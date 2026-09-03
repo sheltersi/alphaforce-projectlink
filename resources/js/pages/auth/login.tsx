@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import { ArrowRight, LockKeyhole, Mail } from 'lucide-react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -16,10 +17,19 @@ type Props = {
     canResetPassword: boolean;
 };
 
+const inputStyles =
+    'h-12 rounded-xl border-harbor/15 bg-white pr-4 pl-11 text-[15px] text-ember shadow-sm transition-all placeholder:text-ember-400/70 focus-visible:border-sienna/60 focus-visible:ring-sienna/25 focus-visible:ring-[3px]';
+
 export default function Login({ status, canResetPassword }: Props) {
     return (
         <>
             <Head title="Log in" />
+
+            {status && (
+                <div className="mb-5 rounded-xl border border-moss/30 bg-moss/10 px-4 py-3 text-center text-sm font-semibold text-moss-600">
+                    {status}
+                </div>
+            )}
 
             <Form
                 {...store.form()}
@@ -28,43 +38,61 @@ export default function Login({ status, canResetPassword }: Props) {
             >
                 {({ processing, errors }) => (
                     <>
-                        <div className="grid gap-6">
+                        <div className="grid gap-5">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    required
-                                    autoFocus
-                                    tabIndex={1}
-                                    autoComplete="email"
-                                    placeholder="email@example.com"
-                                />
+                                <Label
+                                    htmlFor="email"
+                                    className="text-sm font-bold text-harbor"
+                                >
+                                    Email address
+                                </Label>
+                                <div className="relative">
+                                    <Mail className="pointer-events-none absolute top-1/2 left-4 size-4.5 -translate-y-1/2 text-clay-600" />
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        name="email"
+                                        required
+                                        autoFocus
+                                        tabIndex={1}
+                                        autoComplete="email"
+                                        placeholder="email@example.com"
+                                        className={inputStyles}
+                                    />
+                                </div>
                                 <InputError message={errors.email} />
                             </div>
 
                             <div className="grid gap-2">
                                 <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
+                                    <Label
+                                        htmlFor="password"
+                                        className="text-sm font-bold text-harbor"
+                                    >
+                                        Password
+                                    </Label>
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
-                                            className="ml-auto text-sm"
+                                            className="ml-auto text-sm font-bold text-sienna decoration-sienna/40 hover:text-sienna-600"
                                             tabIndex={5}
                                         >
                                             Forgot your password?
                                         </TextLink>
                                     )}
                                 </div>
-                                <PasswordInput
-                                    id="password"
-                                    name="password"
-                                    required
-                                    tabIndex={2}
-                                    autoComplete="current-password"
-                                    placeholder="Password"
-                                />
+                                <div className="relative">
+                                    <LockKeyhole className="pointer-events-none absolute top-1/2 left-4 z-10 size-4.5 -translate-y-1/2 text-clay-600" />
+                                    <PasswordInput
+                                        id="password"
+                                        name="password"
+                                        required
+                                        tabIndex={2}
+                                        autoComplete="current-password"
+                                        placeholder="Enter your password"
+                                        className={inputStyles}
+                                    />
+                                </div>
                                 <InputError message={errors.password} />
                             </div>
 
@@ -73,42 +101,47 @@ export default function Login({ status, canResetPassword }: Props) {
                                     id="remember"
                                     name="remember"
                                     tabIndex={3}
+                                    className="size-5 rounded-md border-harbor/25 data-[state=checked]:border-sienna data-[state=checked]:bg-sienna"
                                 />
-                                <Label htmlFor="remember">Remember me</Label>
+                                <Label
+                                    htmlFor="remember"
+                                    className="text-sm font-semibold text-ember-600"
+                                >
+                                    Remember me
+                                </Label>
                             </div>
 
                             <Button
                                 type="submit"
-                                className="mt-4 w-full"
+                                className="h-12 w-full rounded-full bg-sienna text-[15px] font-bold text-white shadow-lg shadow-sienna/30 transition-all hover:-translate-y-px hover:bg-sienna-600"
                                 tabIndex={4}
                                 disabled={processing}
                                 data-test="login-button"
                             >
                                 {processing && <Spinner />}
                                 Log in
+                                <ArrowRight className="size-4.5" />
                             </Button>
                         </div>
 
-                        <div className="text-muted-foreground text-center text-sm">
-                            Don't have an account?{' '}
-                            <TextLink href={register()} tabIndex={5}>
-                                Sign up
+                        <div className="text-center text-sm font-medium text-ember-500">
+                            New to ProjectLink?{' '}
+                            <TextLink
+                                href={register()}
+                                tabIndex={5}
+                                className="font-bold text-sienna decoration-sienna/40 hover:text-sienna-600"
+                            >
+                                Create your account
                             </TextLink>
                         </div>
                     </>
                 )}
             </Form>
-
-            {status && (
-                <div className="mb-4 text-center text-sm font-medium text-green-600">
-                    {status}
-                </div>
-            )}
         </>
     );
 }
 
 Login.layout = {
-    title: 'Log in to your account',
-    description: 'Enter your email and password below to log in',
+    title: 'Welcome back',
+    description: 'Log in to pick up where you left off.',
 };

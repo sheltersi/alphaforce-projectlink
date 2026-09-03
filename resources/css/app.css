@@ -13,33 +13,61 @@
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
-    --color-forest-50: #eef5f0;
-    --color-forest-100: #d7e8dd;
-    --color-forest-600: #1b5e3c;
-    --color-forest-700: #15492f;
-    --color-forest-800: #103a26;
-    --color-forest-900: #0c2d1e;
-    --color-forest: #1b5e3c;
+    --color-harbor-50: #eef1f5;
+    --color-harbor-100: #d8e0e9;
+    --color-harbor-600: #1e2f44;
+    --color-harbor-700: #182636;
+    --color-harbor-800: #121d2a;
+    --color-harbor-900: #0d1520;
+    --color-harbor: #1e2f44;
 
-    --color-olive-100: #ecefdc;
-    --color-olive-500: #6b7a32;
-    --color-olive-600: #5a682a;
-    --color-olive: #6b7a32;
+    --color-moss-100: #e8e9d8;
+    --color-moss-500: #6b6f3c;
+    --color-moss-600: #585b31;
+    --color-moss: #6b6f3c;
 
-    --color-mustard-100: #f8ecd0;
-    --color-mustard-400: #e0b73a;
-    --color-mustard-500: #d4a72c;
-    --color-mustard-600: #b08a22;
-    --color-mustard: #d4a72c;
+    --color-amber-100: #f6e3d2;
+    --color-amber-400: #d57f3f;
+    --color-amber-500: #c56a2e;
+    --color-amber-600: #a35524;
+    --color-amber: #c56a2e;
 
-    --color-cream-50: #faf7f0;
-    --color-cream-100: #f5f0e6;
-    --color-cream-200: #ece3d1;
-    --color-cream: #f5f0e6;
+    --color-clay-100: #f6e7d6;
+    --color-clay-200: #eccfae;
+    --color-clay-400: #d99862;
+    --color-clay-500: #d08a52;
+    --color-clay-600: #ad6f3e;
+    --color-clay: #d08a52;
 
-    --color-charcoal-500: #4a4a4a;
-    --color-charcoal-600: #333333;
-    --color-charcoal: #252525;
+    --color-sienna-100: #f4ddd1;
+    --color-sienna-500: #b4522a;
+    --color-sienna-600: #96411f;
+    --color-sienna: #b4522a;
+
+    --color-ember-500: #6b4a38;
+    --color-ember-600: #5a3b2b;
+    --color-ember: #4b2e20;
+
+    --color-sand-50: #faf5ec;
+    --color-sand-100: #f4ead9;
+    --color-sand-200: #e9d8bd;
+    --color-sand: #f4ead9;
+
+    --color-harbor-200: #b3c2d4;
+
+    --color-clay-300: #e2b983;
+
+    --color-amber-200: #eec39e;
+
+    --color-moss-200: #d3d5b3;
+    --color-moss-700: #464826;
+
+    --color-sienna-200: #e7b79e;
+    --color-sienna-700: #7a3418;
+
+    --color-ember-400: #8a6552;
+
+    --color-sand-300: #dcc79e;
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -172,6 +200,11 @@
     body {
         @apply bg-background text-foreground;
     }
+
+    ::selection {
+        background: #c56a2e;
+        color: #fff;
+    }
 }
 
 @keyframes float-soft {
@@ -193,5 +226,28 @@
     50% {
         opacity: 0.55;
         transform: scale(0.85);
+    }
+}
+
+@keyframes marquee {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+.marquee-track {
+    animation: marquee 32s linear infinite;
+}
+
+.marquee-track:hover {
+    animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+        animation: none;
     }
 }
