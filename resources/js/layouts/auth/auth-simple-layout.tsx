@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link } from "@inertiajs/react";
 import {
     ArrowLeft,
     Clock3,
@@ -8,25 +8,25 @@ import {
     Sparkles,
     Star,
     UserRound,
-} from 'lucide-react';
-import { home } from '@/routes';
-import type { AuthLayoutProps } from '@/types';
+} from "lucide-react";
+import { home } from "@/routes";
+import type { AuthLayoutProps } from "@/types";
 
 const highlights = [
     {
         icon: Compass,
-        title: 'Discover projects',
-        text: 'Ongoing and upcoming projects from verified organisations.',
+        title: "Discover projects",
+        text: "Ongoing and upcoming projects from verified organisations.",
     },
     {
         icon: UserRound,
-        title: 'One professional profile',
-        text: 'Your experience, skills and qualifications in a single place.',
+        title: "One professional profile",
+        text: "Your experience, skills and qualifications in a single place.",
     },
     {
         icon: Clock3,
-        title: 'Track your impact',
-        text: 'Log hours, follow progress and build a record of contribution.',
+        title: "Track your impact",
+        text: "Log hours, follow progress and build a record of contribution.",
     },
 ];
 
@@ -53,8 +53,8 @@ export default function AuthSimpleLayout({
                         className="pointer-events-none absolute inset-0 opacity-50"
                         style={{
                             backgroundImage:
-                                'radial-gradient(circle, rgba(244,234,217,0.10) 1px, transparent 1px)',
-                            backgroundSize: '26px 26px',
+                                "radial-gradient(circle, rgba(244,234,217,0.10) 1px, transparent 1px)",
+                            backgroundSize: "26px 26px",
                         }}
                     />
                     <div
@@ -63,7 +63,10 @@ export default function AuthSimpleLayout({
                     />
 
                     <div className="relative z-10 flex h-full flex-col p-10 xl:p-14">
-                        <Link href={home()} className="flex items-center gap-2.5">
+                        <Link
+                            href={home()}
+                            className="flex items-center gap-2.5"
+                        >
                             <span className="flex size-10 items-center justify-center rounded-xl bg-sand-50 text-harbor shadow-lg">
                                 <Network
                                     className="size-5.5"
@@ -86,30 +89,16 @@ export default function AuthSimpleLayout({
                                 The opportunity platform
                             </p>
                             <h2 className="mt-5 text-4xl leading-[1.08] font-bold tracking-tight text-sand-50 xl:text-[3.2rem]">
-                                Where skills meet{' '}
+                                Where skills meet{" "}
                                 <span className="relative whitespace-nowrap text-amber-200">
                                     meaningful
-                                    <svg
-                                        aria-hidden
-                                        viewBox="0 0 220 12"
-                                        preserveAspectRatio="none"
-                                        className="absolute -bottom-1 left-0 h-2.5 w-full text-sienna"
-                                    >
-                                        <path
-                                            d="M3 9C60 3 160 3 217 8"
-                                            stroke="currentColor"
-                                            strokeWidth="5"
-                                            strokeLinecap="round"
-                                            fill="none"
-                                        />
-                                    </svg>
-                                </span>{' '}
+                                </span>{" "}
                                 projects.
                             </h2>
                             <p className="mt-5 max-w-md text-[16px] leading-relaxed text-sand-100/70">
                                 Join thousands of participants discovering
-                                projects, showcasing their skills and making
-                                an impact with leading organisations.
+                                projects, showcasing their skills and making an
+                                impact with leading organisations.
                             </p>
                         </div>
 
@@ -153,11 +142,10 @@ export default function AuthSimpleLayout({
                                 </div>
                                 <p className="mt-2.5 text-[14.5px] leading-relaxed font-medium text-sand-50/90">
                                     “I built my profile once and applied to
-                                    three projects in a week. Two accepted
-                                    me.”
+                                    three projects in a week. Two accepted me.”
                                 </p>
                                 <p className="mt-3 text-[13px] font-bold text-amber-200">
-                                    Amara O.{' '}
+                                    Amara O.{" "}
                                     <span className="font-medium text-sand-100/60">
                                         · Participant, Youth mentor
                                     </span>
@@ -182,12 +170,12 @@ export default function AuthSimpleLayout({
                         className="pointer-events-none absolute inset-0 opacity-70"
                         style={{
                             backgroundImage:
-                                'radial-gradient(circle, rgba(30,47,68,0.08) 1px, transparent 1px)',
-                            backgroundSize: '24px 24px',
+                                "radial-gradient(circle, rgba(30,47,68,0.08) 1px, transparent 1px)",
+                            backgroundSize: "24px 24px",
                             maskImage:
-                                'linear-gradient(to bottom, black 0%, transparent 60%)',
+                                "linear-gradient(to bottom, black 0%, transparent 60%)",
                             WebkitMaskImage:
-                                'linear-gradient(to bottom, black 0%, transparent 60%)',
+                                "linear-gradient(to bottom, black 0%, transparent 60%)",
                         }}
                     />
 
@@ -197,10 +185,7 @@ export default function AuthSimpleLayout({
                             className="flex items-center gap-2.5 lg:hidden"
                         >
                             <span className="flex size-9 items-center justify-center rounded-xl bg-harbor text-sand-50 shadow-md">
-                                <Network
-                                    className="size-5"
-                                    strokeWidth={2.2}
-                                />
+                                <Network className="size-5" strokeWidth={2.2} />
                             </span>
                             <span className="text-[15px] font-bold tracking-tight text-harbor">
                                 AlphaForce ProjectLink

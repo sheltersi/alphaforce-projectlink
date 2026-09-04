@@ -1,5 +1,3 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
 import {
     ArrowRight,
     ArrowUpRight,
@@ -27,96 +25,99 @@ import {
     UserRound,
     Users,
     X,
-} from 'lucide-react';
-import { dashboard, login } from '@/routes';
-import { register } from '@/routes';
+} from "lucide-react";
+import { useState } from "react";
+
+import { dashboard, login } from "@/routes";
+import { register } from "@/routes";
+import { Head, Link, usePage } from "@inertiajs/react";
 
 const projects = [
     {
-        name: 'Community Digital Skills Programme',
-        organisation: 'Bright Futures Foundation',
-        category: 'Education',
-        edge: 'bg-moss',
-        location: 'Manchester · Hybrid',
-        start: 'Starts 6 Oct 2026',
-        needed: '24 participants',
-        spotsLeft: '9 spots left',
-        status: 'Accepting applications',
-        statusTone: 'open' as const,
-        skills: ['Mentoring', 'Digital literacy', 'Workshops'],
+        name: "Community Digital Skills Programme",
+        organisation: "Bright Futures Foundation",
+        category: "Education",
+        edge: "bg-moss",
+        location: "Manchester · Hybrid",
+        start: "Starts 6 Oct 2026",
+        needed: "24 participants",
+        spotsLeft: "9 spots left",
+        status: "Accepting applications",
+        statusTone: "open" as const,
+        skills: ["Mentoring", "Digital literacy", "Workshops"],
         description:
-            'Deliver weekly digital-skills workshops in community hubs, helping residents build confidence with everyday technology.',
+            "Deliver weekly digital-skills workshops in community hubs, helping residents build confidence with everyday technology.",
     },
     {
-        name: 'Youth Development Initiative',
-        organisation: 'Northside Youth Trust',
-        category: 'Youth & Community',
-        edge: 'bg-sienna',
-        location: 'Birmingham · In person',
-        start: 'Starts 20 Oct 2026',
-        needed: '18 participants',
-        spotsLeft: '5 spots left',
-        status: 'Closing soon',
-        statusTone: 'closing' as const,
-        skills: ['Coaching', 'Safeguarding', 'Events'],
+        name: "Youth Development Initiative",
+        organisation: "Northside Youth Trust",
+        category: "Youth & Community",
+        edge: "bg-sienna",
+        location: "Birmingham · In person",
+        start: "Starts 20 Oct 2026",
+        needed: "18 participants",
+        spotsLeft: "5 spots left",
+        status: "Closing soon",
+        statusTone: "closing" as const,
+        skills: ["Coaching", "Safeguarding", "Events"],
         description:
-            'Support after-school mentoring circles and weekend activity days for young people aged 14–19.',
+            "Support after-school mentoring circles and weekend activity days for young people aged 14–19.",
     },
     {
-        name: 'Environmental Awareness Project',
-        organisation: 'GreenLoop Collective',
-        category: 'Environment',
-        edge: 'bg-amber',
-        location: 'Remote-friendly',
-        start: 'Starts 3 Nov 2026',
-        needed: '30 participants',
-        spotsLeft: '17 spots left',
-        status: 'Accepting applications',
-        statusTone: 'open' as const,
-        skills: ['Research', 'Content', 'Community outreach'],
+        name: "Environmental Awareness Project",
+        organisation: "GreenLoop Collective",
+        category: "Environment",
+        edge: "bg-amber",
+        location: "Remote-friendly",
+        start: "Starts 3 Nov 2026",
+        needed: "30 participants",
+        spotsLeft: "17 spots left",
+        status: "Accepting applications",
+        statusTone: "open" as const,
+        skills: ["Research", "Content", "Community outreach"],
         description:
-            'Create neighbourhood sustainability guides and run local awareness campaigns across three cities.',
+            "Create neighbourhood sustainability guides and run local awareness campaigns across three cities.",
     },
     {
-        name: 'Technology Innovation Programme',
-        organisation: 'Civic Tech Lab',
-        category: 'Technology',
-        edge: 'bg-harbor',
-        location: 'London · Hybrid',
-        start: 'Starts 12 Jan 2027',
-        needed: '12 participants',
-        spotsLeft: 'Waitlist open',
-        status: 'Upcoming',
-        statusTone: 'upcoming' as const,
-        skills: ['React', 'UX design', 'Data analysis'],
+        name: "Technology Innovation Programme",
+        organisation: "Civic Tech Lab",
+        category: "Technology",
+        edge: "bg-harbor",
+        location: "London · Hybrid",
+        start: "Starts 12 Jan 2027",
+        needed: "12 participants",
+        spotsLeft: "Waitlist open",
+        status: "Upcoming",
+        statusTone: "upcoming" as const,
+        skills: ["React", "UX design", "Data analysis"],
         description:
-            'Prototype civic-tech tools with product mentors — from discovery through to a Demo Day showcase.',
+            "Prototype civic-tech tools with product mentors — from discovery through to a Demo Day showcase.",
     },
 ];
 
 const steps = [
     {
-        n: '01',
-        title: 'Create Your Profile',
-        text: 'Register and build a professional profile with experience, education, skills and qualifications.',
+        n: "01",
+        title: "Create Your Profile",
+        text: "Register and build a professional profile with experience, education, skills and qualifications.",
         icon: UserRound,
     },
     {
-        n: '02',
-        title: 'Discover Projects',
-        text: 'Browse ongoing and upcoming projects from different organisations in one place.',
+        n: "02",
+        title: "Discover Projects",
+        text: "Browse ongoing and upcoming projects from different organisations in one place.",
         icon: Search,
     },
     {
-        n: '03',
-        title: 'Apply',
-        text: 'Apply for projects that match your skills and interests in just a few clicks.',
+        n: "03",
+        title: "Apply",
+        text: "Apply for projects that match your skills and interests in just a few clicks.",
         icon: FileCheck2,
     },
     {
-        n: '04',
-        title: 'Participate',
-        text: 'Project managers review applications and select participants. Accepted participants contribute and track their work.',
+        n: "04",
+        title: "Participate",
+        text: "Project managers review applications and select participants. Accepted participants contribute and track their work.",
         icon: HeartHandshake,
     },
 ];
@@ -124,90 +125,90 @@ const steps = [
 const benefits = [
     {
         icon: Building2,
-        tile: 'bg-harbor/10 text-harbor',
-        title: 'Multiple organisations',
-        text: 'One platform connecting many organisations with a shared pool of talented participants.',
+        tile: "bg-harbor/10 text-harbor",
+        title: "Multiple organisations",
+        text: "One platform connecting many organisations with a shared pool of talented participants.",
     },
     {
         icon: UserRound,
-        tile: 'bg-sienna/10 text-sienna',
-        title: 'Centralised profiles',
-        text: 'A single professional profile that works like an online CV across every project.',
+        tile: "bg-sienna/10 text-sienna",
+        title: "Centralised profiles",
+        text: "A single professional profile that works like an online CV across every project.",
     },
     {
         icon: FileCheck2,
-        tile: 'bg-amber/15 text-amber-600',
-        title: 'Streamlined applications',
-        text: 'Discover, apply and follow progress without re-entering the same details.',
+        tile: "bg-amber/15 text-amber-600",
+        title: "Streamlined applications",
+        text: "Discover, apply and follow progress without re-entering the same details.",
     },
     {
         icon: Users,
-        tile: 'bg-moss/15 text-moss-600',
-        title: 'Participation management',
-        text: 'Project managers build teams, manage roles and keep everyone aligned.',
+        tile: "bg-moss/15 text-moss-600",
+        title: "Participation management",
+        text: "Project managers build teams, manage roles and keep everyone aligned.",
     },
     {
         icon: Clock3,
-        tile: 'bg-clay/20 text-clay-600',
-        title: 'Timesheet tracking',
-        text: 'Participants log hours and managers approve them with a clear audit trail.',
+        tile: "bg-clay/20 text-clay-600",
+        title: "Timesheet tracking",
+        text: "Participants log hours and managers approve them with a clear audit trail.",
     },
     {
         icon: BarChart3,
-        tile: 'bg-harbor/10 text-harbor',
-        title: 'Project reporting',
-        text: 'Generate reports on participation, progress and outcomes for stakeholders.',
+        tile: "bg-harbor/10 text-harbor",
+        title: "Project reporting",
+        text: "Generate reports on participation, progress and outcomes for stakeholders.",
     },
     {
         icon: FolderKanban,
-        tile: 'bg-sienna/10 text-sienna',
-        title: 'Clear project lifecycle',
-        text: 'From draft to published, recruiting, active and complete — always know the status.',
+        tile: "bg-sienna/10 text-sienna",
+        title: "Clear project lifecycle",
+        text: "From draft to published, recruiting, active and complete — always know the status.",
     },
 ];
 
 const orgPoints = [
-    'Create and publish projects',
-    'Receive participant applications',
-    'Review participant profiles',
-    'Select participants',
-    'Manage project teams',
-    'Track participant timesheets',
-    'Monitor project progress',
-    'Generate project reports',
+    "Create and publish projects",
+    "Receive participant applications",
+    "Review participant profiles",
+    "Select participants",
+    "Manage project teams",
+    "Track participant timesheets",
+    "Monitor project progress",
+    "Generate project reports",
 ];
 
 const testimonials = [
     {
-        quote: 'I built my profile once and applied to three projects in a week. Two accepted me.',
-        name: 'Amara O.',
-        role: 'Participant · Youth mentor',
-        initials: 'AO',
-        tile: 'bg-sienna text-white',
+        quote: "I built my profile once and applied to three projects in a week. Two accepted me.",
+        name: "Amara O.",
+        role: "Participant · Youth mentor",
+        initials: "AO",
+        tile: "bg-sienna text-white",
     },
     {
-        quote: 'Reviewing applications used to take days. With ProjectLink it takes an afternoon.',
-        name: 'Daniel K.',
-        role: 'Project Manager · Civic Tech Lab',
-        initials: 'DK',
-        tile: 'bg-harbor text-sand-50',
+        quote: "Reviewing applications used to take days. With ProjectLink it takes an afternoon.",
+        name: "Daniel K.",
+        role: "Project Manager · Civic Tech Lab",
+        initials: "DK",
+        tile: "bg-harbor text-sand-50",
     },
     {
-        quote: 'Timesheets, teams and reports finally live in one place. Our funders love it.',
-        name: 'Priya S.',
-        role: 'Programme Lead · GreenLoop',
-        initials: 'PS',
-        tile: 'bg-moss text-white',
+        quote: "Timesheets, teams and reports finally live in one place. Our funders love it.",
+        name: "Priya S.",
+        role: "Programme Lead · GreenLoop",
+        initials: "PS",
+        tile: "bg-moss text-white",
     },
 ];
 
-function StatusDot({ tone }: { tone: 'open' | 'closing' | 'upcoming' }) {
+function StatusDot({ tone }: { tone: "open" | "closing" | "upcoming" }) {
     const color =
-        tone === 'open'
-            ? 'bg-moss'
-            : tone === 'closing'
-              ? 'bg-amber'
-              : 'bg-clay';
+        tone === "open"
+            ? "bg-moss"
+            : tone === "closing"
+              ? "bg-amber"
+              : "bg-clay";
     return (
         <span className="relative flex size-2">
             <span
@@ -233,8 +234,8 @@ function Eyebrow({
         <p
             className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[11px] font-bold tracking-[0.18em] uppercase ${
                 dark
-                    ? 'border-white/15 bg-white/10 text-amber-200'
-                    : 'border-harbor/15 bg-white/70 text-sienna shadow-sm'
+                    ? "border-white/15 bg-white/10 text-amber-200"
+                    : "border-harbor/15 bg-white/70 text-sienna shadow-sm"
             }`}
         >
             <Icon className="size-3.5" />
@@ -414,12 +415,12 @@ export default function Welcome() {
                         className="pointer-events-none absolute inset-0 opacity-60"
                         style={{
                             backgroundImage:
-                                'radial-gradient(circle, rgba(30,47,68,0.10) 1px, transparent 1px)',
-                            backgroundSize: '24px 24px',
+                                "radial-gradient(circle, rgba(30,47,68,0.10) 1px, transparent 1px)",
+                            backgroundSize: "24px 24px",
                             maskImage:
-                                'linear-gradient(to bottom, black 0%, transparent 70%)',
+                                "linear-gradient(to bottom, black 0%, transparent 70%)",
                             WebkitMaskImage:
-                                'linear-gradient(to bottom, black 0%, transparent 70%)',
+                                "linear-gradient(to bottom, black 0%, transparent 70%)",
                         }}
                     />
 
@@ -433,23 +434,9 @@ export default function Welcome() {
                                 A multi-organisation project platform
                             </div>
                             <h1 className="mt-6 text-[2.75rem] leading-[1.02] font-bold tracking-tight text-harbor sm:text-6xl lg:text-[4.2rem]">
-                                Connect with projects that{' '}
+                                Connect with projects that{" "}
                                 <span className="relative whitespace-nowrap text-sienna">
                                     make&nbsp;a difference
-                                    <svg
-                                        aria-hidden
-                                        viewBox="0 0 220 12"
-                                        preserveAspectRatio="none"
-                                        className="absolute -bottom-1.5 left-0 h-3 w-full text-amber"
-                                    >
-                                        <path
-                                            d="M3 9C60 3 160 3 217 8"
-                                            stroke="currentColor"
-                                            strokeWidth="5"
-                                            strokeLinecap="round"
-                                            fill="none"
-                                        />
-                                    </svg>
                                 </span>
                             </h1>
                             <p className="mt-6 max-w-xl text-lg leading-relaxed text-ember-500">
@@ -486,10 +473,10 @@ export default function Welcome() {
                             <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
                                 <div className="flex -space-x-2.5">
                                     {[
-                                        ['AO', 'bg-sienna text-white'],
-                                        ['DK', 'bg-harbor text-sand-50'],
-                                        ['PS', 'bg-moss text-white'],
-                                        ['+9', 'bg-amber text-white'],
+                                        ["AO", "bg-sienna text-white"],
+                                        ["DK", "bg-harbor text-sand-50"],
+                                        ["PS", "bg-moss text-white"],
+                                        ["+9", "bg-amber text-white"],
                                     ].map(([t, cls]) => (
                                         <span
                                             key={t}
@@ -544,21 +531,21 @@ export default function Welcome() {
                                     {[
                                         {
                                             icon: Users,
-                                            label: 'Participants',
-                                            sub: 'Skills & profiles',
-                                            bg: 'bg-harbor',
+                                            label: "Participants",
+                                            sub: "Skills & profiles",
+                                            bg: "bg-harbor",
                                         },
                                         {
                                             icon: FolderKanban,
-                                            label: 'Projects',
-                                            sub: 'Apply & join',
-                                            bg: 'bg-sienna',
+                                            label: "Projects",
+                                            sub: "Apply & join",
+                                            bg: "bg-sienna",
                                         },
                                         {
                                             icon: Building2,
-                                            label: 'Organisations',
-                                            sub: 'Impact & reports',
-                                            bg: 'bg-moss',
+                                            label: "Organisations",
+                                            sub: "Impact & reports",
+                                            bg: "bg-moss",
                                         },
                                     ].map((n, i) => (
                                         <div
@@ -648,10 +635,10 @@ export default function Welcome() {
                     <div className="relative border-t border-harbor/10 bg-white/70 backdrop-blur">
                         <dl className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-7 sm:px-6 md:grid-cols-4 lg:px-8">
                             {[
-                                ['120+', 'Partner organisations'],
-                                ['4,800', 'Active participants'],
-                                ['350', 'Live projects'],
-                                ['92%', 'Would recommend'],
+                                ["120+", "Partner organisations"],
+                                ["4,800", "Active participants"],
+                                ["350", "Live projects"],
+                                ["92%", "Would recommend"],
                             ].map(([v, l]) => (
                                 <div
                                     key={l}
@@ -677,16 +664,13 @@ export default function Welcome() {
                 >
                     <div className="marquee-track flex w-max items-center gap-8 pr-8">
                         {[0, 1].map((copy) => (
-                            <div
-                                key={copy}
-                                className="flex items-center gap-8"
-                            >
+                            <div key={copy} className="flex items-center gap-8">
                                 {[
-                                    'Participants',
-                                    'Skills',
-                                    'Projects',
-                                    'Organisations',
-                                    'Impact',
+                                    "Participants",
+                                    "Skills",
+                                    "Projects",
+                                    "Organisations",
+                                    "Impact",
                                 ].map((w) => (
                                     <span
                                         key={`${copy}-${w}`}
@@ -706,37 +690,37 @@ export default function Welcome() {
                     <div className="mx-auto max-w-2xl text-center">
                         <Eyebrow icon={Leaf}>The platform concept</Eyebrow>
                         <h2 className="mt-4 text-3xl font-bold tracking-tight text-harbor sm:text-[2.6rem] sm:leading-tight">
-                            One profile. Every{' '}
+                            One profile. Every{" "}
                             <span className="text-sienna">opportunity</span>.
                         </h2>
                         <p className="mt-4 text-[17px] leading-relaxed text-ember-500">
-                            ProjectLink is not a job board — it is a project
-                            and opportunity platform where skills meet
-                            meaningful work.
+                            ProjectLink is not a job board — it is a project and
+                            opportunity platform where skills meet meaningful
+                            work.
                         </p>
                     </div>
                     <div className="mt-12 grid gap-6 md:grid-cols-3">
                         {[
                             {
                                 icon: Compass,
-                                bar: 'from-harbor to-harbor-700',
-                                tile: 'bg-harbor/10 text-harbor',
-                                title: 'Discover Projects',
-                                text: 'Explore ongoing and upcoming projects from participating organisations — all in one trusted place.',
+                                bar: "from-harbor to-harbor-700",
+                                tile: "bg-harbor/10 text-harbor",
+                                title: "Discover Projects",
+                                text: "Explore ongoing and upcoming projects from participating organisations — all in one trusted place.",
                             },
                             {
                                 icon: Award,
-                                bar: 'from-sienna to-amber',
-                                tile: 'bg-sienna/10 text-sienna',
-                                title: 'Build Your Profile',
-                                text: 'Create a professional profile showcasing your experience, education, skills and qualifications.',
+                                bar: "from-sienna to-amber",
+                                tile: "bg-sienna/10 text-sienna",
+                                title: "Build Your Profile",
+                                text: "Create a professional profile showcasing your experience, education, skills and qualifications.",
                             },
                             {
                                 icon: HeartHandshake,
-                                bar: 'from-moss to-moss-700',
-                                tile: 'bg-moss/15 text-moss-600',
-                                title: 'Participate & Contribute',
-                                text: 'Apply for projects, become a participant when selected and contribute your skills to real outcomes.',
+                                bar: "from-moss to-moss-700",
+                                tile: "bg-moss/15 text-moss-600",
+                                title: "Participate & Contribute",
+                                text: "Apply for projects, become a participant when selected and contribute your skills to real outcomes.",
                             },
                         ].map((c) => (
                             <article
@@ -767,7 +751,10 @@ export default function Welcome() {
                 </section>
 
                 {/* ── How It Works (dark) ──────────────────────── */}
-                <section id="how-it-works" className="scroll-mt-20 px-4 sm:px-6 lg:px-8">
+                <section
+                    id="how-it-works"
+                    className="scroll-mt-20 px-4 sm:px-6 lg:px-8"
+                >
                     <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] bg-harbor-900 px-6 py-14 shadow-2xl shadow-harbor/40 sm:px-10 lg:px-14 lg:py-20">
                         <div
                             aria-hidden
@@ -782,8 +769,8 @@ export default function Welcome() {
                             className="pointer-events-none absolute inset-0 opacity-40"
                             style={{
                                 backgroundImage:
-                                    'radial-gradient(circle, rgba(244,234,217,0.12) 1px, transparent 1px)',
-                                backgroundSize: '26px 26px',
+                                    "radial-gradient(circle, rgba(244,234,217,0.12) 1px, transparent 1px)",
+                                backgroundSize: "26px 26px",
                             }}
                         />
                         <div className="relative mx-auto max-w-2xl text-center">
@@ -791,8 +778,8 @@ export default function Welcome() {
                                 How it works
                             </Eyebrow>
                             <h2 className="mt-4 text-3xl font-bold tracking-tight text-sand-50 sm:text-[2.6rem] sm:leading-tight">
-                                From sign-up to{' '}
-                                <span className="text-amber-200">impact</span>{' '}
+                                From sign-up to{" "}
+                                <span className="text-amber-200">impact</span>{" "}
                                 in four steps
                             </h2>
                         </div>
@@ -842,7 +829,7 @@ export default function Welcome() {
                                     Project discovery
                                 </Eyebrow>
                                 <h2 className="mt-4 text-3xl font-bold tracking-tight text-harbor sm:text-[2.6rem] sm:leading-tight">
-                                    Real projects.{' '}
+                                    Real projects.{" "}
                                     <span className="text-sienna">
                                         Real opportunities.
                                     </span>
@@ -904,7 +891,7 @@ export default function Welcome() {
                                             </li>
                                             <li className="flex items-center gap-2">
                                                 <Users className="size-3.5 shrink-0 text-sienna" />
-                                                {p.needed} ·{' '}
+                                                {p.needed} ·{" "}
                                                 <span className="font-extrabold text-amber-600">
                                                     {p.spotsLeft}
                                                 </span>
@@ -962,17 +949,16 @@ export default function Welcome() {
                                         For organisations
                                     </Eyebrow>
                                     <h2 className="mt-4 text-3xl leading-tight font-bold tracking-tight sm:text-[2.6rem]">
-                                        Manage your projects. Find the{' '}
+                                        Manage your projects. Find the{" "}
                                         <span className="text-amber-200">
                                             right participants.
                                         </span>
                                     </h2>
                                     <p className="mt-4 max-w-lg text-[16px] leading-relaxed text-sand-100/80">
                                         Publish opportunities, review rich
-                                        participant profiles and run your
-                                        entire project lifecycle — teams,
-                                        timesheets and reports — from one
-                                        dashboard.
+                                        participant profiles and run your entire
+                                        project lifecycle — teams, timesheets
+                                        and reports — from one dashboard.
                                     </p>
                                     <ul className="mt-7 grid gap-x-6 gap-y-3 sm:grid-cols-2">
                                         {orgPoints.map((pt) => (
@@ -1019,18 +1005,18 @@ export default function Welcome() {
                                     <div className="mt-4 grid grid-cols-3 gap-3 text-center">
                                         {[
                                             {
-                                                v: '46',
-                                                l: 'Applications',
+                                                v: "46",
+                                                l: "Applications",
                                                 hot: false,
                                             },
                                             {
-                                                v: '24',
-                                                l: 'Selected',
+                                                v: "24",
+                                                l: "Selected",
                                                 hot: true,
                                             },
                                             {
-                                                v: '312h',
-                                                l: 'Logged',
+                                                v: "312h",
+                                                l: "Logged",
                                                 hot: false,
                                             },
                                         ].map((k) => (
@@ -1038,12 +1024,12 @@ export default function Welcome() {
                                                 key={k.l}
                                                 className={`rounded-2xl border p-3 ${
                                                     k.hot
-                                                        ? 'border-sienna/40 bg-gradient-to-b from-sienna/15 to-amber/15'
-                                                        : 'border-harbor/10 bg-sand-100'
+                                                        ? "border-sienna/40 bg-gradient-to-b from-sienna/15 to-amber/15"
+                                                        : "border-harbor/10 bg-sand-100"
                                                 }`}
                                             >
                                                 <p
-                                                    className={`text-xl font-extrabold ${k.hot ? 'text-sienna' : 'text-harbor'}`}
+                                                    className={`text-xl font-extrabold ${k.hot ? "text-sienna" : "text-harbor"}`}
                                                 >
                                                     {k.v}
                                                 </p>
@@ -1056,19 +1042,19 @@ export default function Welcome() {
                                     <div className="mt-3 space-y-2.5">
                                         {[
                                             {
-                                                n: 'Amara O. — Mentor',
-                                                tag: 'Shortlisted',
-                                                cls: 'bg-moss/15 text-moss-600',
+                                                n: "Amara O. — Mentor",
+                                                tag: "Shortlisted",
+                                                cls: "bg-moss/15 text-moss-600",
                                             },
                                             {
-                                                n: 'Timesheets — Week 6',
-                                                tag: '18 approved',
-                                                cls: 'bg-harbor/10 text-harbor',
+                                                n: "Timesheets — Week 6",
+                                                tag: "18 approved",
+                                                cls: "bg-harbor/10 text-harbor",
                                             },
                                             {
-                                                n: 'Impact report — Q3',
-                                                tag: 'Ready',
-                                                cls: 'bg-clay/20 text-sienna-600',
+                                                n: "Impact report — Q3",
+                                                tag: "Ready",
+                                                cls: "bg-clay/20 text-sienna-600",
                                             },
                                         ].map((r) => (
                                             <div
@@ -1100,7 +1086,7 @@ export default function Welcome() {
                                 Platform benefits
                             </Eyebrow>
                             <h2 className="mt-4 text-3xl font-bold tracking-tight text-harbor sm:text-[2.6rem] sm:leading-tight">
-                                Built for{' '}
+                                Built for{" "}
                                 <span className="text-sienna">
                                     scale and trust
                                 </span>
@@ -1242,11 +1228,11 @@ export default function Welcome() {
                                     Your next project starts here.
                                 </h2>
                                 <p className="mx-auto mt-5 max-w-xl text-[17px] leading-relaxed text-white/85">
-                                    Whether you're looking for an opportunity
-                                    to contribute your skills or an
-                                    organisation looking for participants for
-                                    your next project, AlphaForce ProjectLink
-                                    brings everyone together.
+                                    Whether you're looking for an opportunity to
+                                    contribute your skills or an organisation
+                                    looking for participants for your next
+                                    project, AlphaForce ProjectLink brings
+                                    everyone together.
                                 </p>
                                 <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
                                     <a
@@ -1311,10 +1297,10 @@ export default function Welcome() {
                                 </p>
                                 <ul className="mt-4 space-y-2.5 text-sm font-semibold">
                                     {[
-                                        ['About', '#organisations'],
-                                        ['Projects', '#projects'],
-                                        ['How It Works', '#how-it-works'],
-                                        ['Contact', '#cta'],
+                                        ["About", "#organisations"],
+                                        ["Projects", "#projects"],
+                                        ["How It Works", "#how-it-works"],
+                                        ["Contact", "#cta"],
                                     ].map(([label, href]) => (
                                         <li key={label}>
                                             <a
@@ -1333,8 +1319,8 @@ export default function Welcome() {
                                 </p>
                                 <ul className="mt-4 space-y-2.5 text-sm font-semibold">
                                     {[
-                                        'Privacy Policy',
-                                        'Terms & Conditions',
+                                        "Privacy Policy",
+                                        "Terms & Conditions",
                                     ].map((label) => (
                                         <li key={label}>
                                             <a
