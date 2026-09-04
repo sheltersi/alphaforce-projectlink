@@ -246,8 +246,34 @@
     animation-play-state: paused;
 }
 
+@keyframes kenburns {
+    from {
+        transform: scale(1) translateY(0);
+    }
+    to {
+        transform: scale(1.09) translateY(-1.5%);
+    }
+}
+
+.animate-kenburns {
+    animation: kenburns 26s ease-in-out infinite alternate;
+}
+
+.animate-float-soft {
+    animation: float-soft 6s ease-in-out infinite;
+}
+
+.animate-float-soft-delayed {
+    animation: float-soft 7.5s ease-in-out 1.2s infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .marquee-track {
+        animation: none;
+    }
+    .animate-kenburns,
+    .animate-float-soft,
+    .animate-float-soft-delayed {
         animation: none;
     }
 }
