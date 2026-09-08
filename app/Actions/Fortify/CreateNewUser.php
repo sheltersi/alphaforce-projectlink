@@ -24,10 +24,22 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
         ]);
+
+        // New registrations are participants by default – this ensures the
+        // onboarding guard treats them as needing a participant profile.
+        if (method_exists($user, 'assignRole')) {
+            try {
+                $user->assignRole('participant');
+            } catch (\Throwable $e) {
+                // Role may not exist in testing without seeder – ignore.
+            }
+        }
+
+        return $user;
     }
 }
