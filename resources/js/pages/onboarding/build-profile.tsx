@@ -623,10 +623,10 @@ export default function BuildProfile() {
                                 className="overflow-hidden rounded-[2rem] border border-harbor/10 bg-white shadow-2xl shadow-harbor/15"
                             >
                                 {/* Stepper strip */}
-                                <div className="border-b border-harbor/10 bg-sand-100/70 px-6 py-4 sm:px-8">
+                                <div className="border-b border-harbor/10 bg-sand-100/70 px-6 pt-4 pb-6 sm:px-8">
                                     <ol
                                         aria-label="Profile sections"
-                                        className="flex items-center gap-1 overflow-x-auto"
+                                        className="flex items-center gap-1 overflow-x-auto pb-2"
                                     >
                                         {STEPS.map((s, i) => (
                                             <li
