@@ -34,7 +34,6 @@ import {
 const JOURNEY = [
     { label: 'Registration', state: 'done' },
     { label: 'Email Verification', state: 'done' },
-    { label: 'Welcome', state: 'done' },
     { label: 'Build Your Profile', state: 'done' },
     { label: 'Profile Preview', state: 'current' },
     { label: 'Dashboard', state: 'todo' },
@@ -140,9 +139,6 @@ export default function ProfilePreview() {
                                                     'Build Your Profile' ? (
                                                         <FileText className="size-4.5" />
                                                     ) : s.label ===
-                                                      'Welcome' ? (
-                                                        <Sparkles className="size-4.5" />
-                                                    ) : s.label ===
                                                       'Email Verification' ? (
                                                         <MailCheck className="size-4.5" />
                                                     ) : (
@@ -173,7 +169,7 @@ export default function ProfilePreview() {
                                 ))}
                             </ol>
                             <p className="text-center text-[13px] font-bold text-ember-500 sm:hidden">
-                                Step 5 of 6 ·{' '}
+                                Step 4 of 5 ·{' '}
                                 <span className="text-sienna">
                                     Profile Preview
                                 </span>

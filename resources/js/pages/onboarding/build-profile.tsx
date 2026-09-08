@@ -7,7 +7,6 @@ import {
     Briefcase,
     Camera,
     Check,
-    ChevronLeft,
     ChevronRight,
     CircleAlert,
     Download,
@@ -152,7 +151,6 @@ function SectionCard({
 const JOURNEY = [
     { label: 'Registration', state: 'done' },
     { label: 'Email Verification', state: 'done' },
-    { label: 'Welcome', state: 'done' },
     { label: 'Build Your Profile', state: 'current' },
     { label: 'Profile Preview', state: 'todo' },
     { label: 'Dashboard', state: 'todo' },
@@ -413,17 +411,14 @@ export default function BuildProfile() {
                         className="h-1 bg-gradient-to-r from-harbor via-sienna to-amber"
                     />
                     <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                        <Link
-                            href="/onboarding"
-                            className="flex items-center gap-2.5"
-                        >
+                        <span className="flex items-center gap-2.5">
                             <span className="flex size-9 items-center justify-center rounded-xl bg-harbor text-sand-50 shadow-md shadow-harbor/25">
                                 <Network className="size-5" strokeWidth={2.2} />
                             </span>
                             <span className="text-[15px] font-bold tracking-tight text-harbor">
                                 AlphaForce ProjectLink
                             </span>
-                        </Link>
+                        </span>
                         <span className="inline-flex items-center gap-2 text-xs font-bold text-ember-500">
                             <span className="hidden items-center gap-1.5 rounded-full border border-moss/25 bg-moss/10 px-3 py-1.5 text-moss-600 sm:inline-flex">
                                 <Save className="size-3.5" />
@@ -499,7 +494,7 @@ export default function BuildProfile() {
                                 ))}
                             </ol>
                             <p className="text-center text-[13px] font-bold text-ember-500 sm:hidden">
-                                Step 4 of 6 ·{' '}
+                                Step 3 of 5 ·{' '}
                                 <span className="text-sienna">
                                     Build Your Profile
                                 </span>
@@ -771,14 +766,7 @@ export default function BuildProfile() {
                                 </div>
                             </section>
 
-                            <div className="flex items-center justify-between text-[12.5px] font-semibold text-ember-400">
-                                <Link
-                                    href="/onboarding"
-                                    className="inline-flex items-center gap-1.5 hover:text-harbor"
-                                >
-                                    <ChevronLeft className="size-4" />
-                                    Back to welcome
-                                </Link>
+                            <div className="flex items-center justify-end text-[12.5px] font-semibold text-ember-400">
                                 <span>Next: {STEPS[stepIndex + 1]?.label ?? 'Profile Preview'}</span>
                             </div>
                         </div>

@@ -6,7 +6,7 @@ Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
-    Route::inertia('onboarding', 'onboarding/welcome')->name('onboarding.welcome');
+    Route::redirect('onboarding', 'onboarding/build-profile');
     Route::inertia('onboarding/build-profile', 'onboarding/build-profile')->name(
         'onboarding.build-profile',
     );
