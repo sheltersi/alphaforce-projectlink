@@ -5,6 +5,7 @@ use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
@@ -214,4 +215,90 @@ test('validation fails for invalid fields', function () {
 
     $response->assertUnprocessable();
     $response->assertJsonValidationErrors(['email', 'summary']);
+});
+
+test('profile preview redirects to the builder when no profile exists', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $user->assignRole('participant');
+
+    $this->actingAs($user)
+        ->get(route('onboarding.profile-preview'))
+        ->assertRedirect(route('onboarding.build-profile'));
+});
+
+test('profile preview renders the saved profile from the database', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $user->assignRole('participant');
+
+    $this->actingAs($user)->postJson(route('onboarding.profile.store'), [
+        'firstName' => 'Amara',
+        'lastName' => 'Okafor',
+        'email' => 'amara@example.org',
+        'summary' => str_repeat('Experienced project participant. ', 5),
+        'skills' => ['Research'],
+    ])->assertOk();
+
+    $response = $this->actingAs($user)->get(route('onboarding.profile-preview'));
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('onboarding/profile-preview')
+        ->where('profile.firstName', 'Amara')
+        ->where('profile.skills.0', 'Research'),
+    );
+});
+
+test('saving from the preview redirects to the dashboard', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $user->assignRole('participant');
+
+    $response = $this->actingAs($user)
+        ->withHeader('X-Inertia', 'true')
+        ->post(route('onboarding.profile.store'), [
+            'firstName' => 'Amara',
+            'lastName' => 'Okafor',
+            'email' => 'amara@example.org',
+            'summary' => str_repeat('Experienced project participant. ', 5),
+            'skills' => ['Research'],
+            'redirect_to' => 'dashboard',
+        ]);
+
+    $response->assertRedirect(route('dashboard'));
+    expect(ParticipantProfile::where('user_id', $user->id)->exists())->toBeTrue();
+});
+
+test('re-saving a profile keeps existing documents and files', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $user->assignRole('participant');
+
+    $pdfDataUrl = 'data:application/pdf;base64,'.base64_encode('fake pdf content');
+
+    $this->actingAs($user)->postJson(route('onboarding.profile.store'), [
+        'firstName' => 'Doc',
+        'lastName' => 'Test',
+        'email' => 'doc@example.com',
+        'summary' => str_repeat('Summary text for testing. ', 10),
+        'skills' => ['Research'],
+        'documents' => [
+            [
+                'name' => 'cv.pdf',
+                'size' => 1234,
+                'type' => 'application/pdf',
+                'category' => 'CV',
+                'dataUrl' => $pdfDataUrl,
+            ],
+        ],
+    ])->assertOk();
+
+    // Load the payload exactly as the preview page receives it (no dataUrl, includes filePath).
+    $payload = $this->actingAs($user)
+        ->getJson(route('onboarding.profile.show'))
+        ->json('profile');
+
+    // Saving that payload again must not delete or duplicate the document.
+    $this->actingAs($user)->postJson(route('onboarding.profile.store'), $payload)->assertOk();
+
+    $profile = ParticipantProfile::where('user_id', $user->id)->first();
+    expect($profile->documents)->toHaveCount(1);
+    Storage::disk('local')->assertExists($profile->documents->first()->file_path);
 });

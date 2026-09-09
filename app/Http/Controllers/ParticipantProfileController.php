@@ -35,6 +35,34 @@ class ParticipantProfileController extends Controller
             : Inertia::render('onboarding/build-profile', ['profile' => $payload]);
     }
 
+    /**
+     * Render the profile builder with the participant's saved profile (if any).
+     */
+    public function edit(Request $request): InertiaResponse
+    {
+        $profile = $this->profiles->findForUser($request->user());
+
+        return Inertia::render('onboarding/build-profile', [
+            'profile' => $profile ? $this->profiles->toPayload($profile) : null,
+        ]);
+    }
+
+    /**
+     * Render the profile preview from the database – never from local storage.
+     */
+    public function preview(Request $request): InertiaResponse|RedirectResponse
+    {
+        $profile = $this->profiles->findForUser($request->user());
+
+        if (! $profile) {
+            return redirect()->route('onboarding.build-profile');
+        }
+
+        return Inertia::render('onboarding/profile-preview', [
+            'profile' => $this->profiles->toPayload($profile),
+        ]);
+    }
+
     public function store(StoreParticipantProfileRequest $request): JsonResponse|RedirectResponse
     {
         $profile = $this->profiles->upsert($request->user(), $request->validated(), $request);
@@ -49,7 +77,9 @@ class ParticipantProfileController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Profile saved successfully.']);
 
-        return redirect()->route('onboarding.profile-preview');
+        return $request->input('redirect_to') === 'dashboard'
+            ? redirect()->route('dashboard')
+            : redirect()->route('onboarding.profile-preview');
     }
 
     public function update(StoreParticipantProfileRequest $request): JsonResponse|RedirectResponse
@@ -78,6 +108,6 @@ class ParticipantProfileController extends Controller
 
     private function wantsJson(Request $request): bool
     {
-        return $request->wantsJson() || $request->expectsJson() || $request->header('X-Inertia') === null;
+        return $request->expectsJson();
     }
 }

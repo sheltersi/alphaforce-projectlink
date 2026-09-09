@@ -68,6 +68,7 @@ class StoreParticipantProfileRequest extends FormRequest
             'documents.*.mime_type' => ['nullable', 'string', 'max:255'],
             'documents.*.category' => ['nullable', 'string', 'in:CV,Certificate,Supporting document'],
             'documents.*.data_url' => ['nullable', 'string', 'max:15000000'], // base64 for ~10MB
+            'documents.*.file_path' => ['nullable', 'string', 'max:255'], // existing documents round-tripped from the UI
             // For multipart file uploads, the frontend may send files as `document_files` array
             'document_files' => ['nullable', 'array'],
             'document_files.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,png,jpg,jpeg'],
@@ -151,6 +152,9 @@ class StoreParticipantProfileRequest extends FormRequest
                 }
                 if (isset($d['size']) && ! isset($d['file_size'])) {
                     $d['file_size'] = $d['size'];
+                }
+                if (isset($d['filePath']) && ! isset($d['file_path'])) {
+                    $d['file_path'] = $d['filePath'];
                 }
 
                 return $d;

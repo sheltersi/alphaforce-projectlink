@@ -37,6 +37,10 @@ export interface ProfileDocument {
     uploadDate: string;
     /** data: URL so the file survives reloads and can be downloaded */
     dataUrl?: string;
+    /** Storage path for documents already persisted on the server */
+    filePath?: string;
+    /** Authenticated download URL for documents persisted on the server */
+    downloadUrl?: string;
 }
 
 export interface ParticipantProfile {
@@ -380,10 +384,14 @@ export function requiredBlockingErrors(
     return errors;
 }
 
-export function loadDraft(): ParticipantProfile {
+export function storageKeyForUser(userId: number | string): string {
+    return `${STORAGE_KEY}-${userId}`;
+}
+
+export function loadDraft(userId: number | string): ParticipantProfile {
     if (typeof window === 'undefined') return emptyProfile();
     try {
-        const raw = window.localStorage.getItem(STORAGE_KEY);
+        const raw = window.localStorage.getItem(storageKeyForUser(userId));
         if (!raw) return emptyProfile();
         const parsed = JSON.parse(raw) as Partial<ParticipantProfile>;
         return { ...emptyProfile(), ...parsed };
@@ -392,10 +400,10 @@ export function loadDraft(): ParticipantProfile {
     }
 }
 
-export function saveDraft(profile: ParticipantProfile): void {
+export function saveDraft(profile: ParticipantProfile, userId: number | string): void {
     try {
         window.localStorage.setItem(
-            STORAGE_KEY,
+            storageKeyForUser(userId),
             JSON.stringify({
                 ...profile,
                 updatedAt: new Date().toISOString(),
@@ -405,7 +413,7 @@ export function saveDraft(profile: ParticipantProfile): void {
         // Storage full (e.g. large documents) — persist without file payloads.
         try {
             window.localStorage.setItem(
-                STORAGE_KEY,
+                storageKeyForUser(userId),
                 JSON.stringify({
                     ...profile,
                     photoDataUrl: null,
@@ -422,9 +430,9 @@ export function saveDraft(profile: ParticipantProfile): void {
     }
 }
 
-export function clearDraft(): void {
+export function clearDraft(userId: number | string): void {
     try {
-        window.localStorage.removeItem(STORAGE_KEY);
+        window.localStorage.removeItem(storageKeyForUser(userId));
     } catch {
         // noop
     }

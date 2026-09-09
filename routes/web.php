@@ -7,10 +7,10 @@ Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('onboarding', 'onboarding/build-profile');
-    Route::inertia('onboarding/build-profile', 'onboarding/build-profile')->name(
+    Route::get('onboarding/build-profile', [ParticipantProfileController::class, 'edit'])->name(
         'onboarding.build-profile',
     );
-    Route::inertia('onboarding/profile-preview', 'onboarding/profile-preview')->name(
+    Route::get('onboarding/profile-preview', [ParticipantProfileController::class, 'preview'])->name(
         'onboarding.profile-preview',
     );
 

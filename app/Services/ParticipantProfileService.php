@@ -211,52 +211,53 @@ class ParticipantProfileService
 
     private function syncDocuments(ParticipantProfile $profile, array $jsonDocuments, Request $request): void
     {
-        // Delete old files first (inside transaction – if DB rollback, files already deleted → acceptable orphan cleanup)
-        foreach ($profile->documents as $doc) {
-            $this->deleteIfExists($doc->file_path, $doc->disk);
-        }
-        $profile->documents()->delete();
+        $existing = $profile->documents()->get();
+        $payloadDocuments = collect($jsonDocuments);
+        $keptPaths = $payloadDocuments->pluck('file_path')->filter()->values();
 
-        foreach (collect($jsonDocuments) as $doc) {
-            if (empty($doc['original_name'] ?? '')) {
+        // Remove only the documents that were deleted in the UI.
+        // Kept documents must keep both their DB row and their stored file.
+        foreach ($existing as $doc) {
+            if (! $keptPaths->contains($doc->file_path)) {
+                $this->deleteIfExists($doc->file_path, $doc->disk);
+                $doc->delete();
+            }
+        }
+
+        foreach ($payloadDocuments as $doc) {
+            $originalName = trim((string) ($doc['original_name'] ?? ''));
+            if ($originalName === '') {
                 continue;
             }
 
             $category = $doc['category'] ?? 'Supporting document';
-            $fileSize = $doc['file_size'] ?? 0;
-            $mimeType = $doc['mime_type'] ?? 'application/octet-stream';
-            $originalName = $doc['original_name'];
-            $filePath = null;
-            $disk = 'local';
 
+            // New upload sent as a base64 data URL.
             if (! empty($doc['data_url'])) {
                 $decoded = $this->storeBase64File($doc['data_url'], "participant-documents/{$profile->id}", 'local');
                 if ($decoded) {
-                    $filePath = $decoded['path'];
-                    $disk = $decoded['disk'];
-                    $fileSize = $decoded['size'];
-                    $mimeType = $decoded['mime'] ?? $mimeType;
+                    $profile->documents()->create([
+                        'original_name' => $originalName,
+                        'file_path' => $decoded['path'],
+                        'disk' => $decoded['disk'],
+                        'file_size' => $decoded['size'],
+                        'mime_type' => $decoded['mime'] ?? ($doc['mime_type'] ?? 'application/octet-stream'),
+                        'category' => $category,
+                    ]);
                 }
+
+                continue;
             }
 
+            // Existing document round-tripped from the frontend – keep the file, refresh metadata.
+            $filePath = $doc['file_path'] ?? null;
             if ($filePath) {
-                $profile->documents()->create([
-                    'original_name' => $originalName,
-                    'file_path' => $filePath,
-                    'disk' => $disk,
-                    'file_size' => $fileSize,
-                    'mime_type' => $mimeType,
-                    'category' => $category,
-                ]);
-            } elseif (! empty($doc['file_path'])) {
-                $profile->documents()->create([
-                    'original_name' => $originalName,
-                    'file_path' => $doc['file_path'],
-                    'disk' => $disk,
-                    'file_size' => $fileSize,
-                    'mime_type' => $mimeType,
-                    'category' => $category,
-                ]);
+                $existing->where('file_path', $filePath)->each(function ($stored) use ($originalName, $category): void {
+                    $stored->update([
+                        'original_name' => $originalName,
+                        'category' => $category,
+                    ]);
+                });
             }
         }
 
@@ -388,6 +389,7 @@ class ParticipantProfileService
                 'type' => $d->mime_type,
                 'category' => $d->category,
                 'uploadDate' => $d->created_at?->toISOString(),
+                'filePath' => $d->file_path,
                 'downloadUrl' => route('onboarding.profile.document.download', ['document' => $d->id]),
             ])->toArray(),
             'updatedAt' => $profile->updated_at?->toISOString(),

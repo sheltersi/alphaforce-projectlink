@@ -5,23 +5,24 @@ import {
     BadgeCheck,
     Briefcase,
     Check,
+    CircleAlert,
     Download,
     Eye,
     FileText,
     GraduationCap,
-    LayoutDashboard,
     Mail,
     MailCheck,
     MapPin,
     Network,
     Pencil,
     Phone,
+    Save,
     Sparkles,
     UserRound,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, router, usePage } from "@inertiajs/react";
 
 import {
     STEPS,
@@ -29,8 +30,8 @@ import {
     emptyProfile,
     fileTypeLabel,
     formatFileSize,
-    loadDraft,
     sectionStatuses,
+    type ParticipantProfile,
 } from "./lib/profile";
 
 const JOURNEY = [
@@ -53,8 +54,52 @@ function formatMonth(value: string): string {
     });
 }
 
+function getCsrfToken(): string {
+    const meta = document.querySelector(
+        'meta[name="csrf-token"]',
+    ) as HTMLMetaElement | null;
+    if (meta?.content) return meta.content;
+    const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : "";
+}
+
+function flattenBackendErrors(payload: unknown, status: number): string[] {
+    if (
+        payload &&
+        typeof payload === "object" &&
+        "errors" in payload &&
+        typeof (payload as { errors: unknown }).errors === "object"
+    ) {
+        const errs = (payload as { errors: Record<string, string[]> }).errors;
+        const flat = Object.values(errs).flat();
+        if (flat.length > 0) return flat;
+    }
+    if (
+        payload &&
+        typeof payload === "object" &&
+        "message" in payload &&
+        typeof (payload as { message: unknown }).message === "string"
+    ) {
+        return [(payload as { message: string }).message];
+    }
+    return [
+        `We couldn't save your profile (error ${status}). Please try again.`,
+    ];
+}
+
 export default function ProfilePreview() {
-    const [profile] = useState(loadDraft);
+    // The preview always renders the profile as stored in the database.
+    const { profile: serverProfile } = usePage().props as unknown as {
+        profile: ParticipantProfile | null;
+    };
+    const profile = useMemo(
+        () => ({ ...emptyProfile(), ...(serverProfile ?? {}) }),
+        [serverProfile],
+    );
+
+    const [errors, setErrors] = useState<string[]>([]);
+    const [isSaving, setIsSaving] = useState(false);
+
     const percent = useMemo(() => completionPercent(profile), [profile]);
     const statuses = useMemo(() => sectionStatuses(profile), [profile]);
     const incomplete = STEPS.filter(
@@ -69,11 +114,53 @@ export default function ProfilePreview() {
     const location =
         [profile.city, profile.country].filter(Boolean).join(", ") || null;
     const isEmpty =
+        !serverProfile &&
         !profile.firstName &&
         !profile.summary &&
         profile.skills.length === 0 &&
         profile.education.length === 0 &&
         profile.experience.length === 0;
+
+    /**
+     * Persist the previewed profile to the database, then continue to the
+     * dashboard. Any backend validation errors are shown to the user.
+     */
+    async function handleSave() {
+        setErrors([]);
+        setIsSaving(true);
+        try {
+            const token = getCsrfToken();
+            const res = await fetch("/onboarding/profile", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    ...(token
+                        ? { "X-XSRF-TOKEN": token, "X-CSRF-TOKEN": token }
+                        : {}),
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({ ...profile, redirect_to: "dashboard" }),
+            });
+
+            if (res.ok) {
+                router.visit("/dashboard");
+                return;
+            }
+
+            const payload = (await res.json().catch(() => null)) as unknown;
+            setErrors(flattenBackendErrors(payload, res.status));
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        } catch {
+            setErrors([
+                "Network error – could not save your profile. Please check your connection and try again.",
+            ]);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        } finally {
+            setIsSaving(false);
+        }
+    }
 
     return (
         <>
@@ -225,15 +312,40 @@ export default function ProfilePreview() {
                                     <Pencil className="size-4" />
                                     Edit Profile
                                 </Link>
-                                <Link
-                                    href="/onboarding/profile"
-                                    className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-sienna px-6 text-[14px] font-bold text-white shadow-lg shadow-sienna/30 transition hover:bg-sienna-600"
+                                <button
+                                    type="button"
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    aria-busy={isSaving}
+                                    className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-sienna px-6 text-[14px] font-bold text-white shadow-lg shadow-sienna/30 transition hover:bg-sienna-600 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                    Save & Proceed to Dashboard
+                                    {isSaving
+                                        ? "Saving…"
+                                        : "Save & Proceed to Dashboard"}
                                     <ArrowRight className="size-4" />
-                                </Link>
+                                </button>
                             </div>
                         </section>
+
+                        {/* Save errors */}
+                        {errors.length > 0 && (
+                            <div
+                                role="alert"
+                                className="mt-6 flex gap-3 rounded-2xl border border-sienna/25 bg-sienna-100/50 p-4"
+                            >
+                                <CircleAlert className="mt-0.5 size-5 shrink-0 text-sienna" />
+                                <div>
+                                    <p className="text-[14px] font-extrabold text-harbor">
+                                        We couldn't save your profile
+                                    </p>
+                                    <ul className="mt-1.5 list-disc space-y-1 pl-5 text-[13.5px] font-medium text-ember-600">
+                                        {errors.map((e) => (
+                                            <li key={e}>{e}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        )}
 
                         {isEmpty ? (
                             <section className="mt-6 rounded-[2rem] border border-harbor/10 bg-white p-10 text-center shadow-2xl shadow-harbor/15 sm:p-14">
@@ -244,9 +356,9 @@ export default function ProfilePreview() {
                                     Your preview is empty
                                 </h1>
                                 <p className="mx-auto mt-2 max-w-md text-[14.5px] text-ember-500">
-                                    We couldn't find a saved profile on this
-                                    device. Head back to the builder — your
-                                    progress saves automatically as you type.
+                                    We couldn't find a saved profile. Head back
+                                    to the builder — your progress saves
+                                    automatically as you type.
                                 </p>
                                 <Link
                                     href="/onboarding/build-profile"
@@ -585,11 +697,17 @@ export default function ProfilePreview() {
                                                                 )}
                                                             </span>
                                                         </span>
-                                                        {d.dataUrl && (
+                                                        {(d.downloadUrl ||
+                                                            d.dataUrl) && (
                                                             <a
-                                                                href={d.dataUrl}
+                                                                href={
+                                                                    d.downloadUrl ??
+                                                                    d.dataUrl
+                                                                }
                                                                 download={
-                                                                    d.name
+                                                                    d.dataUrl
+                                                                        ? d.name
+                                                                        : undefined
                                                                 }
                                                                 aria-label={`Download ${d.name}`}
                                                                 className="inline-flex size-9 items-center justify-center rounded-full border border-harbor/12 text-harbor transition hover:bg-harbor hover:text-sand-50"
@@ -618,26 +736,34 @@ export default function ProfilePreview() {
                                 Back to editor
                             </Link>
                             <div className="flex flex-col gap-3 sm:flex-row">
-                                <Link
-                                    href="/dashboard"
-                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 border-dashed border-clay-400/60 px-7 text-[14.5px] font-bold text-clay-600 transition hover:border-clay-600 hover:bg-clay-100"
+                                <button
+                                    type="button"
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    aria-busy={isSaving}
+                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 border-dashed border-clay-400/60 px-7 text-[14.5px] font-bold text-clay-600 transition hover:border-clay-600 hover:bg-clay-100 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                    <LayoutDashboard className="size-4.5" />
-                                    Save &amp; finish later
-                                </Link>
-                                <Link
-                                    href="/onboarding/profile"
-                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-sienna px-8 text-[14.5px] font-bold text-white shadow-xl shadow-sienna/35 transition-all hover:-translate-y-0.5 hover:bg-sienna-600"
+                                    <Save className="size-4.5" />
+                                    {isSaving ? "Saving…" : "Save"}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    aria-busy={isSaving}
+                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-sienna px-8 text-[14.5px] font-bold text-white shadow-xl shadow-sienna/35 transition-all hover:-translate-y-0.5 hover:bg-sienna-600 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
                                 >
-                                    Save
+                                    {isSaving
+                                        ? "Saving…"
+                                        : "Save & Continue to Dashboard"}
                                     <ArrowRight className="size-4.5" />
-                                </Link>
+                                </button>
                             </div>
                         </div>
 
                         <p className="mt-6 text-center text-[13px] font-medium text-ember-400">
                             {profile.updatedAt
-                                ? `Draft last saved ${new Date(profile.updatedAt).toLocaleString()}. `
+                                ? `Last saved ${new Date(profile.updatedAt).toLocaleString()}. `
                                 : ""}
                             Project Managers see this preview layout when
                             reviewing applications.
@@ -684,6 +810,3 @@ function EmptyNote({ label }: { label: string }) {
         </p>
     );
 }
-
-// Keep tree-shaken import referenced for TS without rendering it.
-void emptyProfile;

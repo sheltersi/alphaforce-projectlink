@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from "@inertiajs/react";
 import {
     ArrowLeft,
     ArrowRight,
@@ -24,15 +24,9 @@ import {
     Upload,
     UserRound,
     X,
-} from 'lucide-react';
-import {
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-    type ReactNode,
-} from 'react';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import {
     SKILL_SUGGESTIONS,
     STEPS,
@@ -55,7 +49,7 @@ import {
     type ParticipantProfile,
     type ProfileDocument,
     type StepId,
-} from './lib/profile';
+} from "./lib/profile";
 
 /* ── Small presentational helpers ─────────────────────────────── */
 
@@ -83,7 +77,7 @@ function Field({
                 className="flex items-baseline justify-between gap-2 text-[13.5px] font-bold text-harbor"
             >
                 <span>
-                    {label}{' '}
+                    {label}{" "}
                     {required && (
                         <span aria-hidden className="text-sienna">
                             *
@@ -102,7 +96,10 @@ function Field({
                 <p className="mt-1.5 text-[12.5px] text-ember-400">{hint}</p>
             )}
             {error && (
-                <p role="alert" className="mt-1.5 text-[12.5px] font-semibold text-sienna-600">
+                <p
+                    role="alert"
+                    className="mt-1.5 text-[12.5px] font-semibold text-sienna-600"
+                >
                     {error}
                 </p>
             )}
@@ -111,9 +108,9 @@ function Field({
 }
 
 const inputCls =
-    'h-12 w-full rounded-xl border border-harbor/15 bg-white px-4 text-[14.5px] font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25';
+    "h-12 w-full rounded-xl border border-harbor/15 bg-white px-4 text-[14.5px] font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25";
 const textareaCls =
-    'w-full rounded-xl border border-harbor/15 bg-white px-4 py-3.5 text-[14.5px] leading-relaxed font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25';
+    "w-full rounded-xl border border-harbor/15 bg-white px-4 py-3.5 text-[14.5px] leading-relaxed font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25";
 
 function SectionCard({
     title,
@@ -149,22 +146,29 @@ function SectionCard({
 /* ── Main page ────────────────────────────────────────────────── */
 
 const JOURNEY = [
-    { label: 'Registration', state: 'done' },
-    { label: 'Email Verification', state: 'done' },
-    { label: 'Build Your Profile', state: 'current' },
-    { label: 'Profile Preview', state: 'todo' },
-    { label: 'Dashboard', state: 'todo' },
+    { label: "Registration", state: "done" },
+    { label: "Email Verification", state: "done" },
+    { label: "Build Your Profile", state: "current" },
+    { label: "Profile Preview", state: "todo" },
+    { label: "Dashboard", state: "todo" },
 ] as const;
 
 export default function BuildProfile() {
-    const { auth } = usePage().props as unknown as {
+    const { auth, profile: serverProfile } = usePage().props as unknown as {
         auth: {
-            user: { name?: string; email?: string } | null;
+            user: { id: number; name?: string; email?: string } | null;
         };
+        profile: ParticipantProfile | null;
     };
+    const userId = auth.user?.id;
 
     const [profile, setProfile] = useState<ParticipantProfile>(() => {
-        const draft = loadDraft();
+        // The database is the source of truth once a profile has been saved.
+        if (serverProfile) {
+            return { ...emptyProfile(), ...serverProfile };
+        }
+        if (!userId) return emptyProfile();
+        const draft = loadDraft(userId);
         const hasAnything =
             draft.firstName ||
             draft.lastName ||
@@ -172,20 +176,20 @@ export default function BuildProfile() {
             draft.summary ||
             draft.skills.length > 0;
         if (!hasAnything && auth.user) {
-            const parts = (auth.user.name ?? '').trim().split(/\s+/);
+            const parts = (auth.user.name ?? "").trim().split(/\s+/);
             return {
                 ...draft,
-                firstName: draft.firstName || parts[0] || '',
-                lastName: draft.lastName || parts.slice(1).join(' ') || '',
-                email: draft.email || auth.user.email || '',
+                firstName: draft.firstName || parts[0] || "",
+                lastName: draft.lastName || parts.slice(1).join(" ") || "",
+                email: draft.email || auth.user.email || "",
             };
         }
         return draft;
     });
     const [stepIndex, setStepIndex] = useState(() => {
-        if (typeof window === 'undefined') return 0;
+        if (typeof window === "undefined") return 0;
         const fromQuery = Number(
-            new URLSearchParams(window.location.search).get('step'),
+            new URLSearchParams(window.location.search).get("step"),
         );
         return Number.isInteger(fromQuery) &&
             fromQuery >= 0 &&
@@ -197,9 +201,9 @@ export default function BuildProfile() {
     const [savedAt, setSavedAt] = useState<string | null>(
         profile.updatedAt ?? null,
     );
-    const [skillInput, setSkillInput] = useState('');
+    const [skillInput, setSkillInput] = useState("");
     const [docCategory, setDocCategory] =
-        useState<ProfileDocument['category']>('CV');
+        useState<ProfileDocument["category"]>("CV");
     const [isSaving, setIsSaving] = useState(false);
 
     const photoRef = useRef<HTMLInputElement>(null);
@@ -210,17 +214,18 @@ export default function BuildProfile() {
     const statuses = useMemo(() => sectionStatuses(profile), [profile]);
     const percent = useMemo(() => completionPercent(profile), [profile]);
     const statusById = useMemo(
-        () => Object.fromEntries(statuses.map((s) => [s.id, s])) as Record<
-            StepId,
-            (typeof statuses)[number]
-        >,
+        () =>
+            Object.fromEntries(statuses.map((s) => [s.id, s])) as Record<
+                StepId,
+                (typeof statuses)[number]
+            >,
         [statuses],
     );
 
     // Autosave draft (debounced) so participants can continue later.
     useEffect(() => {
         const t = window.setTimeout(() => {
-            saveDraft(profile);
+            if (userId) saveDraft(profile, userId);
             setSavedAt(new Date().toISOString());
         }, 600);
         return () => window.clearTimeout(t);
@@ -230,7 +235,7 @@ export default function BuildProfile() {
         setProfile((prev) => ({ ...prev, ...p }));
 
     function scrollTop() {
-        topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     function goTo(index: number) {
@@ -240,50 +245,68 @@ export default function BuildProfile() {
     }
 
     function getCsrfToken(): string {
-        const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
+        const meta = document.querySelector(
+            'meta[name="csrf-token"]',
+        ) as HTMLMetaElement | null;
         if (meta?.content) return meta.content;
         const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : '';
+        return match ? decodeURIComponent(match[1]) : "";
     }
 
     function flattenBackendErrors(payload: unknown): string[] {
         if (
             payload &&
-            typeof payload === 'object' &&
-            'errors' in payload &&
-            typeof (payload as { errors: unknown }).errors === 'object'
+            typeof payload === "object" &&
+            "errors" in payload &&
+            typeof (payload as { errors: unknown }).errors === "object"
         ) {
-            const errs = (payload as { errors: Record<string, string[]> }).errors;
+            const errs = (payload as { errors: Record<string, string[]> })
+                .errors;
             const flat = Object.values(errs).flat();
             if (flat.length > 0) return flat;
         }
-        if (payload && typeof payload === 'object' && 'message' in payload && typeof (payload as { message: string }).message === 'string') {
+        if (
+            payload &&
+            typeof payload === "object" &&
+            "message" in payload &&
+            typeof (payload as { message: string }).message === "string"
+        ) {
             return [(payload as { message: string }).message];
         }
-        return ['An unexpected error occurred. Please try again.'];
+        return ["An unexpected error occurred. Please try again."];
     }
 
-    async function persistToServer(profileToSave: ParticipantProfile): Promise<boolean> {
+    async function persistToServer(
+        profileToSave: ParticipantProfile,
+    ): Promise<boolean> {
         const token = getCsrfToken();
         setIsSaving(true);
         try {
-            const res = await fetch('/onboarding/profile', {
-                method: 'POST',
+            const res = await fetch("/onboarding/profile", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    ...(token ? { 'X-XSRF-TOKEN': token, 'X-CSRF-TOKEN': token } : {}),
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    ...(token
+                        ? { "X-XSRF-TOKEN": token, "X-CSRF-TOKEN": token }
+                        : {}),
                 },
-                credentials: 'same-origin',
+                credentials: "same-origin",
                 body: JSON.stringify(profileToSave),
             });
 
             if (res.ok) {
-                const data = (await res.json()) as { profile?: ParticipantProfile };
+                const data = (await res.json()) as {
+                    profile?: ParticipantProfile;
+                };
                 if (data.profile) {
                     // Optionally sync server response (e.g., IDs) – keep local draft in sync
-                    saveDraft(data.profile as unknown as ParticipantProfile);
+                    if (userId)
+                        saveDraft(
+                            data.profile as unknown as ParticipantProfile,
+                            userId,
+                        );
                 }
                 return true;
             }
@@ -293,7 +316,7 @@ export default function BuildProfile() {
                 const flat = flattenBackendErrors(payload);
                 setErrors(flat);
                 scrollTop();
-                toast.error('Please fix the errors before continuing.', {
+                toast.error("Please fix the errors before continuing.", {
                     description: flat[0],
                 });
                 return false;
@@ -303,11 +326,16 @@ export default function BuildProfile() {
             const flat = flattenBackendErrors(payload);
             setErrors(flat);
             scrollTop();
-            toast.error('Failed to save profile.', { description: flat[0] });
+            toast.error("Failed to save profile.", { description: flat[0] });
             return false;
         } catch {
-            toast.error('Network error', { description: 'Could not save your profile. Please check your connection.' });
-            setErrors(['Network error – could not save your profile. Please try again.']);
+            toast.error("Network error", {
+                description:
+                    "Could not save your profile. Please check your connection.",
+            });
+            setErrors([
+                "Network error – could not save your profile. Please try again.",
+            ]);
             scrollTop();
             return false;
         } finally {
@@ -317,12 +345,12 @@ export default function BuildProfile() {
 
     async function handleSaveDraft() {
         const pruned = pruneEmpty(profile);
-        saveDraft(pruned);
+        if (userId) saveDraft(pruned, userId);
         setSavedAt(new Date().toISOString());
         const ok = await persistToServer(pruned);
         if (ok) {
-            toast.success('Draft saved', {
-                description: 'You can continue later — nothing is lost.',
+            toast.success("Draft saved", {
+                description: "You can continue later — nothing is lost.",
             });
         }
         // persistToServer already shows validation errors via setErrors + toast.error when !ok
@@ -364,7 +392,7 @@ export default function BuildProfile() {
         setErrors([]);
         const pruned = pruneEmpty(profile);
         setProfile(pruned);
-        saveDraft(pruned);
+        if (userId) saveDraft(pruned, userId);
 
         const ok = await persistToServer(pruned);
         if (!ok) return;
@@ -379,17 +407,17 @@ export default function BuildProfile() {
 
     function handlePhotoFile(file: File | undefined) {
         if (!file) return;
-        if (!file.type.startsWith('image/')) {
-            toast.error('Please choose an image file for your photo.');
+        if (!file.type.startsWith("image/")) {
+            toast.error("Please choose an image file for your photo.");
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
-            toast.error('Photo must be smaller than 5 MB.');
+            toast.error("Photo must be smaller than 5 MB.");
             return;
         }
         const reader = new FileReader();
         reader.onload = () =>
-            patch({ photoDataUrl: String(reader.result ?? '') });
+            patch({ photoDataUrl: String(reader.result ?? "") });
         reader.readAsDataURL(file);
     }
 
@@ -398,20 +426,22 @@ export default function BuildProfile() {
         const next: ProfileDocument[] = [];
         Array.from(files).forEach((file) => {
             if (file.size > 10 * 1024 * 1024) {
-                toast.error(`“${file.name}” is larger than 10 MB and was skipped.`);
+                toast.error(
+                    `“${file.name}” is larger than 10 MB and was skipped.`,
+                );
                 return;
             }
             const doc: ProfileDocument = {
-                id: newId('doc'),
+                id: newId("doc"),
                 name: file.name,
                 size: file.size,
-                type: file.type || 'application/octet-stream',
+                type: file.type || "application/octet-stream",
                 category: docCategory,
                 uploadDate: new Date().toISOString(),
             };
             const reader = new FileReader();
             reader.onload = () => {
-                const dataUrl = String(reader.result ?? '');
+                const dataUrl = String(reader.result ?? "");
                 setProfile((prev) => ({
                     ...prev,
                     documents: prev.documents.map((d) =>
@@ -428,21 +458,25 @@ export default function BuildProfile() {
                 documents: [...prev.documents, ...next],
             }));
             toast.success(
-                next.length === 1 ? 'Document added' : `${next.length} documents added`,
+                next.length === 1
+                    ? "Document added"
+                    : `${next.length} documents added`,
             );
         }
-        if (docsRef.current) docsRef.current.value = '';
+        if (docsRef.current) docsRef.current.value = "";
     }
 
     function addSkill(raw: string) {
-        const value = raw.trim().replace(/\s+/g, ' ');
+        const value = raw.trim().replace(/\s+/g, " ");
         if (!value) return;
-        if (profile.skills.some((s) => s.toLowerCase() === value.toLowerCase())) {
-            toast.info('That skill is already on your list.');
+        if (
+            profile.skills.some((s) => s.toLowerCase() === value.toLowerCase())
+        ) {
+            toast.info("That skill is already on your list.");
             return;
         }
         patch({ skills: [...profile.skills, value] });
-        setSkillInput('');
+        setSkillInput("");
     }
 
     function updateEducation(id: string, p: Partial<EducationEntry>) {
@@ -460,7 +494,9 @@ export default function BuildProfile() {
                     ? {
                           ...e,
                           ...p,
-                          endDate: p.currentlyWorking ? '' : (p.endDate ?? e.endDate),
+                          endDate: p.currentlyWorking
+                              ? ""
+                              : (p.endDate ?? e.endDate),
                       }
                     : e,
             ),
@@ -476,12 +512,12 @@ export default function BuildProfile() {
     }
 
     const initials =
-        `${profile.firstName.trim()[0] ?? ''}${profile.lastName.trim()[0] ?? ''}`.toUpperCase() ||
-        'YOU';
+        `${profile.firstName.trim()[0] ?? ""}${profile.lastName.trim()[0] ?? ""}`.toUpperCase() ||
+        "YOU";
 
     const savedLabel = savedAt
-        ? `Saved ${new Date(savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-        : 'Saving…';
+        ? `Saved ${new Date(savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+        : "Saving…";
 
     return (
         <>
@@ -542,20 +578,20 @@ export default function BuildProfile() {
                                         <span className="flex w-full items-center">
                                             <span
                                                 aria-hidden
-                                                className={`h-0.5 flex-1 rounded ${i === 0 ? 'bg-transparent' : 'bg-moss/50'}`}
+                                                className={`h-0.5 flex-1 rounded ${i === 0 ? "bg-transparent" : "bg-moss/50"}`}
                                             />
                                             <span
                                                 className={`flex size-9 items-center justify-center rounded-full ${
-                                                    s.state === 'done'
-                                                        ? 'bg-moss text-white shadow-md shadow-moss/30'
-                                                        : s.state === 'current'
-                                                          ? 'relative bg-sienna text-white shadow-lg shadow-sienna/40'
-                                                          : 'border border-harbor/15 bg-white text-[13px] font-extrabold text-ember-400'
+                                                    s.state === "done"
+                                                        ? "bg-moss text-white shadow-md shadow-moss/30"
+                                                        : s.state === "current"
+                                                          ? "relative bg-sienna text-white shadow-lg shadow-sienna/40"
+                                                          : "border border-harbor/15 bg-white text-[13px] font-extrabold text-ember-400"
                                                 }`}
                                             >
-                                                {s.state === 'done' ? (
+                                                {s.state === "done" ? (
                                                     <BadgeCheck className="size-4.5" />
-                                                ) : s.state === 'current' ? (
+                                                ) : s.state === "current" ? (
                                                     <FileText className="size-4.5" />
                                                 ) : (
                                                     i + 1
@@ -563,14 +599,14 @@ export default function BuildProfile() {
                                             </span>
                                             <span
                                                 aria-hidden
-                                                className={`h-0.5 flex-1 rounded ${s.state === 'done' ? 'bg-moss/50' : 'bg-harbor/10'} ${i === JOURNEY.length - 1 ? 'bg-transparent' : ''}`}
+                                                className={`h-0.5 flex-1 rounded ${s.state === "done" ? "bg-moss/50" : "bg-harbor/10"} ${i === JOURNEY.length - 1 ? "bg-transparent" : ""}`}
                                             />
                                         </span>
                                         <span
-                                            className={`text-center text-[11px] leading-tight font-bold ${s.state === 'current' ? 'text-sienna' : s.state === 'done' ? 'text-moss-600' : 'text-ember-400'}`}
+                                            className={`text-center text-[11px] leading-tight font-bold ${s.state === "current" ? "text-sienna" : s.state === "done" ? "text-moss-600" : "text-ember-400"}`}
                                             aria-current={
-                                                s.state === 'current'
-                                                    ? 'step'
+                                                s.state === "current"
+                                                    ? "step"
                                                     : undefined
                                             }
                                         >
@@ -580,7 +616,7 @@ export default function BuildProfile() {
                                 ))}
                             </ol>
                             <p className="text-center text-[13px] font-bold text-ember-500 sm:hidden">
-                                Step 3 of 5 ·{' '}
+                                Step 3 of 5 ·{" "}
                                 <span className="text-sienna">
                                     Build Your Profile
                                 </span>
@@ -618,12 +654,12 @@ export default function BuildProfile() {
                                     </div>
                                     <p className="mt-3 text-[13px] leading-relaxed text-sand-100/85">
                                         {percent < 40
-                                            ? 'Great start — complete the core sections so organisations can find you.'
+                                            ? "Great start — complete the core sections so organisations can find you."
                                             : percent < 80
-                                              ? 'Looking strong. Add education and experience to stand out.'
+                                              ? "Looking strong. Add education and experience to stand out."
                                               : percent < 100
-                                                ? 'Almost there — a few finishing touches left.'
-                                                : 'Excellent — your profile is complete and ready to preview.'}
+                                                ? "Almost there — a few finishing touches left."
+                                                : "Excellent — your profile is complete and ready to preview."}
                                     </p>
 
                                     <ol className="mt-5 space-y-1">
@@ -637,22 +673,22 @@ export default function BuildProfile() {
                                                         onClick={() => goTo(i)}
                                                         aria-current={
                                                             active
-                                                                ? 'step'
+                                                                ? "step"
                                                                 : undefined
                                                         }
                                                         className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${
                                                             active
-                                                                ? 'bg-white/12 ring-1 ring-white/25'
-                                                                : 'hover:bg-white/8'
+                                                                ? "bg-white/12 ring-1 ring-white/25"
+                                                                : "hover:bg-white/8"
                                                         }`}
                                                     >
                                                         <span
                                                             className={`flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-extrabold ${
                                                                 st.complete
-                                                                    ? 'bg-moss text-white'
+                                                                    ? "bg-moss text-white"
                                                                     : active
-                                                                      ? 'bg-amber text-harbor'
-                                                                      : 'bg-white/12 text-sand-100'
+                                                                      ? "bg-amber text-harbor"
+                                                                      : "bg-white/12 text-sand-100"
                                                             }`}
                                                         >
                                                             {st.complete ? (
@@ -666,13 +702,14 @@ export default function BuildProfile() {
                                                                 {s.shortLabel}
                                                                 {!s.required && (
                                                                     <span className="text-[10.5px] font-bold text-sand-100/60 uppercase">
-                                                                        · optional
+                                                                        ·
+                                                                        optional
                                                                     </span>
                                                                 )}
                                                             </span>
                                                             <span className="mt-1 block h-1 overflow-hidden rounded-full bg-white/12">
                                                                 <span
-                                                                    className={`block h-full rounded-full ${st.complete ? 'bg-moss-200' : 'bg-amber-200/80'}`}
+                                                                    className={`block h-full rounded-full ${st.complete ? "bg-moss-200" : "bg-amber-200/80"}`}
                                                                     style={{
                                                                         width: `${st.percent}%`,
                                                                     }}
@@ -724,11 +761,11 @@ export default function BuildProfile() {
                                                     onClick={() => goTo(i)}
                                                     className={`rounded-full px-3 py-1.5 text-[12px] font-extrabold whitespace-nowrap transition ${
                                                         i === stepIndex
-                                                            ? 'bg-harbor text-sand-50 shadow-md shadow-harbor/25'
+                                                            ? "bg-harbor text-sand-50 shadow-md shadow-harbor/25"
                                                             : statusById[s.id]
                                                                     .complete
-                                                              ? 'bg-moss/12 text-moss-600'
-                                                              : 'text-ember-400 hover:bg-white hover:text-harbor'
+                                                              ? "bg-moss/12 text-moss-600"
+                                                              : "text-ember-400 hover:bg-white hover:text-harbor"
                                                     }`}
                                                 >
                                                     {i + 1}. {s.shortLabel}
@@ -748,11 +785,11 @@ export default function BuildProfile() {
                                     <p className="inline-flex items-center gap-2 text-[12px] font-extrabold tracking-widest text-sienna uppercase">
                                         Step {stepIndex + 1} of {STEPS.length}
                                         <span
-                                            className={`rounded-full px-2.5 py-0.5 normal-case ${step.required ? 'bg-sienna/10 text-sienna-600' : 'bg-sand-100 text-ember-500'}`}
+                                            className={`rounded-full px-2.5 py-0.5 normal-case ${step.required ? "bg-sienna/10 text-sienna-600" : "bg-sand-100 text-ember-500"}`}
                                         >
                                             {step.required
-                                                ? 'Required'
-                                                : 'Optional — skippable'}
+                                                ? "Required"
+                                                : "Optional — skippable"}
                                         </span>
                                     </p>
                                     <h1
@@ -773,8 +810,8 @@ export default function BuildProfile() {
                                             <CircleAlert className="mt-0.5 size-5 shrink-0 text-sienna" />
                                             <div>
                                                 <p className="text-[14px] font-extrabold text-harbor">
-                                                    Please complete the
-                                                    required information
+                                                    Please complete the required
+                                                    information
                                                 </p>
                                                 <ul className="mt-1.5 list-disc space-y-1 pl-5 text-[13.5px] font-medium text-ember-600">
                                                     {errors.map((e) => (
@@ -791,9 +828,7 @@ export default function BuildProfile() {
                                     <div className="mt-9 flex flex-col gap-3 border-t border-harbor/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
                                         <button
                                             type="button"
-                                            onClick={() =>
-                                                goTo(stepIndex - 1)
-                                            }
+                                            onClick={() => goTo(stepIndex - 1)}
                                             disabled={stepIndex === 0}
                                             className="inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 border-harbor/15 px-6 text-[14.5px] font-bold text-harbor transition hover:border-harbor hover:bg-harbor hover:text-sand-50 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-harbor/15 disabled:hover:bg-transparent disabled:hover:text-harbor"
                                         >
@@ -809,7 +844,9 @@ export default function BuildProfile() {
                                                 className="inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 border-dashed border-clay-400/60 px-6 text-[14.5px] font-bold text-clay-600 transition hover:border-clay-600 hover:bg-clay-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <Save className="size-4.5" />
-                                                {isSaving ? 'Saving...' : 'Save as Draft'}
+                                                {isSaving
+                                                    ? "Saving..."
+                                                    : "Save as Draft"}
                                             </button>
                                             {stepIndex < STEPS.length - 1 ? (
                                                 <button
@@ -818,7 +855,9 @@ export default function BuildProfile() {
                                                     disabled={isSaving}
                                                     className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-sienna px-8 text-[14.5px] font-bold text-white shadow-xl shadow-sienna/35 transition-all hover:-translate-y-0.5 hover:bg-sienna-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
-                                                    {isSaving ? 'Saving...' : 'Save & Continue'}
+                                                    {isSaving
+                                                        ? "Saving..."
+                                                        : "Save & Continue"}
                                                     <ArrowRight className="size-4.5" />
                                                 </button>
                                             ) : (
@@ -827,50 +866,87 @@ export default function BuildProfile() {
                                                     disabled={isSaving}
                                                     onClick={async () => {
                                                         // Validate all required steps before preview
-                                                        const requiredSteps: StepId[] = ['personal', 'summary', 'skills'];
-                                                        const allErrors = requiredSteps.flatMap((id) => requiredBlockingErrors(profile, id));
-                                                        if (allErrors.length > 0) {
-                                                            setErrors(allErrors);
+                                                        const requiredSteps: StepId[] =
+                                                            [
+                                                                "personal",
+                                                                "summary",
+                                                                "skills",
+                                                            ];
+                                                        const allErrors =
+                                                            requiredSteps.flatMap(
+                                                                (id) =>
+                                                                    requiredBlockingErrors(
+                                                                        profile,
+                                                                        id,
+                                                                    ),
+                                                            );
+                                                        if (
+                                                            allErrors.length > 0
+                                                        ) {
+                                                            setErrors(
+                                                                allErrors,
+                                                            );
                                                             scrollTop();
-                                                            toast.error('Please complete the required sections before previewing.', {
-                                                                description: allErrors[0],
-                                                            });
+                                                            toast.error(
+                                                                "Please complete the required sections before previewing.",
+                                                                {
+                                                                    description:
+                                                                        allErrors[0],
+                                                                },
+                                                            );
                                                             return;
                                                         }
-                                                        const pruned = pruneEmpty(profile);
+                                                        const pruned =
+                                                            pruneEmpty(profile);
                                                         setProfile(pruned);
-                                                        saveDraft(pruned);
-                                                        const ok = await persistToServer(pruned);
+                                                        if (userId)
+                                                            saveDraft(
+                                                                pruned,
+                                                                userId,
+                                                            );
+                                                        const ok =
+                                                            await persistToServer(
+                                                                pruned,
+                                                            );
                                                         if (!ok) return;
-                                                        window.location.href = '/onboarding/profile-preview';
+                                                        router.visit(
+                                                            "/onboarding/profile-preview",
+                                                        );
                                                     }}
                                                     className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-harbor px-8 text-[14.5px] font-bold text-sand-50 shadow-xl shadow-harbor/35 transition-all hover:-translate-y-0.5 hover:bg-harbor-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     <Eye className="size-4.5" />
-                                                    {isSaving ? 'Saving...' : 'Preview Profile'}
+                                                    {isSaving
+                                                        ? "Saving..."
+                                                        : "Preview Profile"}
                                                 </button>
                                             )}
                                         </div>
                                     </div>
 
-                                    {!step.required && stepIndex < STEPS.length - 1 && (
-                                        <p className="mt-4 text-center text-[13px] font-medium text-ember-400 sm:text-right">
-                                            Nothing to add here?{' '}
-                                            <button
-                                                type="button"
-                                                onClick={handleContinue}
-                                                className="font-bold text-sienna underline-offset-2 hover:underline"
-                                            >
-                                                Skip for now
-                                            </button>{' '}
-                                            — you can come back anytime.
-                                        </p>
-                                    )}
+                                    {!step.required &&
+                                        stepIndex < STEPS.length - 1 && (
+                                            <p className="mt-4 text-center text-[13px] font-medium text-ember-400 sm:text-right">
+                                                Nothing to add here?{" "}
+                                                <button
+                                                    type="button"
+                                                    onClick={handleContinue}
+                                                    className="font-bold text-sienna underline-offset-2 hover:underline"
+                                                >
+                                                    Skip for now
+                                                </button>{" "}
+                                                — you can come back anytime.
+                                            </p>
+                                        )}
                                 </div>
                             </section>
 
                             <div className="flex items-center justify-end text-[12.5px] font-semibold text-ember-400">
-                                <span>Next: {STEPS[stepIndex + 1]?.label ?? 'Profile Preview'}</span>
+                                <span>
+                                    Next:{" "}
+                                    {STEPS[stepIndex + 1]?.label ??
+                                        "Profile Preview"}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -883,7 +959,7 @@ export default function BuildProfile() {
 
     function renderStep() {
         switch (step.id) {
-            case 'personal':
+            case "personal":
                 return (
                     <div className="space-y-6">
                         {/* Photo */}
@@ -914,7 +990,7 @@ export default function BuildProfile() {
                             </span>
                             <div className="flex-1">
                                 <p className="text-[14px] font-extrabold text-harbor">
-                                    Profile photo{' '}
+                                    Profile photo{" "}
                                     <span className="ml-1 rounded-full bg-sand-100 px-2 py-0.5 text-[11px] font-bold text-ember-400">
                                         Optional
                                     </span>
@@ -926,16 +1002,22 @@ export default function BuildProfile() {
                                 <div className="mt-2.5 flex gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => photoRef.current?.click()}
+                                        onClick={() =>
+                                            photoRef.current?.click()
+                                        }
                                         className="inline-flex h-9 items-center gap-1.5 rounded-full bg-harbor px-4 text-[13px] font-bold text-sand-50 transition hover:bg-harbor-700"
                                     >
                                         <Upload className="size-3.5" />
-                                        {profile.photoDataUrl ? 'Change photo' : 'Upload photo'}
+                                        {profile.photoDataUrl
+                                            ? "Change photo"
+                                            : "Upload photo"}
                                     </button>
                                     {profile.photoDataUrl && (
                                         <button
                                             type="button"
-                                            onClick={() => patch({ photoDataUrl: null })}
+                                            onClick={() =>
+                                                patch({ photoDataUrl: null })
+                                            }
                                             className="inline-flex h-9 items-center gap-1.5 rounded-full border border-harbor/15 px-4 text-[13px] font-bold text-ember-500 transition hover:border-sienna hover:text-sienna"
                                         >
                                             <X className="size-3.5" />
@@ -957,7 +1039,11 @@ export default function BuildProfile() {
                         </div>
 
                         <div className="grid gap-5 sm:grid-cols-2">
-                            <Field label="First name" required htmlFor="firstName">
+                            <Field
+                                label="First name"
+                                required
+                                htmlFor="firstName"
+                            >
                                 <input
                                     id="firstName"
                                     className={inputCls}
@@ -969,7 +1055,11 @@ export default function BuildProfile() {
                                     }
                                 />
                             </Field>
-                            <Field label="Last name" required htmlFor="lastName">
+                            <Field
+                                label="Last name"
+                                required
+                                htmlFor="lastName"
+                            >
                                 <input
                                     id="lastName"
                                     className={inputCls}
@@ -983,7 +1073,12 @@ export default function BuildProfile() {
                             </Field>
                         </div>
                         <div className="grid gap-5 sm:grid-cols-2">
-                            <Field label="Email" required htmlFor="email" hint="Organisations use this to contact you about projects.">
+                            <Field
+                                label="Email"
+                                required
+                                htmlFor="email"
+                                hint="Organisations use this to contact you about projects."
+                            >
                                 <input
                                     id="email"
                                     type="email"
@@ -996,7 +1091,11 @@ export default function BuildProfile() {
                                     }
                                 />
                             </Field>
-                            <Field label="Phone number" optional htmlFor="phone">
+                            <Field
+                                label="Phone number"
+                                optional
+                                htmlFor="phone"
+                            >
                                 <input
                                     id="phone"
                                     type="tel"
@@ -1011,7 +1110,11 @@ export default function BuildProfile() {
                             </Field>
                         </div>
                         <div className="grid gap-5 sm:grid-cols-2">
-                            <Field label="Location / City" optional htmlFor="city">
+                            <Field
+                                label="Location / City"
+                                optional
+                                htmlFor="city"
+                            >
                                 <div className="relative">
                                     <MapPin className="pointer-events-none absolute top-1/2 left-4 size-4.5 -translate-y-1/2 text-ember-400" />
                                     <input
@@ -1042,7 +1145,7 @@ export default function BuildProfile() {
                     </div>
                 );
 
-            case 'summary':
+            case "summary":
                 return (
                     <div className="space-y-5">
                         <Field
@@ -1068,15 +1171,20 @@ export default function BuildProfile() {
                                 What makes a strong summary?
                             </p>
                             <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-ember-600">
-                                <li>Your years of experience and sector focus</li>
+                                <li>
+                                    Your years of experience and sector focus
+                                </li>
                                 <li>2–3 standout strengths or specialisms</li>
-                                <li>The kind of projects you want to contribute to</li>
+                                <li>
+                                    The kind of projects you want to contribute
+                                    to
+                                </li>
                             </ul>
                         </div>
                     </div>
                 );
 
-            case 'skills':
+            case "skills":
                 return (
                     <div className="space-y-5">
                         <Field
@@ -1095,7 +1203,7 @@ export default function BuildProfile() {
                                         setSkillInput(e.target.value)
                                     }
                                     onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
+                                        if (e.key === "Enter") {
                                             e.preventDefault();
                                             addSkill(skillInput);
                                         }
@@ -1174,7 +1282,7 @@ export default function BuildProfile() {
                     </div>
                 );
 
-            case 'education':
+            case "education":
                 return (
                     <div className="space-y-5">
                         {profile.education.length === 0 && (
@@ -1207,7 +1315,11 @@ export default function BuildProfile() {
                             >
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div className="sm:col-span-2">
-                                        <Field label="Institution" required htmlFor={`edu-inst-${edu.id}`}>
+                                        <Field
+                                            label="Institution"
+                                            required
+                                            htmlFor={`edu-inst-${edu.id}`}
+                                        >
                                             <input
                                                 id={`edu-inst-${edu.id}`}
                                                 className={inputCls}
@@ -1222,7 +1334,11 @@ export default function BuildProfile() {
                                             />
                                         </Field>
                                     </div>
-                                    <Field label="Qualification / Degree" required htmlFor={`edu-qual-${edu.id}`}>
+                                    <Field
+                                        label="Qualification / Degree"
+                                        required
+                                        htmlFor={`edu-qual-${edu.id}`}
+                                    >
                                         <input
                                             id={`edu-qual-${edu.id}`}
                                             className={inputCls}
@@ -1236,7 +1352,11 @@ export default function BuildProfile() {
                                             }
                                         />
                                     </Field>
-                                    <Field label="Field of Study" optional htmlFor={`edu-field-${edu.id}`}>
+                                    <Field
+                                        label="Field of Study"
+                                        optional
+                                        htmlFor={`edu-field-${edu.id}`}
+                                    >
                                         <input
                                             id={`edu-field-${edu.id}`}
                                             className={inputCls}
@@ -1250,7 +1370,11 @@ export default function BuildProfile() {
                                             }
                                         />
                                     </Field>
-                                    <Field label="Start Year" required htmlFor={`edu-start-${edu.id}`}>
+                                    <Field
+                                        label="Start Year"
+                                        required
+                                        htmlFor={`edu-start-${edu.id}`}
+                                    >
                                         <input
                                             id={`edu-start-${edu.id}`}
                                             className={inputCls}
@@ -1264,7 +1388,11 @@ export default function BuildProfile() {
                                             }
                                         />
                                     </Field>
-                                    <Field label="End Year" optional htmlFor={`edu-end-${edu.id}`}>
+                                    <Field
+                                        label="End Year"
+                                        optional
+                                        htmlFor={`edu-end-${edu.id}`}
+                                    >
                                         <input
                                             id={`edu-end-${edu.id}`}
                                             className={inputCls}
@@ -1279,7 +1407,11 @@ export default function BuildProfile() {
                                         />
                                     </Field>
                                     <div className="sm:col-span-2">
-                                        <Field label="Description" optional htmlFor={`edu-desc-${edu.id}`}>
+                                        <Field
+                                            label="Description"
+                                            optional
+                                            htmlFor={`edu-desc-${edu.id}`}
+                                        >
                                             <textarea
                                                 id={`edu-desc-${edu.id}`}
                                                 rows={3}
@@ -1316,7 +1448,7 @@ export default function BuildProfile() {
                     </div>
                 );
 
-            case 'experience':
+            case "experience":
                 return (
                     <div className="space-y-5">
                         {profile.experience.length === 0 && (
@@ -1348,7 +1480,11 @@ export default function BuildProfile() {
                                 }
                             >
                                 <div className="grid gap-4 sm:grid-cols-2">
-                                    <Field label="Job Title" required htmlFor={`exp-title-${exp.id}`}>
+                                    <Field
+                                        label="Job Title"
+                                        required
+                                        htmlFor={`exp-title-${exp.id}`}
+                                    >
                                         <input
                                             id={`exp-title-${exp.id}`}
                                             className={inputCls}
@@ -1361,7 +1497,11 @@ export default function BuildProfile() {
                                             }
                                         />
                                     </Field>
-                                    <Field label="Organisation" required htmlFor={`exp-org-${exp.id}`}>
+                                    <Field
+                                        label="Organisation"
+                                        required
+                                        htmlFor={`exp-org-${exp.id}`}
+                                    >
                                         <input
                                             id={`exp-org-${exp.id}`}
                                             className={inputCls}
@@ -1375,7 +1515,11 @@ export default function BuildProfile() {
                                             }
                                         />
                                     </Field>
-                                    <Field label="Location" optional htmlFor={`exp-loc-${exp.id}`}>
+                                    <Field
+                                        label="Location"
+                                        optional
+                                        htmlFor={`exp-loc-${exp.id}`}
+                                    >
                                         <input
                                             id={`exp-loc-${exp.id}`}
                                             className={inputCls}
@@ -1389,7 +1533,11 @@ export default function BuildProfile() {
                                         />
                                     </Field>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <Field label="Start Date" required htmlFor={`exp-start-${exp.id}`}>
+                                        <Field
+                                            label="Start Date"
+                                            required
+                                            htmlFor={`exp-start-${exp.id}`}
+                                        >
                                             <input
                                                 id={`exp-start-${exp.id}`}
                                                 type="month"
@@ -1403,7 +1551,11 @@ export default function BuildProfile() {
                                                 }
                                             />
                                         </Field>
-                                        <Field label="End Date" optional htmlFor={`exp-end-${exp.id}`}>
+                                        <Field
+                                            label="End Date"
+                                            optional
+                                            htmlFor={`exp-end-${exp.id}`}
+                                        >
                                             <input
                                                 id={`exp-end-${exp.id}`}
                                                 type="month"
@@ -1430,10 +1582,10 @@ export default function BuildProfile() {
                                                         !exp.currentlyWorking,
                                                 })
                                             }
-                                            className={`relative h-6.5 w-11.5 shrink-0 rounded-full transition ${exp.currentlyWorking ? 'bg-moss' : 'bg-harbor/20'}`}
+                                            className={`relative h-6.5 w-11.5 shrink-0 rounded-full transition ${exp.currentlyWorking ? "bg-moss" : "bg-harbor/20"}`}
                                         >
                                             <span
-                                                className={`absolute top-0.5 left-0.5 size-5.5 rounded-full bg-white shadow transition-transform ${exp.currentlyWorking ? 'translate-x-5' : ''}`}
+                                                className={`absolute top-0.5 left-0.5 size-5.5 rounded-full bg-white shadow transition-transform ${exp.currentlyWorking ? "translate-x-5" : ""}`}
                                             />
                                         </button>
                                         <span className="text-[13.5px] font-bold text-harbor">
@@ -1441,7 +1593,12 @@ export default function BuildProfile() {
                                         </span>
                                     </div>
                                     <div className="sm:col-span-2">
-                                        <Field label="Description" optional htmlFor={`exp-desc-${exp.id}`} hint="What did you do, and what changed because of it?">
+                                        <Field
+                                            label="Description"
+                                            optional
+                                            htmlFor={`exp-desc-${exp.id}`}
+                                            hint="What did you do, and what changed because of it?"
+                                        >
                                             <textarea
                                                 id={`exp-desc-${exp.id}`}
                                                 rows={3}
@@ -1478,7 +1635,7 @@ export default function BuildProfile() {
                     </div>
                 );
 
-            case 'certifications':
+            case "certifications":
                 return (
                     <div className="space-y-5">
                         {profile.certifications.length === 0 && (
@@ -1512,7 +1669,11 @@ export default function BuildProfile() {
                             >
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div className="sm:col-span-2">
-                                        <Field label="Certification name" required htmlFor={`cert-name-${cert.id}`}>
+                                        <Field
+                                            label="Certification name"
+                                            required
+                                            htmlFor={`cert-name-${cert.id}`}
+                                        >
                                             <input
                                                 id={`cert-name-${cert.id}`}
                                                 className={inputCls}
@@ -1522,14 +1683,19 @@ export default function BuildProfile() {
                                                     updateCertification(
                                                         cert.id,
                                                         {
-                                                            name: e.target.value,
+                                                            name: e.target
+                                                                .value,
                                                         },
                                                     )
                                                 }
                                             />
                                         </Field>
                                     </div>
-                                    <Field label="Issuing organisation" required htmlFor={`cert-org-${cert.id}`}>
+                                    <Field
+                                        label="Issuing organisation"
+                                        required
+                                        htmlFor={`cert-org-${cert.id}`}
+                                    >
                                         <input
                                             id={`cert-org-${cert.id}`}
                                             className={inputCls}
@@ -1543,7 +1709,11 @@ export default function BuildProfile() {
                                             }
                                         />
                                     </Field>
-                                    <Field label="Credential / reference number" optional htmlFor={`cert-cred-${cert.id}`}>
+                                    <Field
+                                        label="Credential / reference number"
+                                        optional
+                                        htmlFor={`cert-cred-${cert.id}`}
+                                    >
                                         <input
                                             id={`cert-cred-${cert.id}`}
                                             className={inputCls}
@@ -1557,7 +1727,11 @@ export default function BuildProfile() {
                                             }
                                         />
                                     </Field>
-                                    <Field label="Issue date" optional htmlFor={`cert-issue-${cert.id}`}>
+                                    <Field
+                                        label="Issue date"
+                                        optional
+                                        htmlFor={`cert-issue-${cert.id}`}
+                                    >
                                         <input
                                             id={`cert-issue-${cert.id}`}
                                             type="month"
@@ -1570,7 +1744,11 @@ export default function BuildProfile() {
                                             }
                                         />
                                     </Field>
-                                    <Field label="Expiry date" optional htmlFor={`cert-exp-${cert.id}`}>
+                                    <Field
+                                        label="Expiry date"
+                                        optional
+                                        htmlFor={`cert-exp-${cert.id}`}
+                                    >
                                         <input
                                             id={`cert-exp-${cert.id}`}
                                             type="month"
@@ -1604,7 +1782,7 @@ export default function BuildProfile() {
                     </div>
                 );
 
-            case 'documents':
+            case "documents":
                 return (
                     <div className="space-y-5">
                         <div className="rounded-2xl border border-harbor/10 bg-sand-50/60 p-5 sm:p-6">
@@ -1627,7 +1805,7 @@ export default function BuildProfile() {
                                         onChange={(e) =>
                                             setDocCategory(
                                                 e.target
-                                                    .value as ProfileDocument['category'],
+                                                    .value as ProfileDocument["category"],
                                             )
                                         }
                                         className={`${inputCls} appearance-none`}
@@ -1686,18 +1864,28 @@ export default function BuildProfile() {
                                                 {doc.name}
                                             </span>
                                             <span className="mt-0.5 block text-[12.5px] font-medium text-ember-400">
-                                                {doc.category} ·{' '}
-                                                {fileTypeLabel(doc.type, doc.name)} ·{' '}
-                                                {formatFileSize(doc.size)} ·{' '}
+                                                {doc.category} ·{" "}
+                                                {fileTypeLabel(
+                                                    doc.type,
+                                                    doc.name,
+                                                )}{" "}
+                                                · {formatFileSize(doc.size)} ·{" "}
                                                 {new Date(
                                                     doc.uploadDate,
                                                 ).toLocaleDateString()}
                                             </span>
                                         </span>
-                                        {doc.dataUrl ? (
+                                        {doc.dataUrl || doc.downloadUrl ? (
                                             <a
-                                                href={doc.dataUrl}
-                                                download={doc.name}
+                                                href={
+                                                    doc.downloadUrl ??
+                                                    doc.dataUrl
+                                                }
+                                                download={
+                                                    doc.dataUrl
+                                                        ? doc.name
+                                                        : undefined
+                                                }
                                                 aria-label={`Download ${doc.name}`}
                                                 className="inline-flex size-9 items-center justify-center rounded-full border border-harbor/12 text-harbor transition hover:border-harbor hover:bg-harbor hover:text-sand-50"
                                             >
@@ -1738,19 +1926,21 @@ export default function BuildProfile() {
                                 Review everything on the next screen. Your
                                 profile is {percent}% complete
                                 {percent < 100
-                                    ? ' — you can still enter the dashboard with a partial profile and finish later.'
-                                    : ' — nicely done.'}
+                                    ? " — you can still enter the dashboard with a partial profile and finish later."
+                                    : " — nicely done."}
                             </p>
                             <div className="mt-4 flex flex-wrap gap-2">
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        clearDraft();
+                                        if (userId) clearDraft(userId);
                                         setProfile(emptyProfile());
-                                        setSkillInput('');
+                                        setSkillInput("");
                                         setStepIndex(0);
                                         scrollTop();
-                                        toast.info('Started fresh — draft cleared.');
+                                        toast.info(
+                                            "Started fresh — draft cleared.",
+                                        );
                                     }}
                                     className="inline-flex h-10 items-center rounded-full border border-white/25 px-5 text-[13px] font-bold transition hover:bg-white/10"
                                 >
