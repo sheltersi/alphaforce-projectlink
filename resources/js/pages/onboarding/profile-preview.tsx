@@ -1,4 +1,3 @@
-import { Head, Link } from '@inertiajs/react';
 import {
     ArrowLeft,
     ArrowRight,
@@ -19,8 +18,11 @@ import {
     Phone,
     Sparkles,
     UserRound,
-} from 'lucide-react';
-import { useMemo, useState } from 'react';
+} from "lucide-react";
+import { useMemo, useState } from "react";
+
+import { Head, Link } from "@inertiajs/react";
+
 import {
     STEPS,
     completionPercent,
@@ -29,25 +31,25 @@ import {
     formatFileSize,
     loadDraft,
     sectionStatuses,
-} from './lib/profile';
+} from "./lib/profile";
 
 const JOURNEY = [
-    { label: 'Registration', state: 'done' },
-    { label: 'Email Verification', state: 'done' },
-    { label: 'Build Your Profile', state: 'done' },
-    { label: 'Profile Preview', state: 'current' },
-    { label: 'Dashboard', state: 'todo' },
+    { label: "Registration", state: "done" },
+    { label: "Email Verification", state: "done" },
+    { label: "Build Your Profile", state: "done" },
+    { label: "Profile Preview", state: "current" },
+    { label: "Dashboard", state: "todo" },
 ] as const;
 
 function formatMonth(value: string): string {
-    if (!value) return '';
-    const [y, m] = value.split('-');
+    if (!value) return "";
+    const [y, m] = value.split("-");
     if (!y) return value;
     if (!m) return y;
     const date = new Date(Number(y), Number(m) - 1, 1);
     return date.toLocaleDateString(undefined, {
-        month: 'short',
-        year: 'numeric',
+        month: "short",
+        year: "numeric",
     });
 }
 
@@ -60,12 +62,12 @@ export default function ProfilePreview() {
     );
 
     const fullName =
-        `${profile.firstName} ${profile.lastName}`.trim() || 'Your Name';
+        `${profile.firstName} ${profile.lastName}`.trim() || "Your Name";
     const initials =
-        `${profile.firstName.trim()[0] ?? ''}${profile.lastName.trim()[0] ?? ''}`.toUpperCase() ||
-        'YOU';
+        `${profile.firstName.trim()[0] ?? ""}${profile.lastName.trim()[0] ?? ""}`.toUpperCase() ||
+        "YOU";
     const location =
-        [profile.city, profile.country].filter(Boolean).join(', ') || null;
+        [profile.city, profile.country].filter(Boolean).join(", ") || null;
     const isEmpty =
         !profile.firstName &&
         !profile.summary &&
@@ -123,28 +125,28 @@ export default function ProfilePreview() {
                                         <span className="flex w-full items-center">
                                             <span
                                                 aria-hidden
-                                                className={`h-0.5 flex-1 rounded ${i === 0 ? 'bg-transparent' : 'bg-moss/50'}`}
+                                                className={`h-0.5 flex-1 rounded ${i === 0 ? "bg-transparent" : "bg-moss/50"}`}
                                             />
                                             <span
                                                 className={`flex size-9 items-center justify-center rounded-full ${
-                                                    s.state === 'done'
-                                                        ? 'bg-moss text-white shadow-md shadow-moss/30'
-                                                        : s.state === 'current'
-                                                          ? 'relative bg-sienna text-white shadow-lg shadow-sienna/40'
-                                                          : 'border border-harbor/15 bg-white text-[13px] font-extrabold text-ember-400'
+                                                    s.state === "done"
+                                                        ? "bg-moss text-white shadow-md shadow-moss/30"
+                                                        : s.state === "current"
+                                                          ? "relative bg-sienna text-white shadow-lg shadow-sienna/40"
+                                                          : "border border-harbor/15 bg-white text-[13px] font-extrabold text-ember-400"
                                                 }`}
                                             >
-                                                {s.state === 'done' ? (
+                                                {s.state === "done" ? (
                                                     s.label ===
-                                                    'Build Your Profile' ? (
+                                                    "Build Your Profile" ? (
                                                         <FileText className="size-4.5" />
                                                     ) : s.label ===
-                                                      'Email Verification' ? (
+                                                      "Email Verification" ? (
                                                         <MailCheck className="size-4.5" />
                                                     ) : (
                                                         <BadgeCheck className="size-4.5" />
                                                     )
-                                                ) : s.state === 'current' ? (
+                                                ) : s.state === "current" ? (
                                                     <Eye className="size-4.5" />
                                                 ) : (
                                                     i + 1
@@ -152,14 +154,14 @@ export default function ProfilePreview() {
                                             </span>
                                             <span
                                                 aria-hidden
-                                                className={`h-0.5 flex-1 rounded ${s.state === 'done' ? 'bg-moss/50' : 'bg-harbor/10'} ${i === JOURNEY.length - 1 ? 'bg-transparent' : ''}`}
+                                                className={`h-0.5 flex-1 rounded ${s.state === "done" ? "bg-moss/50" : "bg-harbor/10"} ${i === JOURNEY.length - 1 ? "bg-transparent" : ""}`}
                                             />
                                         </span>
                                         <span
-                                            className={`text-center text-[11px] leading-tight font-bold ${s.state === 'current' ? 'text-sienna' : s.state === 'done' ? 'text-moss-600' : 'text-ember-400'}`}
+                                            className={`text-center text-[11px] leading-tight font-bold ${s.state === "current" ? "text-sienna" : s.state === "done" ? "text-moss-600" : "text-ember-400"}`}
                                             aria-current={
-                                                s.state === 'current'
-                                                    ? 'step'
+                                                s.state === "current"
+                                                    ? "step"
                                                     : undefined
                                             }
                                         >
@@ -169,7 +171,7 @@ export default function ProfilePreview() {
                                 ))}
                             </ol>
                             <p className="text-center text-[13px] font-bold text-ember-500 sm:hidden">
-                                Step 4 of 5 ·{' '}
+                                Step 4 of 5 ·{" "}
                                 <span className="text-sienna">
                                     Profile Preview
                                 </span>
@@ -200,13 +202,12 @@ export default function ProfilePreview() {
                                 </div>
                                 {incomplete.length > 0 ? (
                                     <p className="mt-3 text-[13.5px] leading-relaxed text-sand-100/85">
-                                        Incomplete:{' '}
+                                        Incomplete:{" "}
                                         {incomplete
                                             .map((s) => s.shortLabel)
-                                            .join(' · ')}
-                                        . This is how Project Managers will
-                                        see you — polish anything that looks
-                                        thin.
+                                            .join(" · ")}
+                                        . This is how Project Managers will see
+                                        you — polish anything that looks thin.
                                     </p>
                                 ) : (
                                     <p className="mt-3 inline-flex items-center gap-1.5 text-[13.5px] font-bold text-moss-200">
@@ -225,10 +226,10 @@ export default function ProfilePreview() {
                                     Edit Profile
                                 </Link>
                                 <Link
-                                    href="/dashboard"
+                                    href="/onboarding/profile"
                                     className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-sienna px-6 text-[14px] font-bold text-white shadow-lg shadow-sienna/30 transition hover:bg-sienna-600"
                                 >
-                                    Continue to Dashboard
+                                    Save & Proceed to Dashboard
                                     <ArrowRight className="size-4" />
                                 </Link>
                             </div>
@@ -393,10 +394,10 @@ export default function ProfilePreview() {
                                                             />
                                                             <p className="text-[15px] font-extrabold text-harbor">
                                                                 {exp.jobTitle ||
-                                                                    'Untitled role'}{' '}
+                                                                    "Untitled role"}{" "}
                                                                 {exp.organisation && (
                                                                     <span className="font-bold text-ember-500">
-                                                                        ·{' '}
+                                                                        ·{" "}
                                                                         {
                                                                             exp.organisation
                                                                         }
@@ -406,14 +407,15 @@ export default function ProfilePreview() {
                                                             <p className="mt-0.5 text-[12.5px] font-bold text-ember-400">
                                                                 {formatMonth(
                                                                     exp.startDate,
-                                                                ) || 'Start?'}{' '}
-                                                                —{' '}
+                                                                ) ||
+                                                                    "Start?"}{" "}
+                                                                —{" "}
                                                                 {exp.currentlyWorking
-                                                                    ? 'Present'
+                                                                    ? "Present"
                                                                     : formatMonth(
                                                                           exp.endDate,
                                                                       ) ||
-                                                                      'End?'}
+                                                                      "End?"}
                                                                 {exp.location &&
                                                                     ` · ${exp.location}`}
                                                             </p>
@@ -452,11 +454,11 @@ export default function ProfilePreview() {
                                                         >
                                                             <p className="text-[14px] font-extrabold text-harbor">
                                                                 {edu.qualification ||
-                                                                    'Qualification'}
+                                                                    "Qualification"}
                                                             </p>
                                                             <p className="text-[13px] font-bold text-sienna">
                                                                 {edu.institution ||
-                                                                    'Institution'}
+                                                                    "Institution"}
                                                             </p>
                                                             <p className="mt-1 text-[12.5px] font-medium text-ember-500">
                                                                 {[
@@ -469,15 +471,15 @@ export default function ProfilePreview() {
                                                                             Boolean,
                                                                         )
                                                                         .join(
-                                                                            ' — ',
+                                                                            " — ",
                                                                         ),
                                                                 ]
                                                                     .filter(
                                                                         Boolean,
                                                                     )
                                                                     .join(
-                                                                        ' · ',
-                                                                    ) || '—'}
+                                                                        " · ",
+                                                                    ) || "—"}
                                                             </p>
                                                             {edu.description && (
                                                                 <p className="mt-1.5 line-clamp-3 text-[13px] leading-relaxed text-ember-600">
@@ -518,24 +520,25 @@ export default function ProfilePreview() {
                                                             <span className="min-w-0">
                                                                 <span className="block text-[14px] font-extrabold text-harbor">
                                                                     {c.name ||
-                                                                        'Untitled certification'}
+                                                                        "Untitled certification"}
                                                                 </span>
                                                                 <span className="block text-[13px] font-medium text-ember-500">
                                                                     {[
                                                                         c.issuingOrganisation,
                                                                         c.issueDate
                                                                             ? `Issued ${formatMonth(c.issueDate)}`
-                                                                            : '',
+                                                                            : "",
                                                                         c.credentialNumber
                                                                             ? `#${c.credentialNumber}`
-                                                                            : '',
+                                                                            : "",
                                                                     ]
                                                                         .filter(
                                                                             Boolean,
                                                                         )
                                                                         .join(
-                                                                            ' · ',
-                                                                        ) || '—'}
+                                                                            " · ",
+                                                                        ) ||
+                                                                        "—"}
                                                                 </span>
                                                             </span>
                                                         </li>
@@ -558,51 +561,44 @@ export default function ProfilePreview() {
                                         />
                                         {profile.documents.length > 0 ? (
                                             <ul className="mt-3 space-y-2.5">
-                                                {profile.documents.map(
-                                                    (d) => (
-                                                        <li
-                                                            key={d.id}
-                                                            className="flex items-center gap-3 rounded-2xl border border-harbor/10 bg-white p-4 shadow-sm"
-                                                        >
-                                                            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-harbor/8 text-harbor">
-                                                                <FileText className="size-5" />
+                                                {profile.documents.map((d) => (
+                                                    <li
+                                                        key={d.id}
+                                                        className="flex items-center gap-3 rounded-2xl border border-harbor/10 bg-white p-4 shadow-sm"
+                                                    >
+                                                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-harbor/8 text-harbor">
+                                                            <FileText className="size-5" />
+                                                        </span>
+                                                        <span className="min-w-0 flex-1">
+                                                            <span className="block truncate text-[14px] font-extrabold text-harbor">
+                                                                {d.name}
                                                             </span>
-                                                            <span className="min-w-0 flex-1">
-                                                                <span className="block truncate text-[14px] font-extrabold text-harbor">
-                                                                    {d.name}
-                                                                </span>
-                                                                <span className="block text-[12.5px] font-medium text-ember-400">
-                                                                    {
-                                                                        d.category
-                                                                    }{' '}
-                                                                    ·{' '}
-                                                                    {fileTypeLabel(
-                                                                        d.type,
-                                                                        d.name,
-                                                                    )}{' '}
-                                                                    ·{' '}
-                                                                    {formatFileSize(
-                                                                        d.size,
-                                                                    )}
-                                                                </span>
+                                                            <span className="block text-[12.5px] font-medium text-ember-400">
+                                                                {d.category} ·{" "}
+                                                                {fileTypeLabel(
+                                                                    d.type,
+                                                                    d.name,
+                                                                )}{" "}
+                                                                ·{" "}
+                                                                {formatFileSize(
+                                                                    d.size,
+                                                                )}
                                                             </span>
-                                                            {d.dataUrl && (
-                                                                <a
-                                                                    href={
-                                                                        d.dataUrl
-                                                                    }
-                                                                    download={
-                                                                        d.name
-                                                                    }
-                                                                    aria-label={`Download ${d.name}`}
-                                                                    className="inline-flex size-9 items-center justify-center rounded-full border border-harbor/12 text-harbor transition hover:bg-harbor hover:text-sand-50"
-                                                                >
-                                                                    <Download className="size-4" />
-                                                                </a>
-                                                            )}
-                                                        </li>
-                                                    ),
-                                                )}
+                                                        </span>
+                                                        {d.dataUrl && (
+                                                            <a
+                                                                href={d.dataUrl}
+                                                                download={
+                                                                    d.name
+                                                                }
+                                                                aria-label={`Download ${d.name}`}
+                                                                className="inline-flex size-9 items-center justify-center rounded-full border border-harbor/12 text-harbor transition hover:bg-harbor hover:text-sand-50"
+                                                            >
+                                                                <Download className="size-4" />
+                                                            </a>
+                                                        )}
+                                                    </li>
+                                                ))}
                                             </ul>
                                         ) : (
                                             <EmptyNote label="No documents uploaded — optional." />
@@ -630,10 +626,10 @@ export default function ProfilePreview() {
                                     Save &amp; finish later
                                 </Link>
                                 <Link
-                                    href="/dashboard"
+                                    href="/onboarding/profile"
                                     className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-sienna px-8 text-[14.5px] font-bold text-white shadow-xl shadow-sienna/35 transition-all hover:-translate-y-0.5 hover:bg-sienna-600"
                                 >
-                                    Enter Dashboard
+                                    Save
                                     <ArrowRight className="size-4.5" />
                                 </Link>
                             </div>
@@ -642,7 +638,7 @@ export default function ProfilePreview() {
                         <p className="mt-6 text-center text-[13px] font-medium text-ember-400">
                             {profile.updatedAt
                                 ? `Draft last saved ${new Date(profile.updatedAt).toLocaleString()}. `
-                                : ''}
+                                : ""}
                             Project Managers see this preview layout when
                             reviewing applications.
                         </p>
