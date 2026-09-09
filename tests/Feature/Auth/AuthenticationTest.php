@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use App\Models\ParticipantProfile;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Features;
 
@@ -20,6 +22,26 @@ test('users can authenticate using the login screen', function () {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+});
+
+test('participants with an incomplete profile are sent back to onboarding after login', function () {
+    $this->seed(RoleSeeder::class);
+    $user = User::factory()->create();
+    $user->assignRole('participant');
+    ParticipantProfile::create([
+        'user_id' => $user->id,
+        'first_name' => 'Partial',
+        'last_name' => 'Participant',
+        'email' => $user->email,
+        'summary' => 'Incomplete draft',
+    ]);
+
+    $response = $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $response->assertRedirect(route('onboarding.build-profile', absolute: false));
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {

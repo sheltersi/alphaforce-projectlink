@@ -14,6 +14,7 @@ import {
     FileText,
     GraduationCap,
     LayoutDashboard,
+    LogOut,
     MailCheck,
     MapPin,
     Network,
@@ -572,7 +573,7 @@ export default function BuildProfile() {
                                 AlphaForce ProjectLink
                             </span>
                         </span>
-                        <span className="inline-flex items-center gap-2 text-xs font-bold text-ember-500">
+                        <div className="inline-flex items-center gap-2 text-xs font-bold text-ember-500">
                             <span className="hidden items-center gap-1.5 rounded-full border border-moss/25 bg-moss/10 px-3 py-1.5 text-moss-600 sm:inline-flex">
                                 <Save className="size-3.5" />
                                 {savedLabel} · continues later
@@ -583,7 +584,17 @@ export default function BuildProfile() {
                             >
                                 {initials}
                             </span>
-                        </span>
+                            <button
+                                type="button"
+                                onClick={() => router.post("/logout")}
+                                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-harbor/15 px-3 text-[12px] font-bold text-ember-500 transition hover:border-sienna hover:text-sienna"
+                            >
+                                <LogOut className="size-3.5" />
+                                <span className="hidden sm:inline">
+                                    Log out
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </header>
 
@@ -1099,6 +1110,40 @@ export default function BuildProfile() {
                         </div>
                         <div className="grid gap-5 sm:grid-cols-2">
                             <Field
+                                label="ID Number / Passport"
+                                required
+                                htmlFor="idNumber"
+                            >
+                                <input
+                                    id="idNumber"
+                                    className={inputCls}
+                                    placeholder="Enter your ID or passport number"
+                                    autoComplete="off"
+                                    value={profile.idNumber}
+                                    onChange={(e) =>
+                                        patch({ idNumber: e.target.value })
+                                    }
+                                />
+                            </Field>
+                            <Field
+                                label="Nationality"
+                                required
+                                htmlFor="nationality"
+                            >
+                                <input
+                                    id="nationality"
+                                    className={inputCls}
+                                    placeholder="e.g. Zambian"
+                                    autoComplete="country-name"
+                                    value={profile.nationality}
+                                    onChange={(e) =>
+                                        patch({ nationality: e.target.value })
+                                    }
+                                />
+                            </Field>
+                        </div>
+                        <div className="grid gap-5 sm:grid-cols-2">
+                            <Field
                                 label="Email"
                                 required
                                 htmlFor="email"
@@ -1118,7 +1163,7 @@ export default function BuildProfile() {
                             </Field>
                             <Field
                                 label="Phone number"
-                                optional
+                                required
                                 htmlFor="phone"
                             >
                                 <input
@@ -1137,7 +1182,7 @@ export default function BuildProfile() {
                         <div className="grid gap-5 sm:grid-cols-2">
                             <Field
                                 label="Location / City"
-                                optional
+                                required
                                 htmlFor="city"
                             >
                                 <div className="relative">
@@ -1154,7 +1199,7 @@ export default function BuildProfile() {
                                     />
                                 </div>
                             </Field>
-                            <Field label="Country" optional htmlFor="country">
+                            <Field label="Country" required htmlFor="country">
                                 <input
                                     id="country"
                                     className={inputCls}
@@ -1951,7 +1996,7 @@ export default function BuildProfile() {
                                 Review everything on the next screen. Your
                                 profile is {percent}% complete
                                 {percent < 100
-                                    ? " — you can still enter the dashboard with a partial profile and finish later."
+                                    ? " — complete the required sections before entering the dashboard."
                                     : " — nicely done."}
                             </p>
                             <div className="mt-4 flex flex-wrap gap-2">

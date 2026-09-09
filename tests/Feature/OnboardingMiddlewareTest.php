@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ParticipantProfile;
+use App\Models\Skill;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,17 +33,39 @@ test('participant without profile can access onboarding', function () {
 test('participant with profile can access dashboard', function () {
     $user = User::factory()->create(['email_verified_at' => now()]);
     $user->assignRole('participant');
+    $profile = ParticipantProfile::create([
+        'user_id' => $user->id,
+        'first_name' => 'John',
+        'last_name' => 'Doe',
+        'email' => $user->email,
+        'id_number' => 'ID-12345',
+        'phone' => '+260 97 000 0000',
+        'nationality' => 'Zambian',
+        'city' => 'Lusaka',
+        'country' => 'Zambia',
+        'summary' => str_repeat('A complete participant profile summary. ', 2),
+    ]);
+    Skill::create(['participant_profile_id' => $profile->id, 'name' => 'Research']);
+
+    $response = $this->actingAs($user)->get('/dashboard');
+
+    $response->assertOk();
+});
+
+test('participant with an incomplete profile is redirected from dashboard to onboarding', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $user->assignRole('participant');
     ParticipantProfile::create([
         'user_id' => $user->id,
         'first_name' => 'John',
         'last_name' => 'Doe',
         'email' => $user->email,
-        'summary' => 'Test summary',
+        'summary' => 'Partial draft',
     ]);
 
     $response = $this->actingAs($user)->get('/dashboard');
 
-    $response->assertOk();
+    $response->assertRedirect(route('onboarding.build-profile'));
 });
 
 test('technical_admin without profile can access dashboard', function () {

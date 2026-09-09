@@ -17,9 +17,11 @@ class ParticipantProfile extends Model
         'first_name',
         'last_name',
         'email',
+        'id_number',
         'phone',
         'city',
         'country',
+        'nationality',
         'summary',
     ];
 
@@ -62,5 +64,23 @@ class ParticipantProfile extends Model
     public function getFullNameAttribute(): string
     {
         return trim($this->first_name.' '.$this->last_name);
+    }
+
+    public function isComplete(): bool
+    {
+        $hasSkill = $this->relationLoaded('skills')
+            ? $this->skills->isNotEmpty()
+            : $this->skills()->exists();
+
+        return filled(trim((string) $this->first_name))
+            && filled(trim((string) $this->last_name))
+            && filter_var($this->email, FILTER_VALIDATE_EMAIL) !== false
+            && filled(trim((string) $this->id_number))
+            && filled(trim((string) $this->phone))
+            && filled(trim((string) $this->nationality))
+            && filled(trim((string) $this->city))
+            && filled(trim((string) $this->country))
+            && mb_strlen(trim((string) $this->summary)) >= 40
+            && $hasSkill;
     }
 }

@@ -51,9 +51,11 @@ class ParticipantProfileService
                     'first_name' => $validated['first_name'] ?? $existingForDefaults?->first_name ?? '',
                     'last_name' => $validated['last_name'] ?? $existingForDefaults?->last_name ?? '',
                     'email' => $validated['email'] ?? $existingForDefaults?->email ?? $user->email ?? '',
+                    'id_number' => array_key_exists('id_number', $validated) ? $validated['id_number'] : ($existingForDefaults?->id_number),
                     'phone' => array_key_exists('phone', $validated) ? $validated['phone'] : ($existingForDefaults?->phone),
                     'city' => array_key_exists('city', $validated) ? $validated['city'] : ($existingForDefaults?->city),
                     'country' => array_key_exists('country', $validated) ? $validated['country'] : ($existingForDefaults?->country),
+                    'nationality' => array_key_exists('nationality', $validated) ? $validated['nationality'] : ($existingForDefaults?->nationality),
                     'summary' => $validated['summary'] ?? $existingForDefaults?->summary ?? '',
                     'photo_path' => $photoPath,
                 ]
@@ -350,9 +352,11 @@ class ParticipantProfileService
             'firstName' => $profile->first_name,
             'lastName' => $profile->last_name,
             'email' => $profile->email,
+            'idNumber' => $profile->id_number ?? '',
             'phone' => $profile->phone ?? '',
             'city' => $profile->city ?? '',
             'country' => $profile->country ?? '',
+            'nationality' => $profile->nationality ?? '',
             'summary' => $profile->summary ?? '',
             'skills' => $profile->skills->pluck('name')->toArray(),
             'education' => $profile->educations->map(fn ($e) => [

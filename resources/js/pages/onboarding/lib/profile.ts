@@ -48,9 +48,11 @@ export interface ParticipantProfile {
     firstName: string;
     lastName: string;
     email: string;
+    idNumber: string;
     phone: string;
     city: string;
     country: string;
+    nationality: string;
     summary: string;
     skills: string[];
     education: EducationEntry[];
@@ -121,9 +123,11 @@ export function emptyProfile(): ParticipantProfile {
         firstName: '',
         lastName: '',
         email: '',
+        idNumber: '',
         phone: '',
         city: '',
         country: '',
+        nationality: '',
         summary: '',
         skills: [],
         education: [],
@@ -230,16 +234,17 @@ export function sectionStatuses(profile: ParticipantProfile): SectionStatus[] {
         profile.firstName.trim(),
         profile.lastName.trim(),
         profile.email.trim(),
+        profile.idNumber.trim(),
+        profile.phone.trim(),
+        profile.nationality.trim(),
+        profile.city.trim(),
+        profile.country.trim(),
     ];
     const personalFilled = personalFields.filter(Boolean).length;
-    const personalBonus =
-        (profile.phone.trim() ? 0.5 : 0) +
-        (profile.city.trim() ? 0.5 : 0) +
-        (profile.country.trim() ? 0.5 : 0) +
-        (profile.photoDataUrl ? 0.5 : 0);
+    const personalBonus = profile.photoDataUrl ? 0.5 : 0;
     const personalPercent = Math.min(
         100,
-        Math.round(((personalFilled + personalBonus) / 5) * 100),
+        Math.round(((personalFilled + personalBonus) / 8.5) * 100),
     );
 
     const summaryLen = profile.summary.trim().length;
@@ -291,7 +296,7 @@ export function sectionStatuses(profile: ParticipantProfile): SectionStatus[] {
     const raw: SectionStatus[] = [
         {
             id: 'personal',
-            complete: personalFilled === 3,
+            complete: personalFilled === 8,
             percent: personalPercent,
         },
         {
@@ -366,6 +371,11 @@ export function requiredBlockingErrors(
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email.trim())) {
             errors.push('Enter a valid email address.');
         }
+        if (!profile.idNumber.trim()) errors.push('ID number or passport is required.');
+        if (!profile.phone.trim()) errors.push('Phone number is required.');
+        if (!profile.nationality.trim()) errors.push('Nationality is required.');
+        if (!profile.city.trim()) errors.push('City is required.');
+        if (!profile.country.trim()) errors.push('Country is required.');
     }
     if (step === 'summary') {
         if (profile.summary.trim().length < 40) {

@@ -21,9 +21,11 @@ class StoreParticipantProfileRequest extends FormRequest
             'first_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
+            'id_number' => ['nullable', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:50'],
             'city' => ['nullable', 'string', 'max:255'],
             'country' => ['nullable', 'string', 'max:255'],
+            'nationality' => ['nullable', 'string', 'max:255'],
             'summary' => ['nullable', 'string', 'min:40', 'max:5000'],
 
             // Photo – either file upload or base64 dataUrl string
@@ -105,6 +107,8 @@ class StoreParticipantProfileRequest extends FormRequest
         $map = [
             'firstName' => 'first_name',
             'lastName' => 'last_name',
+            'idNumber' => 'id_number',
+            'nationality' => 'nationality',
             'photoDataUrl' => 'photo_data_url',
             'fieldOfStudy' => 'field_of_study',
             'startYear' => 'start_year',
@@ -122,7 +126,7 @@ class StoreParticipantProfileRequest extends FormRequest
         $input = $this->all();
 
         // Top-level camelCase
-        foreach (['firstName' => 'first_name', 'lastName' => 'last_name', 'photoDataUrl' => 'photo_data_url'] as $from => $to) {
+        foreach (['firstName' => 'first_name', 'lastName' => 'last_name', 'idNumber' => 'id_number', 'photoDataUrl' => 'photo_data_url'] as $from => $to) {
             if (array_key_exists($from, $input) && ! array_key_exists($to, $input)) {
                 $input[$to] = $input[$from];
             }

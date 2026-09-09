@@ -31,7 +31,9 @@ class RegisterResponse implements RegisterResponseContract
                 return false;
             }
 
-            return ! $user->participantProfile()->exists();
+            $profile = $user->participantProfile()->with('skills')->first();
+
+            return ! $profile || ! $profile->isComplete();
         } catch (\Throwable $e) {
             return false;
         }

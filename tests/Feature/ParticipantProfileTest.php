@@ -23,9 +23,11 @@ test('participant can save profile with all onboarding data', function () {
         'firstName' => 'Amara',
         'lastName' => 'Okafor',
         'email' => 'amara@example.org',
+        'idNumber' => 'ID-12345',
         'phone' => '+260 97 000 0000',
         'city' => 'Lusaka',
         'country' => 'Zambia',
+        'nationality' => 'Zambian',
         'summary' => str_repeat('Experienced project participant with strong community mobilization skills. ', 5), // >40 chars
         'skills' => ['Data Analysis', 'Communication', 'Research'],
         'education' => [
@@ -72,6 +74,8 @@ test('participant can save profile with all onboarding data', function () {
     expect($profile->workExperiences)->toHaveCount(1);
     expect($profile->certifications)->toHaveCount(1);
     expect($profile->phone)->toBe('+260 97 000 0000');
+    expect($profile->id_number)->toBe('ID-12345');
+    expect($profile->nationality)->toBe('Zambian');
 });
 
 test('participant can save profile with photo via base64', function () {

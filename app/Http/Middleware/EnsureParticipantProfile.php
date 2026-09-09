@@ -70,17 +70,18 @@ class EnsureParticipantProfile
             return $next($request);
         }
 
-        // Check if participant profile exists. Use exists() to avoid loading full model if not already loaded.
+        // A profile row can exist while onboarding is still incomplete because drafts are server-backed.
         try {
-            $hasProfile = $user->relationLoaded('participantProfile')
-                ? $user->participantProfile !== null
-                : $user->participantProfile()->exists();
+            $profile = $user->relationLoaded('participantProfile')
+                ? $user->participantProfile
+                : $user->participantProfile()->with('skills')->first();
+            $hasCompleteProfile = $profile?->isComplete() ?? false;
         } catch (\Throwable $e) {
             // Table may not exist in testing – allow request to proceed.
             return $next($request);
         }
 
-        if (! $hasProfile) {
+        if (! $hasCompleteProfile) {
             // Avoid redirect loop: if already heading to onboarding, let through (already handled above, but double-check)
             if ($request->routeIs('onboarding.*') || $request->is('onboarding*')) {
                 return $next($request);

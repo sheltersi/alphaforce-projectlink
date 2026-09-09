@@ -15,7 +15,7 @@ class LoginResponse implements LoginResponseContract
 
         $user = $request->user();
 
-        // Participants without a profile must complete onboarding before reaching the dashboard.
+        // Participants with an incomplete profile must finish onboarding before reaching the dashboard.
         if ($user && $this->shouldRedirectToOnboarding($user)) {
             return redirect()->intended(route('onboarding.build-profile'));
         }
@@ -31,7 +31,9 @@ class LoginResponse implements LoginResponseContract
                 return false;
             }
 
-            return ! $user->participantProfile()->exists();
+            $profile = $user->participantProfile()->with('skills')->first();
+
+            return ! $profile || ! $profile->isComplete();
         } catch (\Throwable $e) {
             return false;
         }

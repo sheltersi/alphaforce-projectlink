@@ -14,6 +14,7 @@ import {
     MailCheck,
     MapPin,
     Network,
+    LogOut,
     Pencil,
     Phone,
     Save,
@@ -183,10 +184,22 @@ export default function ProfilePreview() {
                                 AlphaForce ProjectLink
                             </span>
                         </Link>
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-moss/25 bg-moss/10 px-3 py-1.5 text-xs font-extrabold text-moss-600">
-                            <Eye className="size-3.5" />
-                            Preview mode
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="hidden items-center gap-1.5 rounded-full border border-moss/25 bg-moss/10 px-3 py-1.5 text-xs font-extrabold text-moss-600 sm:inline-flex">
+                                <Eye className="size-3.5" />
+                                Preview mode
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => router.post("/logout")}
+                                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-harbor/15 px-3 text-[12px] font-bold text-ember-500 transition hover:border-sienna hover:text-sienna"
+                            >
+                                <LogOut className="size-3.5" />
+                                <span className="hidden sm:inline">
+                                    Log out
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </header>
 
