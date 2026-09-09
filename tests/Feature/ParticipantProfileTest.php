@@ -200,18 +200,18 @@ test('profile update replaces previous skills and educations', function () {
     expect($profile->educations->first()->institution)->toBe('New Uni');
 });
 
-test('validation fails for missing required fields', function () {
+test('validation fails for invalid fields', function () {
     $user = User::factory()->create();
     $user->assignRole('participant');
 
     $response = $this->actingAs($user)->postJson(route('onboarding.profile.store'), [
-        'firstName' => '',
-        'lastName' => '',
+        'firstName' => 'John',
+        'lastName' => 'Doe',
         'email' => 'invalid-email',
         'summary' => 'too short',
-        'skills' => [],
+        'skills' => ['Valid Skill'],
     ]);
 
     $response->assertUnprocessable();
-    $response->assertJsonValidationErrors(['first_name', 'last_name', 'email', 'summary', 'skills']);
+    $response->assertJsonValidationErrors(['email', 'summary']);
 });

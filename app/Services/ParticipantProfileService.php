@@ -43,24 +43,34 @@ class ParticipantProfileService
         return DB::transaction(function () use ($user, $validated, $request): ParticipantProfile {
             $photoPath = $this->resolvePhotoPath($user, $validated, $request);
 
+            $existingForDefaults = $user->participantProfile()->first();
+
             $profile = ParticipantProfile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'first_name' => $validated['first_name'],
-                    'last_name' => $validated['last_name'],
-                    'email' => $validated['email'],
-                    'phone' => $validated['phone'] ?? null,
-                    'city' => $validated['city'] ?? null,
-                    'country' => $validated['country'] ?? null,
-                    'summary' => $validated['summary'],
+                    'first_name' => $validated['first_name'] ?? $existingForDefaults?->first_name ?? '',
+                    'last_name' => $validated['last_name'] ?? $existingForDefaults?->last_name ?? '',
+                    'email' => $validated['email'] ?? $existingForDefaults?->email ?? $user->email ?? '',
+                    'phone' => array_key_exists('phone', $validated) ? $validated['phone'] : ($existingForDefaults?->phone),
+                    'city' => array_key_exists('city', $validated) ? $validated['city'] : ($existingForDefaults?->city),
+                    'country' => array_key_exists('country', $validated) ? $validated['country'] : ($existingForDefaults?->country),
+                    'summary' => $validated['summary'] ?? $existingForDefaults?->summary ?? '',
                     'photo_path' => $photoPath,
                 ]
             );
 
-            $this->syncSkills($profile, $validated['skills'] ?? []);
-            $this->syncEducations($profile, $validated['education'] ?? []);
-            $this->syncWorkExperiences($profile, $validated['experience'] ?? []);
-            $this->syncCertifications($profile, $validated['certifications'] ?? []);
+            if (array_key_exists('skills', $validated)) {
+                $this->syncSkills($profile, $validated['skills'] ?? []);
+            }
+            if (array_key_exists('education', $validated)) {
+                $this->syncEducations($profile, $validated['education'] ?? []);
+            }
+            if (array_key_exists('experience', $validated)) {
+                $this->syncWorkExperiences($profile, $validated['experience'] ?? []);
+            }
+            if (array_key_exists('certifications', $validated)) {
+                $this->syncCertifications($profile, $validated['certifications'] ?? []);
+            }
 
             // Only touch documents if the payload explicitly contains them (allows partial updates)
             if ($request->has('documents') || $request->hasFile('document_files')) {

@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     ArrowRight,
@@ -200,6 +200,7 @@ export default function BuildProfile() {
     const [skillInput, setSkillInput] = useState('');
     const [docCategory, setDocCategory] =
         useState<ProfileDocument['category']>('CV');
+    const [isSaving, setIsSaving] = useState(false);
 
     const photoRef = useRef<HTMLInputElement>(null);
     const docsRef = useRef<HTMLInputElement>(null);
@@ -238,12 +239,93 @@ export default function BuildProfile() {
         scrollTop();
     }
 
-    function handleSaveDraft() {
-        saveDraft(profile);
+    function getCsrfToken(): string {
+        const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
+        if (meta?.content) return meta.content;
+        const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
+    function flattenBackendErrors(payload: unknown): string[] {
+        if (
+            payload &&
+            typeof payload === 'object' &&
+            'errors' in payload &&
+            typeof (payload as { errors: unknown }).errors === 'object'
+        ) {
+            const errs = (payload as { errors: Record<string, string[]> }).errors;
+            const flat = Object.values(errs).flat();
+            if (flat.length > 0) return flat;
+        }
+        if (payload && typeof payload === 'object' && 'message' in payload && typeof (payload as { message: string }).message === 'string') {
+            return [(payload as { message: string }).message];
+        }
+        return ['An unexpected error occurred. Please try again.'];
+    }
+
+    async function persistToServer(profileToSave: ParticipantProfile): Promise<boolean> {
+        const token = getCsrfToken();
+        setIsSaving(true);
+        try {
+            const res = await fetch('/onboarding/profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    ...(token ? { 'X-XSRF-TOKEN': token, 'X-CSRF-TOKEN': token } : {}),
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(profileToSave),
+            });
+
+            if (res.ok) {
+                const data = (await res.json()) as { profile?: ParticipantProfile };
+                if (data.profile) {
+                    // Optionally sync server response (e.g., IDs) – keep local draft in sync
+                    saveDraft(data.profile as unknown as ParticipantProfile);
+                }
+                return true;
+            }
+
+            if (res.status === 422) {
+                const payload = (await res.json()) as unknown;
+                const flat = flattenBackendErrors(payload);
+                setErrors(flat);
+                scrollTop();
+                toast.error('Please fix the errors before continuing.', {
+                    description: flat[0],
+                });
+                return false;
+            }
+
+            const payload = (await res.json().catch(() => null)) as unknown;
+            const flat = flattenBackendErrors(payload);
+            setErrors(flat);
+            scrollTop();
+            toast.error('Failed to save profile.', { description: flat[0] });
+            return false;
+        } catch {
+            toast.error('Network error', { description: 'Could not save your profile. Please check your connection.' });
+            setErrors(['Network error – could not save your profile. Please try again.']);
+            scrollTop();
+            return false;
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
+    async function handleSaveDraft() {
+        const pruned = pruneEmpty(profile);
+        saveDraft(pruned);
         setSavedAt(new Date().toISOString());
-        toast.success('Draft saved', {
-            description: 'You can continue later — nothing is lost.',
-        });
+        const ok = await persistToServer(pruned);
+        if (ok) {
+            toast.success('Draft saved', {
+                description: 'You can continue later — nothing is lost.',
+            });
+        }
+        // persistToServer already shows validation errors via setErrors + toast.error when !ok
     }
 
     function pruneEmpty(value: ParticipantProfile): ParticipantProfile {
@@ -272,7 +354,7 @@ export default function BuildProfile() {
         };
     }
 
-    function handleContinue() {
+    async function handleContinue() {
         const blocking = requiredBlockingErrors(profile, step.id);
         if (blocking.length > 0) {
             setErrors(blocking);
@@ -283,6 +365,10 @@ export default function BuildProfile() {
         const pruned = pruneEmpty(profile);
         setProfile(pruned);
         saveDraft(pruned);
+
+        const ok = await persistToServer(pruned);
+        if (!ok) return;
+
         if (stepIndex < STEPS.length - 1) {
             setStepIndex(stepIndex + 1);
             scrollTop();
@@ -719,33 +805,50 @@ export default function BuildProfile() {
                                             <button
                                                 type="button"
                                                 onClick={handleSaveDraft}
-                                                className="inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 border-dashed border-clay-400/60 px-6 text-[14.5px] font-bold text-clay-600 transition hover:border-clay-600 hover:bg-clay-100"
+                                                disabled={isSaving}
+                                                className="inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 border-dashed border-clay-400/60 px-6 text-[14.5px] font-bold text-clay-600 transition hover:border-clay-600 hover:bg-clay-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <Save className="size-4.5" />
-                                                Save as Draft
+                                                {isSaving ? 'Saving...' : 'Save as Draft'}
                                             </button>
                                             {stepIndex < STEPS.length - 1 ? (
                                                 <button
                                                     type="button"
                                                     onClick={handleContinue}
-                                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-sienna px-8 text-[14.5px] font-bold text-white shadow-xl shadow-sienna/35 transition-all hover:-translate-y-0.5 hover:bg-sienna-600"
+                                                    disabled={isSaving}
+                                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-sienna px-8 text-[14.5px] font-bold text-white shadow-xl shadow-sienna/35 transition-all hover:-translate-y-0.5 hover:bg-sienna-600 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
-                                                    Save &amp; Continue
+                                                    {isSaving ? 'Saving...' : 'Save & Continue'}
                                                     <ArrowRight className="size-4.5" />
                                                 </button>
                                             ) : (
-                                                <Link
-                                                    href="/onboarding/profile-preview"
-                                                    onClick={() => {
-                                                        const pruned =
-                                                            pruneEmpty(profile);
+                                                <button
+                                                    type="button"
+                                                    disabled={isSaving}
+                                                    onClick={async () => {
+                                                        // Validate all required steps before preview
+                                                        const requiredSteps: StepId[] = ['personal', 'summary', 'skills'];
+                                                        const allErrors = requiredSteps.flatMap((id) => requiredBlockingErrors(profile, id));
+                                                        if (allErrors.length > 0) {
+                                                            setErrors(allErrors);
+                                                            scrollTop();
+                                                            toast.error('Please complete the required sections before previewing.', {
+                                                                description: allErrors[0],
+                                                            });
+                                                            return;
+                                                        }
+                                                        const pruned = pruneEmpty(profile);
+                                                        setProfile(pruned);
                                                         saveDraft(pruned);
+                                                        const ok = await persistToServer(pruned);
+                                                        if (!ok) return;
+                                                        window.location.href = '/onboarding/profile-preview';
                                                     }}
-                                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-harbor px-8 text-[14.5px] font-bold text-sand-50 shadow-xl shadow-harbor/35 transition-all hover:-translate-y-0.5 hover:bg-harbor-700"
+                                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-harbor px-8 text-[14.5px] font-bold text-sand-50 shadow-xl shadow-harbor/35 transition-all hover:-translate-y-0.5 hover:bg-harbor-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     <Eye className="size-4.5" />
-                                                    Preview Profile
-                                                </Link>
+                                                    {isSaving ? 'Saving...' : 'Preview Profile'}
+                                                </button>
                                             )}
                                         </div>
                                     </div>

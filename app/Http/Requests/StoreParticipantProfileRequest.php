@@ -17,22 +17,22 @@ class StoreParticipantProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Personal
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
+            // Personal – allow draft saves (nullable), but validate format when present
+            'first_name' => ['nullable', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'city' => ['nullable', 'string', 'max:255'],
             'country' => ['nullable', 'string', 'max:255'],
-            'summary' => ['required', 'string', 'min:40', 'max:5000'],
+            'summary' => ['nullable', 'string', 'min:40', 'max:5000'],
 
             // Photo – either file upload or base64 dataUrl string
             'photo' => ['nullable', 'image', 'max:5120'], // 5 MB
             'photo_data_url' => ['nullable', 'string', 'max:8000000'], // base64 ~5MB
 
-            // Skills – multiple, at least 1
-            'skills' => ['required', 'array', 'min:1'],
-            'skills.*' => ['required', 'string', 'max:100', 'distinct'],
+            // Skills – allow draft with no skills, but validate when present
+            'skills' => ['nullable', 'array'],
+            'skills.*' => ['string', 'max:100', 'distinct'],
 
             // Education – optional, multiple
             'education' => ['nullable', 'array'],
