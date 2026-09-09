@@ -30,7 +30,6 @@ import { toast } from "sonner";
 import {
     SKILL_SUGGESTIONS,
     STEPS,
-    clearDraft,
     completionPercent,
     emptyCertification,
     emptyEducation,
@@ -38,10 +37,8 @@ import {
     emptyProfile,
     fileTypeLabel,
     formatFileSize,
-    loadDraft,
     newId,
     requiredBlockingErrors,
-    saveDraft,
     sectionStatuses,
     type CertificationEntry,
     type EducationEntry,
@@ -153,6 +150,8 @@ const JOURNEY = [
     { label: "Dashboard", state: "todo" },
 ] as const;
 
+const LEGACY_DRAFT_KEY_PREFIX = "af-projectlink-profile-draft-v1";
+
 export default function BuildProfile() {
     const { auth, profile: serverProfile } = usePage().props as unknown as {
         auth: {
@@ -168,7 +167,7 @@ export default function BuildProfile() {
             return { ...emptyProfile(), ...serverProfile };
         }
         if (!userId) return emptyProfile();
-        const draft = loadDraft(userId);
+        const draft = emptyProfile();
         const hasAnything =
             draft.firstName ||
             draft.lastName ||
@@ -222,13 +221,44 @@ export default function BuildProfile() {
         [statuses],
     );
 
-    // Autosave draft (debounced) so participants can continue later.
+    const autosaveController = useRef<AbortController | null>(null);
+
     useEffect(() => {
+        try {
+            for (
+                let index = window.localStorage.length - 1;
+                index >= 0;
+                index--
+            ) {
+                const key = window.localStorage.key(index);
+                if (key?.startsWith(LEGACY_DRAFT_KEY_PREFIX)) {
+                    window.localStorage.removeItem(key);
+                }
+            }
+        } catch {
+            // Ignore storage access restrictions; no new profile data is written there.
+        }
+    }, []);
+
+    // Autosave the draft on the server so personal information never remains in browser storage.
+    useEffect(() => {
+        autosaveController.current?.abort();
+        const controller = new AbortController();
+        autosaveController.current = controller;
         const t = window.setTimeout(() => {
-            if (userId) saveDraft(profile, userId);
-            setSavedAt(new Date().toISOString());
+            void persistToServer(profile, {
+                signal: controller.signal,
+                silent: true,
+            }).then((ok) => {
+                if (ok && !controller.signal.aborted) {
+                    setSavedAt(new Date().toISOString());
+                }
+            });
         }, 600);
-        return () => window.clearTimeout(t);
+        return () => {
+            window.clearTimeout(t);
+            controller.abort();
+        };
     }, [profile]);
 
     const patch = (p: Partial<ParticipantProfile>) =>
@@ -278,7 +308,9 @@ export default function BuildProfile() {
 
     async function persistToServer(
         profileToSave: ParticipantProfile,
+        options: { signal?: AbortSignal; silent?: boolean } = {},
     ): Promise<boolean> {
+        const { signal, silent = false } = options;
         const token = getCsrfToken();
         setIsSaving(true);
         try {
@@ -292,51 +324,53 @@ export default function BuildProfile() {
                         ? { "X-XSRF-TOKEN": token, "X-CSRF-TOKEN": token }
                         : {}),
                 },
+                signal,
                 credentials: "same-origin",
                 body: JSON.stringify(profileToSave),
             });
 
             if (res.ok) {
-                const data = (await res.json()) as {
-                    profile?: ParticipantProfile;
-                };
-                if (data.profile) {
-                    // Optionally sync server response (e.g., IDs) – keep local draft in sync
-                    if (userId)
-                        saveDraft(
-                            data.profile as unknown as ParticipantProfile,
-                            userId,
-                        );
-                }
+                await res.json();
                 return true;
             }
 
             if (res.status === 422) {
                 const payload = (await res.json()) as unknown;
                 const flat = flattenBackendErrors(payload);
-                setErrors(flat);
-                scrollTop();
-                toast.error("Please fix the errors before continuing.", {
-                    description: flat[0],
-                });
+                if (!silent) {
+                    setErrors(flat);
+                    scrollTop();
+                    toast.error("Please fix the errors before continuing.", {
+                        description: flat[0],
+                    });
+                }
                 return false;
             }
 
             const payload = (await res.json().catch(() => null)) as unknown;
             const flat = flattenBackendErrors(payload);
-            setErrors(flat);
-            scrollTop();
-            toast.error("Failed to save profile.", { description: flat[0] });
+            if (!silent) {
+                setErrors(flat);
+                scrollTop();
+                toast.error("Failed to save profile.", {
+                    description: flat[0],
+                });
+            }
             return false;
-        } catch {
-            toast.error("Network error", {
-                description:
-                    "Could not save your profile. Please check your connection.",
-            });
-            setErrors([
-                "Network error – could not save your profile. Please try again.",
-            ]);
-            scrollTop();
+        } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") {
+                return false;
+            }
+            if (!silent) {
+                toast.error("Network error", {
+                    description:
+                        "Could not save your profile. Please check your connection.",
+                });
+                setErrors([
+                    "Network error – could not save your profile. Please try again.",
+                ]);
+                scrollTop();
+            }
             return false;
         } finally {
             setIsSaving(false);
@@ -345,7 +379,6 @@ export default function BuildProfile() {
 
     async function handleSaveDraft() {
         const pruned = pruneEmpty(profile);
-        if (userId) saveDraft(pruned, userId);
         setSavedAt(new Date().toISOString());
         const ok = await persistToServer(pruned);
         if (ok) {
@@ -392,8 +425,6 @@ export default function BuildProfile() {
         setErrors([]);
         const pruned = pruneEmpty(profile);
         setProfile(pruned);
-        if (userId) saveDraft(pruned, userId);
-
         const ok = await persistToServer(pruned);
         if (!ok) return;
 
@@ -899,11 +930,6 @@ export default function BuildProfile() {
                                                         const pruned =
                                                             pruneEmpty(profile);
                                                         setProfile(pruned);
-                                                        if (userId)
-                                                            saveDraft(
-                                                                pruned,
-                                                                userId,
-                                                            );
                                                         const ok =
                                                             await persistToServer(
                                                                 pruned,
@@ -1005,9 +1031,8 @@ export default function BuildProfile() {
                                         onClick={() =>
                                             photoRef.current?.click()
                                         }
-                                        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-harbor px-4 text-[13px] font-bold text-sand-50 transition hover:bg-harbor-700"
+                                        className="inline-flex h-9 items-center gap-1.5 rounded-full border border-harbor/15 px-4 text-[13px] font-bold text-ember-500 transition hover:border-sienna hover:text-sienna"
                                     >
-                                        <Upload className="size-3.5" />
                                         {profile.photoDataUrl
                                             ? "Change photo"
                                             : "Upload photo"}
@@ -1932,8 +1957,11 @@ export default function BuildProfile() {
                             <div className="mt-4 flex flex-wrap gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        if (userId) clearDraft(userId);
+                                    onClick={async () => {
+                                        const freshProfile = emptyProfile();
+                                        const ok =
+                                            await persistToServer(freshProfile);
+                                        if (!ok) return;
                                         setProfile(emptyProfile());
                                         setSkillInput("");
                                         setStepIndex(0);

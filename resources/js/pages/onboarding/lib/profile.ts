@@ -60,8 +60,6 @@ export interface ParticipantProfile {
     updatedAt: string | null;
 }
 
-export const STORAGE_KEY = 'af-projectlink-profile-draft-v1';
-
 export const SKILL_SUGGESTIONS = [
     'Project Management',
     'Software Development',
@@ -382,60 +380,6 @@ export function requiredBlockingErrors(
         }
     }
     return errors;
-}
-
-export function storageKeyForUser(userId: number | string): string {
-    return `${STORAGE_KEY}-${userId}`;
-}
-
-export function loadDraft(userId: number | string): ParticipantProfile {
-    if (typeof window === 'undefined') return emptyProfile();
-    try {
-        const raw = window.localStorage.getItem(storageKeyForUser(userId));
-        if (!raw) return emptyProfile();
-        const parsed = JSON.parse(raw) as Partial<ParticipantProfile>;
-        return { ...emptyProfile(), ...parsed };
-    } catch {
-        return emptyProfile();
-    }
-}
-
-export function saveDraft(profile: ParticipantProfile, userId: number | string): void {
-    try {
-        window.localStorage.setItem(
-            storageKeyForUser(userId),
-            JSON.stringify({
-                ...profile,
-                updatedAt: new Date().toISOString(),
-            }),
-        );
-    } catch {
-        // Storage full (e.g. large documents) — persist without file payloads.
-        try {
-            window.localStorage.setItem(
-                storageKeyForUser(userId),
-                JSON.stringify({
-                    ...profile,
-                    photoDataUrl: null,
-                    documents: profile.documents.map((d) => ({
-                        ...d,
-                        dataUrl: undefined,
-                    })),
-                    updatedAt: new Date().toISOString(),
-                }),
-            );
-        } catch {
-            // Give up silently; session state still holds the data.
-        }
-    }
-}
-
-export function clearDraft(userId: number | string): void {
-    try {
-        window.localStorage.removeItem(storageKeyForUser(userId));
-    } catch {
-        // noop
-    }
 }
 
 export function formatFileSize(bytes: number): string {
