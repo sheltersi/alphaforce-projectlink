@@ -1,7 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { BriefcaseBusiness, CalendarDays, ClipboardList, Compass, LayoutGrid, UserRound } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -22,24 +21,40 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
-];
-
-const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
+        title: 'Discover projects',
+        href: `${dashboard()}#opportunities`,
+        icon: Compass,
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
+        title: 'My applications',
+        href: `${dashboard()}#applications`,
+        icon: ClipboardList,
+    },
+    {
+        title: 'My projects',
+        href: `${dashboard()}#projects`,
+        icon: BriefcaseBusiness,
+    },
+    {
+        title: 'Timesheets',
+        href: `${dashboard()}#timesheets`,
+        icon: CalendarDays,
+    },
+    {
+        title: 'My profile',
+        href: '/onboarding/build-profile',
+        icon: UserRound,
     },
 ];
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar
+            collapsible="icon"
+            variant="inset"
+            className="[--sidebar:#1e2f44] [--sidebar-foreground:#faf5ec] [--sidebar-primary:#c56a2e] [--sidebar-primary-foreground:#fff] [--sidebar-accent:#29415b] [--sidebar-accent-foreground:#fff] [--sidebar-border:#38506a]"
+        >
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -57,7 +72,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
