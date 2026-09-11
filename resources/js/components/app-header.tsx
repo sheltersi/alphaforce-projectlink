@@ -1,5 +1,13 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
+import {
+    Bell,
+    BookOpen,
+    Folder,
+    LayoutGrid,
+    Menu,
+    MessageSquare,
+    Search,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
@@ -185,6 +193,26 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 className="group h-9 w-9 cursor-pointer"
                             >
                                 <Search className="!size-5 opacity-80 group-hover:opacity-100" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="group relative h-9 w-9 cursor-pointer"
+                                aria-label="Messages"
+                            >
+                                <MessageSquare className="!size-5 opacity-80 group-hover:opacity-100" />
+                                <span className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-sienna-500 px-1 text-[9px] font-bold text-white shadow-sm">
+                                    5
+                                </span>
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="group relative h-9 w-9 cursor-pointer"
+                                aria-label="Notifications"
+                            >
+                                <Bell className="!size-5 opacity-80 group-hover:opacity-100" />
+                                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-sienna ring-2 ring-background" />
                             </Button>
                             <ThemeToggle />
                             <div className="ml-1 hidden gap-1 lg:flex">

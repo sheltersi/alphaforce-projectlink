@@ -1,15 +1,23 @@
 import { Link } from "@inertiajs/react";
 import {
+    BarChart3,
     BriefcaseBusiness,
     CalendarDays,
     ClipboardList,
+    Clock3,
     Compass,
     LayoutGrid,
+    LifeBuoy,
+    MessageSquare,
+    Settings,
+    SquareCheck,
     UserRound,
+    UsersRound,
 } from "lucide-react";
 import AppLogo from "@/components/app-logo";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
+import { SidebarSeparator } from "@/components/ui/sidebar";
 import {
     Sidebar,
     SidebarContent,
@@ -21,38 +29,101 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { dashboard } from "@/routes";
-import type { NavItem } from "@/types";
+import type { NavGroup } from "@/types";
 
-const mainNavItems: NavItem[] = [
+const navGroups: NavGroup[] = [
     {
-        title: "Dashboard",
-        href: dashboard(),
-        icon: LayoutGrid,
+        label: "Overview",
+        items: [
+            {
+                title: "Dashboard",
+                href: dashboard(),
+                icon: LayoutGrid,
+            },
+            {
+                title: "Analytics",
+                href: `${dashboard()}#analytics`,
+                icon: BarChart3,
+                badge: "New",
+                badgeTone: "accent",
+            },
+        ],
     },
     {
-        title: "Discover projects",
-        href: `${dashboard()}#opportunities`,
-        icon: Compass,
+        label: "Workspace",
+        items: [
+            {
+                title: "Discover projects",
+                href: `${dashboard()}#opportunities`,
+                icon: Compass,
+                badge: "12",
+                badgeTone: "accent",
+            },
+            {
+                title: "My projects",
+                href: `${dashboard()}#projects`,
+                icon: BriefcaseBusiness,
+            },
+            {
+                title: "My applications",
+                href: `${dashboard()}#applications`,
+                icon: ClipboardList,
+            },
+            {
+                title: "Tasks",
+                href: `${dashboard()}#tasks`,
+                icon: SquareCheck,
+                badge: "4",
+                badgeTone: "success",
+            },
+            {
+                title: "Calendar",
+                href: `${dashboard()}#timesheets`,
+                icon: CalendarDays,
+            },
+            {
+                title: "Timesheets",
+                href: `${dashboard()}#timesheets`,
+                icon: Clock3,
+            },
+        ],
     },
     {
-        title: "My applications",
-        href: `${dashboard()}#applications`,
-        icon: ClipboardList,
+        label: "Community",
+        items: [
+            {
+                title: "Messages",
+                href: `${dashboard()}#messages`,
+                icon: MessageSquare,
+                badge: "5",
+                badgeTone: "accent",
+            },
+            {
+                title: "Team",
+                href: `${dashboard()}#team`,
+                icon: UsersRound,
+            },
+        ],
     },
     {
-        title: "My projects",
-        href: `${dashboard()}#projects`,
-        icon: BriefcaseBusiness,
-    },
-    {
-        title: "Timesheets",
-        href: `${dashboard()}#timesheets`,
-        icon: CalendarDays,
-    },
-    {
-        title: "My profile",
-        href: "/onboarding/build-profile",
-        icon: UserRound,
+        label: "Support",
+        items: [
+            {
+                title: "My profile",
+                href: "/onboarding/build-profile",
+                icon: UserRound,
+            },
+            {
+                title: "Settings",
+                href: "/settings/profile",
+                icon: Settings,
+            },
+            {
+                title: "Help center",
+                href: `${dashboard()}#help`,
+                icon: LifeBuoy,
+            },
+        ],
     },
 ];
 
@@ -77,10 +148,11 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={navGroups} />
             </SidebarContent>
 
             <SidebarFooter>
+                <SidebarSeparator className="mx-0" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

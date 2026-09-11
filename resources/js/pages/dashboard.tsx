@@ -1,16 +1,23 @@
 import { Head, Link, usePage } from "@inertiajs/react";
 import {
     ArrowRight,
+    BarChart3,
     Bell,
     Bookmark,
     BriefcaseBusiness,
     CalendarDays,
+    Check,
     CheckCircle2,
     ChevronRight,
+    Circle,
     Clock3,
     Compass,
     FileText,
+    Flag,
+    HelpCircle,
+    LifeBuoy,
     MapPin,
+    MessageCircle,
     MoreHorizontal,
     Plus,
     Send,
@@ -137,6 +144,335 @@ function ActivityDot({ color }: { color: string }) {
             <span className={`absolute inline-flex size-full animate-ping rounded-full opacity-75 ${color}`} />
             <span className={`relative inline-flex size-2.5 rounded-full ${color}`} />
         </span>
+    );
+}
+
+const weeklyActivity = [
+    { day: "Mon", value: 42 },
+    { day: "Tue", value: 68 },
+    { day: "Wed", value: 55 },
+    { day: "Thu", value: 82 },
+    { day: "Fri", value: 74 },
+    { day: "Sat", value: 30 },
+    { day: "Sun", value: 58 },
+];
+
+function WeeklyChart() {
+    const max = Math.max(...weeklyActivity.map((d) => d.value));
+    return (
+        <div className="flex h-32 items-end justify-between gap-2 sm:gap-3">
+            {weeklyActivity.map((d, i) => (
+                <div key={d.day} className="flex flex-1 flex-col items-center gap-2">
+                    <div className="flex w-full flex-1 items-end">
+                        <div
+                            className={`w-full rounded-lg transition-all duration-700 ${
+                                i === 3
+                                    ? "bg-gradient-to-t from-sienna-600 to-sienna-400 dark:from-sienna-700 dark:to-sienna-400"
+                                    : "bg-muted"
+                            }`}
+                            style={{ height: `${Math.max((d.value / max) * 100, 8)}%` }}
+                        />
+                    </div>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                        {d.day}
+                    </span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function SectionHeader({
+    eyebrow,
+    title,
+    description,
+    icon: Icon,
+    tone = "text-sienna dark:text-sienna-300",
+}: {
+    eyebrow: string;
+    title: string;
+    description?: string;
+    icon: typeof BarChart3;
+    tone?: string;
+}) {
+    return (
+        <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+                {Icon && (
+                    <span className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary ${tone}`}>
+                        <Icon className="size-[18px]" />
+                    </span>
+                )}
+                <div>
+                    <p className={`text-xs font-bold tracking-widest uppercase ${tone}`}>
+                        {eyebrow}
+                    </p>
+                    <h2 className="mt-0.5 text-lg font-extrabold text-foreground">
+                        {title}
+                    </h2>
+                    {description && (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            {description}
+                        </p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const initialTasks = [
+    { id: 1, title: "Revise data collection notes", meta: "Due today · 2h" },
+    { id: 2, title: "Attend team check-in", meta: "Today 10:00 · Online" },
+    { id: 3, title: "Submit timesheet", meta: "Due Mon · 6.5h" },
+    { id: 4, title: "Reply to Hannah about fieldwork", meta: "2 new messages" },
+];
+
+function TasksCard() {
+    const [tasks, setTasks] = useState(initialTasks.map((t) => ({ ...t, done: false })));
+    const doneCount = tasks.filter((t) => t.done).length;
+
+    return (
+        <section
+            id="tasks"
+            className="glass-card rounded-2xl p-5 sm:p-6 scroll-mt-6 animate-fade-in-up"
+        >
+            <div className="flex items-center justify-between">
+                <SectionHeader
+                    eyebrow="To do"
+                    title="Today's tasks"
+                    icon={Flag}
+                    tone="text-sienna dark:text-sienna-300"
+                />
+                <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-bold text-secondary-foreground">
+                    {doneCount}/{tasks.length}
+                </span>
+            </div>
+            <div className="mt-5 space-y-1.5">
+                {tasks.map((task) => (
+                    <button
+                        key={task.id}
+                        onClick={() =>
+                            setTasks((prev) =>
+                                prev.map((t) =>
+                                    t.id === task.id ? { ...t, done: !t.done } : t,
+                                ),
+                            )
+                        }
+                        className={`group flex w-full items-start gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-accent/60 ${task.done ? "opacity-60" : ""}`}
+                    >
+                        {task.done ? (
+                            <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-moss-500 text-white shadow-sm">
+                                <Check className="size-3" strokeWidth={3} />
+                            </span>
+                        ) : (
+                            <Circle className="mt-0.5 size-5 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-sienna" />
+                        )}
+                        <span>
+                            <span className={`block text-sm font-bold text-foreground ${task.done ? "line-through" : ""}`}>
+                                {task.title}
+                            </span>
+                            <span className="mt-0.5 block text-xs text-muted-foreground">
+                                {task.meta}
+                            </span>
+                        </span>
+                    </button>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+const messages = [
+    {
+        name: "Hannah van Wyk",
+        initials: "HV",
+        preview: "Hi! Could you send through the fieldwork…",
+        time: "2m",
+        unread: true,
+    },
+    {
+        name: "Project Starter Kit",
+        initials: "PS",
+        preview: "Your profile scored 84% — check the…",
+        time: "1h",
+        unread: false,
+    },
+    {
+        name: "Charles Ndlovu",
+        initials: "CN",
+        preview: "Great session today, see you Friday.",
+        time: "3h",
+        unread: false,
+    },
+];
+
+function MessagesCard() {
+    return (
+        <section
+            id="messages"
+            className="glass-card rounded-2xl p-5 sm:p-6 scroll-mt-6 animate-fade-in-up"
+        >
+            <SectionHeader
+                eyebrow="Inbox"
+                title="Messages"
+                description="3 unread conversations"
+                icon={MessageCircle}
+                tone="text-moss-600 dark:text-moss-300"
+            />
+            <div className="mt-4 space-y-1">
+                {messages.map((m) => (
+                    <button
+                        key={m.name}
+                        className="flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-accent/60"
+                    >
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sienna-500 to-sienna-700 font-bold text-white text-xs">
+                            {m.initials}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                            <span className="flex items-center justify-between gap-2">
+                                <span className="truncate text-sm font-bold text-foreground">
+                                    {m.name}
+                                </span>
+                                <span className="text-[10px] font-semibold text-muted-foreground">
+                                    {m.time}
+                                </span>
+                            </span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                                {m.preview}
+                            </span>
+                        </span>
+                        {m.unread && (
+                            <span className="size-2 shrink-0 rounded-full bg-sienna" />
+                        )}
+                    </button>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+const teamMembers = [
+    { name: "Zanele M.", initials: "ZM" },
+    { name: "Bongani K.", initials: "BK" },
+    { name: "Ayanda P.", initials: "AP" },
+    { name: "Thabo S.", initials: "TS" },
+    { name: "Lerato D.", initials: "LD" },
+];
+
+function TeamCard() {
+    return (
+        <section
+            id="team"
+            className="glass-card rounded-2xl p-5 sm:p-6 scroll-mt-6 animate-fade-in-up"
+        >
+            <SectionHeader
+                eyebrow="Community"
+                title="My team"
+                description="8 members across 1 project"
+                icon={UsersRound}
+                tone="text-clay-600 dark:text-clay-300"
+            />
+            <div className="mt-5 flex items-center -space-x-3">
+                {teamMembers.map((m) => (
+                    <span
+                        key={m.name}
+                        title={m.name}
+                        className="flex size-10 items-center justify-center rounded-full border-2 border-card bg-gradient-to-br from-harbor to-harbor-700 text-xs font-bold text-white"
+                    >
+                        {m.initials}
+                    </span>
+                ))}
+                <span className="z-0 flex size-10 items-center justify-center rounded-full border-2 border-card bg-secondary text-xs font-bold text-secondary-foreground">
+                    +3
+                </span>
+            </div>
+            <button className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-secondary py-2.5 text-xs font-bold text-secondary-foreground transition-all duration-300 hover:bg-secondary/80 hover:-translate-y-0.5">
+                Manage team
+                <ChevronRight className="size-3.5" />
+            </button>
+        </section>
+    );
+}
+
+function AnalyticsCard() {
+    return (
+        <section
+            id="analytics"
+            className="glass-card rounded-2xl p-5 sm:p-6 scroll-mt-6 animate-fade-in-up"
+        >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <SectionHeader
+                    eyebrow="Insights"
+                    title="Weekly activity"
+                    description="Hours engaged across your projects"
+                    icon={BarChart3}
+                    tone="text-sienna dark:text-sienna-300"
+                />
+                <span className="inline-flex items-center gap-1 rounded-full bg-moss-100 px-2.5 py-1 text-[10px] font-bold text-moss-600 dark:bg-moss-800/40 dark:text-moss-300">
+                    <TrendingUp className="size-3" />
+                    +18% vs last week
+                </span>
+            </div>
+            <div className="mt-6">
+                <WeeklyChart />
+            </div>
+            <div className="mt-5 grid grid-cols-3 gap-3 border-t border-border pt-4">
+                {[
+                    { label: "Sessions", value: "14" },
+                    { label: "Hours", value: "32.5" },
+                    { label: "Streak", value: "7d" },
+                ].map((s) => (
+                    <div key={s.label} className="text-center">
+                        <p className="text-xl font-extrabold text-foreground">{s.value}</p>
+                        <p className="mt-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                            {s.label}
+                        </p>
+                    </div>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+function HelpCard() {
+    return (
+        <section
+            id="help"
+            className="glass-card relative overflow-hidden rounded-2xl p-5 sm:p-6 scroll-mt-6 animate-fade-in-up"
+        >
+            <div className="absolute -top-10 -right-10 size-36 rounded-full bg-amber/10 blur-2xl" />
+            <div className="relative">
+                <SectionHeader
+                    eyebrow="Support"
+                    title="Need a hand?"
+                    description="Resources to get you unstuck"
+                    icon={LifeBuoy}
+                    tone="text-sienna dark:text-sienna-300"
+                />
+                <div className="mt-4 space-y-2">
+                    {[
+                        { icon: HelpCircle, label: "Getting started guide", meta: "5 min read" },
+                        { icon: FileText, label: "Timesheet how-to", meta: "Step by step" },
+                        { icon: MessageCircle, label: "Contact support", meta: "Reply in 24h" },
+                    ].map((h) => (
+                        <button
+                            key={h.label}
+                            className="flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-colors hover:bg-accent/60"
+                        >
+                            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary">
+                                <h.icon className="size-4 text-sienna dark:text-sienna-300" />
+                            </span>
+                            <span className="flex-1">
+                                <span className="block text-sm font-bold text-foreground">{h.label}</span>
+                                <span className="block text-[11px] text-muted-foreground">{h.meta}</span>
+                            </span>
+                            <ChevronRight className="size-4 text-muted-foreground/50" />
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </section>
     );
 }
 
@@ -565,6 +901,19 @@ export default function Dashboard() {
                                 </div>
                             </section>
                         </aside>
+                    </div>
+
+                    {/* Analytics */}
+                    <div className="mt-6 animate-fade-in-up">
+                        <AnalyticsCard />
+                    </div>
+
+                    {/* Tasks · Messages · Team · Help */}
+                    <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                        <TasksCard />
+                        <MessagesCard />
+                        <TeamCard />
+                        <HelpCard />
                     </div>
                 </div>
             </main>
