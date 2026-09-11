@@ -1,8 +1,15 @@
-import { Link } from '@inertiajs/react';
-import { BriefcaseBusiness, CalendarDays, ClipboardList, Compass, LayoutGrid, UserRound } from 'lucide-react';
-import AppLogo from '@/components/app-logo';
-import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
+import { Link } from "@inertiajs/react";
+import {
+    BriefcaseBusiness,
+    CalendarDays,
+    ClipboardList,
+    Compass,
+    LayoutGrid,
+    UserRound,
+} from "lucide-react";
+import AppLogo from "@/components/app-logo";
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
 import {
     Sidebar,
     SidebarContent,
@@ -11,39 +18,40 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
+    SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { dashboard } from "@/routes";
+import type { NavItem } from "@/types";
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: "Dashboard",
         href: dashboard(),
         icon: LayoutGrid,
     },
     {
-        title: 'Discover projects',
+        title: "Discover projects",
         href: `${dashboard()}#opportunities`,
         icon: Compass,
     },
     {
-        title: 'My applications',
+        title: "My applications",
         href: `${dashboard()}#applications`,
         icon: ClipboardList,
     },
     {
-        title: 'My projects',
+        title: "My projects",
         href: `${dashboard()}#projects`,
         icon: BriefcaseBusiness,
     },
     {
-        title: 'Timesheets',
+        title: "Timesheets",
         href: `${dashboard()}#timesheets`,
         icon: CalendarDays,
     },
     {
-        title: 'My profile',
-        href: '/onboarding/build-profile',
+        title: "My profile",
+        href: "/onboarding/build-profile",
         icon: UserRound,
     },
 ];
@@ -53,9 +61,10 @@ export function AppSidebar() {
         <Sidebar
             collapsible="icon"
             variant="inset"
-            className="[--sidebar:#1e2f44] [--sidebar-foreground:#faf5ec] [--sidebar-primary:#c56a2e] [--sidebar-primary-foreground:#fff] [--sidebar-accent:#29415b] [--sidebar-accent-foreground:#fff] [--sidebar-border:#38506a]"
+            className="[--sidebar:#d57f3f] [--sidebar-foreground:#1e2f44] [--sidebar-primary:#1e2f44] [--sidebar-primary-foreground:#fff] [--sidebar-accent:#e9a56f] [--sidebar-accent-foreground:#1e2f44] [--sidebar-border:#e9a56f] [--sidebar-width-icon:5rem]"
         >
-            <SidebarHeader>
+            <SidebarHeader className="relative">
+                <SidebarTrigger className="absolute top-3 right-1 z-10" />
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
