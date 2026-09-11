@@ -9,6 +9,8 @@ import {
     LayoutGrid,
     LifeBuoy,
     MessageSquare,
+    PanelLeftClose,
+    PanelLeftOpen,
     Settings,
     SquareCheck,
     UserRound,
@@ -17,7 +19,6 @@ import {
 import AppLogo from "@/components/app-logo";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
-import { SidebarSeparator } from "@/components/ui/sidebar";
 import {
     Sidebar,
     SidebarContent,
@@ -26,8 +27,10 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    SidebarTrigger,
+    SidebarSeparator,
+    useSidebar,
 } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { dashboard } from "@/routes";
 import type { NavGroup } from "@/types";
 
@@ -128,14 +131,41 @@ const navGroups: NavGroup[] = [
 ];
 
 export function AppSidebar() {
+    const { state, toggleSidebar } = useSidebar();
+    const isMobile = useIsMobile();
+    const isCollapsed = !isMobile && state === "collapsed";
+
     return (
         <Sidebar
             collapsible="icon"
             variant="inset"
             className="[--sidebar:#f4ead9] [--sidebar-foreground:#1e2f44] [--sidebar-primary:#1e2f44] [--sidebar-primary-foreground:#faf5ec] [--sidebar-accent:#e9d8bd] [--sidebar-accent-foreground:#1e2f44] [--sidebar-border:#e9d8bd] [--sidebar-width-icon:5rem] dark:[--sidebar:#121d2a] dark:[--sidebar-foreground:#d8e0e9] dark:[--sidebar-primary:#d8e0e9] dark:[--sidebar-primary-foreground:#121d2a] dark:[--sidebar-accent:#1e2f44] dark:[--sidebar-accent-foreground:#d8e0e9] dark:[--sidebar-border:#1e2f44]"
         >
-            <SidebarHeader className="relative">
-                <SidebarTrigger className="absolute top-3 right-1 z-10" />
+            <SidebarHeader>
+                {!isMobile && (
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                onClick={toggleSidebar}
+                                tooltip={
+                                    isCollapsed
+                                        ? "Expand sidebar"
+                                        : "Minimize sidebar"
+                                }
+                                className="text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                            >
+                                {isCollapsed ? (
+                                    <PanelLeftOpen />
+                                ) : (
+                                    <PanelLeftClose />
+                                )}
+                                <span>
+                                    {isCollapsed ? "Expand" : "Minimize"}
+                                </span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                )}
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>

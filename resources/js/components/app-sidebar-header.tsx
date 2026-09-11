@@ -1,8 +1,10 @@
-import { Bell, MessageSquare, Search } from "lucide-react";
+import { Bell, Menu, MessageSquare, PanelLeftClose, PanelLeftOpen, Search } from "lucide-react";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSidebar } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { BreadcrumbItem as BreadcrumbItemType } from "@/types";
 
 export function AppSidebarHeader({
@@ -10,9 +12,27 @@ export function AppSidebarHeader({
 }: {
     breadcrumbs?: BreadcrumbItemType[];
 }) {
+    const { toggleSidebar, state } = useSidebar();
+    const isMobile = useIsMobile();
+
     return (
         <header className="border-sidebar-border/50 bg-background/80 flex h-16 shrink-0 items-center gap-2 border-b px-6 backdrop-blur-lg transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
             <div className="flex w-full items-center gap-2 md:gap-3">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleSidebar}
+                    className="-ml-1.5 rounded-full"
+                    aria-label="Toggle sidebar"
+                >
+                    {isMobile ? (
+                        <Menu className="size-5" />
+                    ) : state === "collapsed" ? (
+                        <PanelLeftOpen className="size-5" />
+                    ) : (
+                        <PanelLeftClose className="size-5" />
+                    )}
+                </Button>
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
 
                 <div className="ml-auto flex items-center gap-1.5 md:gap-2">
