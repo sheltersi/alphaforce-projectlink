@@ -1,4 +1,12 @@
-import { Bell, Menu, MessageSquare, PanelLeftClose, PanelLeftOpen, Search } from "lucide-react";
+import {
+    Bell,
+    Menu,
+    MessageSquare,
+    PanelLeftClose,
+    PanelLeftOpen,
+    Search,
+} from "lucide-react";
+
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
