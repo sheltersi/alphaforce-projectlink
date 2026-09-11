@@ -1,4 +1,4 @@
-import { Head, router, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import {
     ArrowRight,
     BriefcaseBusiness,
@@ -22,7 +22,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { index as projectsIndex, apply as projectsApply, like as projectsLike } from "@/routes/projects";
+import { index as projectsIndex, show as projectsShow, apply as projectsApply, like as projectsLike } from "@/routes/projects";
 
 type DiscoverProject = {
     id: number;
@@ -270,7 +270,12 @@ export default function DiscoverProjects() {
                                         </div>
 
                                         <h2 className="mt-2 text-[16px] font-extrabold leading-snug text-foreground">
-                                            {project.title}
+                                            <Link
+                                                href={projectsShow({ project: project.id }).url}
+                                                className="transition-colors hover:text-sienna dark:hover:text-sienna-300"
+                                            >
+                                                {project.title}
+                                            </Link>
                                         </h2>
                                         <p className="mt-0.5 text-xs text-muted-foreground">
                                             {project.organisation ?? "Independent project"}
@@ -338,10 +343,13 @@ export default function DiscoverProjects() {
                                                         : "Apply"}
                                                 </button>
                                             )}
-                                            <span className="inline-flex items-center justify-center text-xs font-bold text-sienna dark:text-sienna-300">
+                                            <Link
+                                                href={projectsShow({ project: project.id }).url}
+                                                className="inline-flex items-center justify-center text-xs font-bold text-sienna hover:text-sienna-600 dark:text-sienna-300 dark:hover:text-sienna-200"
+                                            >
                                                 Details
                                                 <ArrowRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-                                            </span>
+                                            </Link>
                                         </div>
                                     </article>
                                 );

@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified', 'ensure.participant.profile'])->group(fun
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::post('projects/{project}/like', [ProjectController::class, 'toggleLike'])->name('projects.like');
     Route::post('projects/{project}/apply', [ProjectController::class, 'apply'])->name('projects.apply');
+    Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
 });
 
 require __DIR__.'/settings.php';
