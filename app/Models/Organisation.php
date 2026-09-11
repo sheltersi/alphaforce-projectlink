@@ -54,4 +54,10 @@ class Organisation extends Model
             ->withPivot(['role'])
             ->withTimestamps();
     }
+
+    /** @return HasMany<Project, $this> */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
 }

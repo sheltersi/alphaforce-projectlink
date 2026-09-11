@@ -142,30 +142,6 @@ export function AppSidebar() {
             className="[--sidebar:#f4ead9] [--sidebar-foreground:#1e2f44] [--sidebar-primary:#1e2f44] [--sidebar-primary-foreground:#faf5ec] [--sidebar-accent:#e9d8bd] [--sidebar-accent-foreground:#1e2f44] [--sidebar-border:#e9d8bd] [--sidebar-width-icon:5rem] dark:[--sidebar:#121d2a] dark:[--sidebar-foreground:#d8e0e9] dark:[--sidebar-primary:#d8e0e9] dark:[--sidebar-primary-foreground:#121d2a] dark:[--sidebar-accent:#1e2f44] dark:[--sidebar-accent-foreground:#d8e0e9] dark:[--sidebar-border:#1e2f44]"
         >
             <SidebarHeader>
-                {!isMobile && (
-                    <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton
-                                onClick={toggleSidebar}
-                                tooltip={
-                                    isCollapsed
-                                        ? "Expand sidebar"
-                                        : "Minimize sidebar"
-                                }
-                                className="text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                            >
-                                {isCollapsed ? (
-                                    <PanelLeftOpen />
-                                ) : (
-                                    <PanelLeftClose />
-                                )}
-                                <span>
-                                    {isCollapsed ? "Expand" : "Minimize"}
-                                </span>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                )}
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
