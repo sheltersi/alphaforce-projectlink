@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -41,7 +42,23 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'projectsCount' => $this->openProjectsCount(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
+    }
+
+    /**
+     * Number of projects currently open for applications.
+     */
+    private function openProjectsCount(): int
+    {
+        try {
+            return (int) DB::table('projects')
+                ->whereIn('status', ['open', 'in_progress'])
+                ->count();
+        } catch (\Throwable) {
+            // Table may not exist yet (e.g. before migrations in a fresh checkout).
+            return 0;
+        }
     }
 }

@@ -96,4 +96,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(ProjectParticipant::class);
     }
+
+    /** @return HasMany<ProjectLike, $this> */
+    public function projectLikes(): HasMany
+    {
+        return $this->hasMany(ProjectLike::class);
+    }
+
+    /** @return BelongsToMany<Project, $this> */
+    public function likedProjects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'project_likes');
+    }
 }

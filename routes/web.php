@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ParticipantProfileController;
+use App\Http\Controllers\ProjectController;
+use App\Models\Project;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -23,6 +25,10 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'verified', 'ensure.participant.profile'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
+
+    Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
+    Route::post('projects/{project}/like', [ProjectController::class, 'toggleLike'])->name('projects.like');
+    Route::post('projects/{project}/apply', [ProjectController::class, 'apply'])->name('projects.apply');
 });
 
 require __DIR__.'/settings.php';

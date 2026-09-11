@@ -1,6 +1,7 @@
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import {
     BarChart3,
+    Bell,
     BriefcaseBusiness,
     CalendarDays,
     ClipboardList,
@@ -32,6 +33,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { dashboard } from "@/routes";
+import { index as projectsIndex } from "@/routes/projects";
 import type { NavGroup } from "@/types";
 
 const navGroups: NavGroup[] = [
@@ -42,6 +44,11 @@ const navGroups: NavGroup[] = [
                 title: "Dashboard",
                 href: dashboard(),
                 icon: LayoutGrid,
+            },
+            {
+                title: "Notifications",
+                href: `${dashboard()}#notifications`,
+                icon: Bell,
             },
             {
                 title: "Analytics",
@@ -57,7 +64,7 @@ const navGroups: NavGroup[] = [
         items: [
             {
                 title: "Discover projects",
-                href: `${dashboard()}#opportunities`,
+                href: projectsIndex({}).url,
                 icon: Compass,
                 badge: "12",
                 badgeTone: "accent",
@@ -134,6 +141,16 @@ export function AppSidebar() {
     const { state, toggleSidebar } = useSidebar();
     const isMobile = useIsMobile();
     const isCollapsed = !isMobile && state === "collapsed";
+    const { projectsCount } = usePage().props as unknown as { projectsCount?: number };
+
+    const groups = navGroups.map((group) => ({
+        ...group,
+        items: group.items.map((item) =>
+            item.title === "Discover projects" && projectsCount
+                ? { ...item, badge: String(projectsCount) }
+                : item,
+        ),
+    }));
 
     return (
         <Sidebar
@@ -154,7 +171,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={navGroups} />
+                <NavMain items={groups} />
             </SidebarContent>
 
             <SidebarFooter>

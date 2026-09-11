@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { dashboard } from "@/routes";
+import { index as projectsIndex } from "@/routes/projects";
 
 const opportunities = [
     {
@@ -395,6 +396,32 @@ function TeamCard() {
     );
 }
 
+function NotificationsCard() {
+    return (
+        <section
+            id="notifications"
+            className="glass-card rounded-2xl p-5 sm:p-6 scroll-mt-6 animate-fade-in-up"
+        >
+            <SectionHeader
+                eyebrow="Updates"
+                title="Notifications"
+                description="Activity from your projects and applications"
+                icon={Bell}
+                tone="text-moss dark:text-moss-300"
+            />
+            <div className="mt-6 flex flex-col items-center justify-center gap-3 py-10 text-center">
+                <div className="flex size-12 items-center justify-center rounded-full bg-muted/60">
+                    <Bell className="size-6 text-muted-foreground/50" />
+                </div>
+                <p className="text-sm font-semibold text-foreground">All caught up</p>
+                <p className="text-xs text-muted-foreground">
+                    No new notifications. We'll let you know when something needs your attention.
+                </p>
+            </div>
+        </section>
+    );
+}
+
 function AnalyticsCard() {
     return (
         <section
@@ -519,7 +546,7 @@ export default function Dashboard() {
                                 <span className="absolute top-2.5 right-2.5 size-2 rounded-full bg-sienna ring-2 ring-card" />
                             </button>
                             <a
-                                href="#opportunities"
+                                href={projectsIndex({}).url}
                                 className="inline-flex h-11 items-center gap-2 rounded-xl bg-harbor px-5 text-sm font-bold text-white shadow-lg shadow-harbor/20 transition-all duration-300 hover:bg-harbor-700 hover:shadow-xl hover:shadow-harbor/25 hover:-translate-y-0.5 dark:bg-harbor-600 dark:hover:bg-harbor-500"
                             >
                                 <Compass className="size-4" />
@@ -552,7 +579,7 @@ export default function Dashboard() {
                                     your profile, experience, and interests.
                                 </p>
                                 <a
-                                    href="#opportunities"
+                                    href={projectsIndex({}).url}
                                     className="mt-5 inline-flex items-center gap-2 text-sm font-extrabold text-amber-200 transition-colors hover:text-white"
                                 >
                                     View recommended projects
@@ -691,7 +718,7 @@ export default function Dashboard() {
                                         </p>
                                     </div>
                                     <a
-                                        href="#opportunities"
+                                        href={projectsIndex({}).url}
                                         className="hidden text-sm font-bold text-sienna dark:text-sienna-300 sm:inline-flex sm:items-center sm:gap-1 transition-colors hover:text-sienna-600 dark:hover:text-sienna-200"
                                     >
                                         See all

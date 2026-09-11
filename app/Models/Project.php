@@ -136,4 +136,16 @@ class Project extends Model
     {
         return $this->hasMany(ProjectParticipant::class);
     }
+
+    /** @return HasMany<ProjectLike, $this> */
+    public function likes(): HasMany
+    {
+        return $this->hasMany(ProjectLike::class);
+    }
+
+    /** @return BelongsToMany<User, $this> */
+    public function likedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'project_likes');
+    }
 }
