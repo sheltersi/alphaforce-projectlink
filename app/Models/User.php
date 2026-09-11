@@ -35,6 +35,17 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
 
+    public const SEED_NAMES = [
+        'Liam van der Berg',
+        'Zara Almeida',
+        'Noah Okonkwo',
+        'Aisha Rahman',
+        'Lucas Moreau',
+        'Priya Sharma',
+        'Mateo Rossi',
+        'Elena Petrova',
+    ];
+
     /**
      * Get the attributes that should be cast.
      *

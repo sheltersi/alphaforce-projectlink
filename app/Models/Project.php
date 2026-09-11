@@ -19,6 +19,63 @@ class Project extends Model
     public const STATUS_COMPLETED = 'completed';
     public const STATUS_CANCELLED = 'cancelled';
 
+    public const SEED = [
+        [
+            'title' => 'Community Garden Revitalisation',
+            'status' => self::STATUS_OPEN,
+            'description' => 'Wheelchair-accessible raised beds and a new composting system for the city allotment.',
+            'location' => 'Amsterdam',
+            'start_date' => '+3 months',
+            'end_date' => '+5 months',
+            'positions' => 4,
+        ],
+        [
+            'title' => 'Digital Literacy for Seniors',
+            'status' => self::STATUS_IN_PROGRESS,
+            'description' => 'Weekly one-on-one workshops helping older residents use smartphones and online services.',
+            'location' => 'Rotterdam',
+            'start_date' => '-2 months',
+            'end_date' => '+2 months',
+            'positions' => 6,
+        ],
+        [
+            'title' => 'Foodbank Volunteer Network',
+            'status' => self::STATUS_COMPLETED,
+            'description' => 'Coordinated a delivery roster connecting 200 volunteers with local foodbanks.',
+            'location' => 'Utrecht',
+            'start_date' => '-8 months',
+            'end_date' => '-2 months',
+            'positions' => 10,
+        ],
+        [
+            'title' => 'River Cleanup Initiative',
+            'status' => self::STATUS_OPEN,
+            'description' => 'Monthly riverbank cleanups with data collection on plastic hotspots.',
+            'location' => 'Rotterdam',
+            'start_date' => '+1 month',
+            'end_date' => '+6 months',
+            'positions' => 5,
+        ],
+        [
+            'title' => 'Youth Mentorship Program',
+            'status' => self::STATUS_IN_PROGRESS,
+            'description' => 'Pairing university students with at-risk youth for academic mentoring.',
+            'location' => 'Amsterdam',
+            'start_date' => '-1 month',
+            'end_date' => '+5 months',
+            'positions' => 8,
+        ],
+        [
+            'title' => 'Neighbourhood Watch App',
+            'status' => self::STATUS_DRAFT,
+            'description' => 'Designing a simple safety reporting app for residential blocks.',
+            'location' => 'The Hague',
+            'start_date' => null,
+            'end_date' => null,
+            'positions' => 3,
+        ],
+    ];
+
     protected $fillable = [
         'organisation_id',
         'created_by',

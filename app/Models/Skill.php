@@ -16,6 +16,25 @@ class Skill extends Model
         'name',
     ];
 
+    public const SEED_NAMES = [
+        'Applied Research',
+        'Data Analysis',
+        'Community Outreach',
+        'Public Speaking',
+        'Project Coordination',
+        'Grant Writing',
+        'Graphic Design',
+        'Social Media',
+        'Web Development',
+        'Event Planning',
+        'First Aid',
+        'Budgeting',
+        'Volunteer Recruitment',
+        'Technical Writing',
+        'Mentoring',
+        'Survey Design',
+    ];
+
     /** @return BelongsTo<ParticipantProfile, $this> */
     public function participantProfile(): BelongsTo
     {

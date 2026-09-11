@@ -26,6 +26,25 @@ class Organisation extends Model
         'created_by',
     ];
 
+    public const SEED = [
+        'Alpha Force Foundation' => [
+            'description' => 'A community foundation focused on neighbourhood support and local impact.',
+            'email' => 'hello@alphaforce.example',
+            'phone' => '+1-555-0101',
+            'website' => 'https://alphaforce.example',
+            'city' => 'Amsterdam',
+            'country' => 'Netherlands',
+        ],
+        'Greenbridge Collective' => [
+            'description' => 'Environmental volunteers restoring urban green spaces across the city.',
+            'email' => 'team@greenbridge.example',
+            'phone' => '+1-555-0102',
+            'website' => 'https://greenbridge.example',
+            'city' => 'Rotterdam',
+            'country' => 'Netherlands',
+        ],
+    ];
+
     protected static function booted(): void
     {
         static::creating(function (self $organisation) {
