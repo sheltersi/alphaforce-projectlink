@@ -1,4 +1,3 @@
-import { Link, usePage } from "@inertiajs/react";
 import {
     BarChart3,
     Bell,
@@ -17,6 +16,7 @@ import {
     UserRound,
     UsersRound,
 } from "lucide-react";
+
 import AppLogo from "@/components/app-logo";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -36,7 +36,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { dashboard } from "@/routes";
 import { index as projectsIndex } from "@/routes/projects";
 import type { NavGroup } from "@/types";
+import { Link, usePage } from "@inertiajs/react";
 
+// Central navigation for the app shell. Route values are kept explicit so the
+// workspace links remain easy to audit and update as pages are added.
 const navGroups: NavGroup[] = [
     {
         label: "Overview",
@@ -77,7 +80,7 @@ const navGroups: NavGroup[] = [
             },
             {
                 title: "My applications",
-                href: `${dashboard()}#applications`,
+                href: "/applications",
                 icon: ClipboardList,
             },
             {
@@ -142,7 +145,9 @@ export function AppSidebar() {
     const { state, toggleSidebar } = useSidebar();
     const isMobile = useIsMobile();
     const isCollapsed = !isMobile && state === "collapsed";
-    const { projectsCount } = usePage().props as unknown as { projectsCount?: number };
+    const { projectsCount } = usePage().props as unknown as {
+        projectsCount?: number;
+    };
 
     const groups = navGroups.map((group) => ({
         ...group,

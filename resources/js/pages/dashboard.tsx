@@ -1,4 +1,3 @@
-import { Head, Link, usePage } from "@inertiajs/react";
 import {
     ArrowRight,
     BarChart3,
@@ -27,8 +26,10 @@ import {
     UsersRound,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+
 import { dashboard } from "@/routes";
 import { index as projectsIndex } from "@/routes/projects";
+import { Head, Link, usePage } from "@inertiajs/react";
 
 const opportunities = [
     {
@@ -37,7 +38,8 @@ const opportunities = [
         type: "Hybrid · Cape Town",
         match: "94% match",
         skills: ["Research", "Community"],
-        gradient: "bg-gradient-to-br from-sienna-500 to-sienna-700 dark:from-sienna-600 dark:to-sienna-800",
+        gradient:
+            "bg-gradient-to-br from-sienna-500 to-sienna-700 dark:from-sienna-600 dark:to-sienna-800",
     },
     {
         title: "Youth Employability Lab",
@@ -45,7 +47,8 @@ const opportunities = [
         type: "Remote · South Africa",
         match: "88% match",
         skills: ["Facilitation", "Data"],
-        gradient: "bg-gradient-to-br from-moss-500 to-moss-700 dark:from-moss-600 dark:to-moss-800",
+        gradient:
+            "bg-gradient-to-br from-moss-500 to-moss-700 dark:from-moss-600 dark:to-moss-800",
     },
     {
         title: "Local Food Systems Map",
@@ -53,18 +56,38 @@ const opportunities = [
         type: "On-site · Johannesburg",
         match: "82% match",
         skills: ["Mapping", "Research"],
-        gradient: "bg-gradient-to-br from-amber-400 to-amber-600 dark:from-amber-600 dark:to-amber-800",
+        gradient:
+            "bg-gradient-to-br from-amber-400 to-amber-600 dark:from-amber-600 dark:to-amber-800",
     },
 ];
 
 function Sparkline({ id }: { id: string }) {
-    const points = "0,20 10,15 20,18 30,10 40,14 50,8 60,12 70,6 80,10 90,4 100,8";
+    const points =
+        "0,20 10,15 20,18 30,10 40,14 50,8 60,12 70,6 80,10 90,4 100,8";
     return (
-        <svg viewBox="0 0 100 24" className="h-8 w-full overflow-visible text-foreground/30" preserveAspectRatio="none">
+        <svg
+            viewBox="0 0 100 24"
+            className="h-8 w-full overflow-visible text-foreground/30"
+            preserveAspectRatio="none"
+        >
             <defs>
-                <linearGradient id={`sparklineGrad-${id}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="currentColor" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+                <linearGradient
+                    id={`sparklineGrad-${id}`}
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                >
+                    <stop
+                        offset="0%"
+                        stopColor="currentColor"
+                        stopOpacity="0.4"
+                    />
+                    <stop
+                        offset="100%"
+                        stopColor="currentColor"
+                        stopOpacity="0"
+                    />
                 </linearGradient>
             </defs>
             <polygon
@@ -101,7 +124,7 @@ function StatCard({
     trend?: string;
     delay: number;
 }) {
-    const id = label.toLowerCase().replace(/\s+/g, '-');
+    const id = label.toLowerCase().replace(/\s+/g, "-");
     return (
         <div
             className="glass-card premium-shadow-hover group relative overflow-hidden rounded-2xl p-5 sm:p-6 animate-fade-in-up"
@@ -126,7 +149,9 @@ function StatCard({
                 <Sparkline id={id} />
             </div>
             <div className="relative z-10 mt-3 flex items-center justify-between">
-                <p className="text-xs font-medium text-muted-foreground">{note}</p>
+                <p className="text-xs font-medium text-muted-foreground">
+                    {note}
+                </p>
                 {trend && (
                     <span className="inline-flex items-center gap-0.5 rounded-full bg-moss-100 px-2 py-0.5 text-[10px] font-bold text-moss-600 dark:bg-moss-800/40 dark:text-moss-300">
                         <TrendingUp className="size-3" />
@@ -142,8 +167,12 @@ function StatCard({
 function ActivityDot({ color }: { color: string }) {
     return (
         <span className="relative flex size-2.5">
-            <span className={`absolute inline-flex size-full animate-ping rounded-full opacity-75 ${color}`} />
-            <span className={`relative inline-flex size-2.5 rounded-full ${color}`} />
+            <span
+                className={`absolute inline-flex size-full animate-ping rounded-full opacity-75 ${color}`}
+            />
+            <span
+                className={`relative inline-flex size-2.5 rounded-full ${color}`}
+            />
         </span>
     );
 }
@@ -163,7 +192,10 @@ function WeeklyChart() {
     return (
         <div className="flex h-32 items-end justify-between gap-2 sm:gap-3">
             {weeklyActivity.map((d, i) => (
-                <div key={d.day} className="flex flex-1 flex-col items-center gap-2">
+                <div
+                    key={d.day}
+                    className="flex flex-1 flex-col items-center gap-2"
+                >
                     <div className="flex w-full flex-1 items-end">
                         <div
                             className={`w-full rounded-lg transition-all duration-700 ${
@@ -171,7 +203,9 @@ function WeeklyChart() {
                                     ? "bg-gradient-to-t from-sienna-600 to-sienna-400 dark:from-sienna-700 dark:to-sienna-400"
                                     : "bg-muted"
                             }`}
-                            style={{ height: `${Math.max((d.value / max) * 100, 8)}%` }}
+                            style={{
+                                height: `${Math.max((d.value / max) * 100, 8)}%`,
+                            }}
                         />
                     </div>
                     <span className="text-[10px] font-bold text-muted-foreground uppercase">
@@ -200,12 +234,16 @@ function SectionHeader({
         <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
                 {Icon && (
-                    <span className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary ${tone}`}>
+                    <span
+                        className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary ${tone}`}
+                    >
                         <Icon className="size-[18px]" />
                     </span>
                 )}
                 <div>
-                    <p className={`text-xs font-bold tracking-widest uppercase ${tone}`}>
+                    <p
+                        className={`text-xs font-bold tracking-widest uppercase ${tone}`}
+                    >
                         {eyebrow}
                     </p>
                     <h2 className="mt-0.5 text-lg font-extrabold text-foreground">
@@ -230,7 +268,9 @@ const initialTasks = [
 ];
 
 function TasksCard() {
-    const [tasks, setTasks] = useState(initialTasks.map((t) => ({ ...t, done: false })));
+    const [tasks, setTasks] = useState(
+        initialTasks.map((t) => ({ ...t, done: false })),
+    );
     const doneCount = tasks.filter((t) => t.done).length;
 
     return (
@@ -256,7 +296,9 @@ function TasksCard() {
                         onClick={() =>
                             setTasks((prev) =>
                                 prev.map((t) =>
-                                    t.id === task.id ? { ...t, done: !t.done } : t,
+                                    t.id === task.id
+                                        ? { ...t, done: !t.done }
+                                        : t,
                                 ),
                             )
                         }
@@ -270,7 +312,9 @@ function TasksCard() {
                             <Circle className="mt-0.5 size-5 shrink-0 text-muted-foreground/50 transition-colors group-hover:text-sienna" />
                         )}
                         <span>
-                            <span className={`block text-sm font-bold text-foreground ${task.done ? "line-through" : ""}`}>
+                            <span
+                                className={`block text-sm font-bold text-foreground ${task.done ? "line-through" : ""}`}
+                            >
                                 {task.title}
                             </span>
                             <span className="mt-0.5 block text-xs text-muted-foreground">
@@ -413,9 +457,12 @@ function NotificationsCard() {
                 <div className="flex size-12 items-center justify-center rounded-full bg-muted/60">
                     <Bell className="size-6 text-muted-foreground/50" />
                 </div>
-                <p className="text-sm font-semibold text-foreground">All caught up</p>
+                <p className="text-sm font-semibold text-foreground">
+                    All caught up
+                </p>
                 <p className="text-xs text-muted-foreground">
-                    No new notifications. We'll let you know when something needs your attention.
+                    No new notifications. We'll let you know when something
+                    needs your attention.
                 </p>
             </div>
         </section>
@@ -451,7 +498,9 @@ function AnalyticsCard() {
                     { label: "Streak", value: "7d" },
                 ].map((s) => (
                     <div key={s.label} className="text-center">
-                        <p className="text-xl font-extrabold text-foreground">{s.value}</p>
+                        <p className="text-xl font-extrabold text-foreground">
+                            {s.value}
+                        </p>
                         <p className="mt-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                             {s.label}
                         </p>
@@ -479,9 +528,21 @@ function HelpCard() {
                 />
                 <div className="mt-4 space-y-2">
                     {[
-                        { icon: HelpCircle, label: "Getting started guide", meta: "5 min read" },
-                        { icon: FileText, label: "Timesheet how-to", meta: "Step by step" },
-                        { icon: MessageCircle, label: "Contact support", meta: "Reply in 24h" },
+                        {
+                            icon: HelpCircle,
+                            label: "Getting started guide",
+                            meta: "5 min read",
+                        },
+                        {
+                            icon: FileText,
+                            label: "Timesheet how-to",
+                            meta: "Step by step",
+                        },
+                        {
+                            icon: MessageCircle,
+                            label: "Contact support",
+                            meta: "Reply in 24h",
+                        },
                     ].map((h) => (
                         <button
                             key={h.label}
@@ -491,8 +552,12 @@ function HelpCard() {
                                 <h.icon className="size-4 text-sienna dark:text-sienna-300" />
                             </span>
                             <span className="flex-1">
-                                <span className="block text-sm font-bold text-foreground">{h.label}</span>
-                                <span className="block text-[11px] text-muted-foreground">{h.meta}</span>
+                                <span className="block text-sm font-bold text-foreground">
+                                    {h.label}
+                                </span>
+                                <span className="block text-[11px] text-muted-foreground">
+                                    {h.meta}
+                                </span>
                             </span>
                             <ChevronRight className="size-4 text-muted-foreground/50" />
                         </button>
@@ -513,10 +578,10 @@ export default function Dashboard() {
         [auth.user?.name],
     );
 
-    const today = new Date().toLocaleDateString('en-US', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long'
+    const today = new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
     });
 
     return (
@@ -534,7 +599,8 @@ export default function Dashboard() {
                                 Good morning, {firstName}.
                             </h1>
                             <p className="mt-2 text-sm text-muted-foreground">
-                                Here&apos;s a clear view of your ProjectLink journey.
+                                Here&apos;s a clear view of your ProjectLink
+                                journey.
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -556,9 +622,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Hero Banner */}
-                    <section
-                        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-harbor via-harbor-600 to-harbor-800 px-5 py-6 text-white shadow-2xl shadow-harbor/20 sm:px-8 sm:py-8 animate-fade-in-up stagger-1"
-                    >
+                    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-harbor via-harbor-600 to-harbor-800 px-5 py-6 text-white shadow-2xl shadow-harbor/20 sm:px-8 sm:py-8 animate-fade-in-up stagger-1">
                         {/* Animated background orbs */}
                         <div className="absolute -top-24 -right-12 size-72 rounded-full bg-amber/15 blur-3xl animate-float-soft" />
                         <div className="absolute -bottom-28 left-1/3 size-64 rounded-full bg-sienna/20 blur-3xl animate-float-soft-delayed" />
@@ -575,8 +639,9 @@ export default function Dashboard() {
                                     a real difference.
                                 </h2>
                                 <p className="mt-3 max-w-xl text-sm leading-relaxed text-harbor-100/80">
-                                    We&apos;ve surfaced opportunities that align with
-                                    your profile, experience, and interests.
+                                    We&apos;ve surfaced opportunities that align
+                                    with your profile, experience, and
+                                    interests.
                                 </p>
                                 <a
                                     href={projectsIndex({}).url}
@@ -683,7 +748,9 @@ export default function Dashboard() {
                                     <div>
                                         <div className="flex items-center justify-between text-xs font-bold text-muted-foreground">
                                             <span>Project progress</span>
-                                            <span className="text-foreground">68%</span>
+                                            <span className="text-foreground">
+                                                68%
+                                            </span>
                                         </div>
                                         <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-muted">
                                             <div className="h-full w-[68%] rounded-full bg-gradient-to-r from-moss to-moss-300 shadow-[0_0_8px_rgba(107,111,60,0.3)]" />
@@ -707,7 +774,10 @@ export default function Dashboard() {
                             </section>
 
                             {/* Opportunities Section */}
-                            <section id="opportunities" className="scroll-mt-6 animate-fade-in-up stagger-3">
+                            <section
+                                id="opportunities"
+                                className="scroll-mt-6 animate-fade-in-up stagger-3"
+                            >
                                 <div className="mb-4 flex items-end justify-between gap-4">
                                     <div>
                                         <h2 className="text-xl font-extrabold text-foreground">
@@ -730,7 +800,9 @@ export default function Dashboard() {
                                         <article
                                             key={opportunity.title}
                                             className="glass-card premium-shadow-hover group relative overflow-hidden rounded-2xl p-5 transition-all duration-300 animate-fade-in-up"
-                                            style={{ animationDelay: `${idx * 50}ms` }}
+                                            style={{
+                                                animationDelay: `${idx * 50}ms`,
+                                            }}
                                         >
                                             <div className="flex items-start justify-between gap-3">
                                                 <span
@@ -837,10 +909,13 @@ export default function Dashboard() {
                                         </span>
                                     </div>
                                 </div>
-                                <button className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-secondary py-2.5 text-xs font-bold text-secondary-foreground transition-all duration-300 hover:bg-secondary/80 hover:-translate-y-0.5">
+                                <Link
+                                    href="/applications"
+                                    className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-secondary py-2.5 text-xs font-bold text-secondary-foreground transition-all duration-300 hover:bg-secondary/80 hover:-translate-y-0.5"
+                                >
                                     View all applications
                                     <ChevronRight className="size-3.5" />
-                                </button>
+                                </Link>
                             </section>
 
                             {/* Calendar */}
@@ -902,9 +977,7 @@ export default function Dashboard() {
                             </section>
 
                             {/* CTA Card */}
-                            <section
-                                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sienna-500 via-sienna-600 to-sienna-800 p-5 text-white animate-fade-in-up stagger-4"
-                            >
+                            <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sienna-500 via-sienna-600 to-sienna-800 p-5 text-white animate-fade-in-up stagger-4">
                                 <div className="absolute -top-8 -right-8 size-32 rounded-full bg-white/5 blur-2xl" />
                                 <div className="absolute -bottom-8 -left-8 size-28 rounded-full bg-amber/10 blur-2xl" />
                                 <div className="relative">

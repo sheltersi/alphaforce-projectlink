@@ -75,6 +75,43 @@ class ProjectController extends Controller
     }
 
     /**
+     * Load the authenticated user's project applications for the "My applications" page.
+     * This keeps the page payload small while still exposing status, project metadata,
+     * and the cover letter the user submitted.
+     */
+    public function applications(Request $request): InertiaResponse
+    {
+        $user = $request->user();
+
+        $applications = ProjectApplication::query()
+            ->with(['project.organisation', 'project.skills'])
+            ->where('user_id', $user->id)
+            ->orderByDesc('submitted_at')
+            ->get()
+            ->map(function (ProjectApplication $application): array {
+                $project = $application->project;
+
+                return [
+                    'id' => $application->id,
+                    'project_id' => $project?->id,
+                    'title' => $project?->title,
+                    'slug' => $project?->slug,
+                    'status' => $application->status,
+                    'submitted_at' => $application->submitted_at?->format('M j, Y'),
+                    'organisation' => $project?->organisation?->name,
+                    'location' => $project?->location,
+                    'description' => $project?->description,
+                    'skills' => $project?->skills->pluck('name')->values()->all() ?? [],
+                    'cover_letter' => $application->cover_letter,
+                    'project_url' => $project ? route('projects.show', $project) : null,
+                ];
+            })
+            ->values();
+
+        return Inertia::render('applications/index', ['applications' => $applications]);
+    }
+
+    /**
      * Display a single project with full details.
      */
     public function show(Project $project): InertiaResponse

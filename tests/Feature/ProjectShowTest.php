@@ -50,3 +50,35 @@ it('renders the project details page with a rich payload', function () {
             ->where('project.positions_filled', 1);
     });
 });
+
+it('renders the my applications page for the current user', function () {
+    $organiser = User::factory()->create();
+    $participant = User::factory()->create();
+    $participant->markEmailAsVerified();
+
+    $organisation = Organisation::factory()->create(['created_by' => $organiser->id]);
+    $project = Project::factory()->create([
+        'organisation_id' => $organisation->id,
+        'created_by' => $organiser->id,
+        'status' => 'open',
+    ]);
+
+    ProjectApplication::create([
+        'project_id' => $project->id,
+        'user_id' => $participant->id,
+        'status' => 'shortlisted',
+        'cover_letter' => 'I am a strong match.',
+        'submitted_at' => now(),
+    ]);
+
+    $response = $this->actingAs($participant)
+        ->get(route('applications.index'));
+
+    $response->assertOk();
+    $response->assertInertia(function ($inertia) use ($project) {
+        $inertia->component('applications/index')
+            ->has('applications', 1)
+            ->where('applications.0.title', $project->title)
+            ->where('applications.0.status', 'shortlisted');
+    });
+});
