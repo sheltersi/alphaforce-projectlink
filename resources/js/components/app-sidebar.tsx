@@ -26,6 +26,7 @@ import {
     SidebarFooter,
     SidebarHeader,
     SidebarMenu,
+    SidebarMenuAction,
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarSeparator,
@@ -160,12 +161,36 @@ export function AppSidebar() {
         >
             <SidebarHeader>
                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
+                    <SidebarMenuItem className="flex items-center">
+                        <SidebarMenuButton
+                            size="lg"
+                            asChild
+                            className="min-w-0 flex-1"
+                        >
                             <Link href={dashboard()} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
+                        <SidebarMenuAction
+                            className="static mr-1 size-8 shrink-0 translate-y-0 rounded-md group-data-[collapsible=icon]:static group-data-[collapsible=icon]:flex"
+                            onClick={toggleSidebar}
+                            aria-label={
+                                isCollapsed
+                                    ? "Expand sidebar"
+                                    : "Collapse sidebar"
+                            }
+                            title={
+                                isCollapsed
+                                    ? "Expand sidebar"
+                                    : "Collapse sidebar"
+                            }
+                        >
+                            {isCollapsed ? (
+                                <PanelLeftOpen className="size-4" />
+                            ) : (
+                                <PanelLeftClose className="size-4" />
+                            )}
+                        </SidebarMenuAction>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>

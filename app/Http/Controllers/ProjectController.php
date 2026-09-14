@@ -6,10 +6,10 @@ use App\Http\Requests\ApplyProjectRequest;
 use App\Models\Project;
 use App\Models\ProjectApplication;
 use App\Models\ProjectLike;
+use App\Notifications\ProjectApplicationSubmitted;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -211,13 +211,15 @@ class ProjectController extends Controller
             return back();
         }
 
-        ProjectApplication::create([
+        $application = ProjectApplication::create([
             'project_id' => $project->id,
             'user_id' => $user->id,
             'status' => ProjectApplication::STATUS_SUBMITTED,
             'cover_letter' => $request->validated('cover_letter'),
             'submitted_at' => now(),
         ]);
+
+        $project->creator->notify(new ProjectApplicationSubmitted($application));
 
         $message = 'Application submitted successfully.';
 
