@@ -6,6 +6,7 @@ import {
     ClipboardList,
     Clock3,
     Compass,
+    FileText,
     LayoutGrid,
     LifeBuoy,
     MessageSquare,
@@ -126,6 +127,11 @@ const navGroups: NavGroup[] = [
                 title: "My profile",
                 href: "/onboarding/build-profile",
                 icon: UserRound,
+            },
+            {
+                title: "Digital resume",
+                href: "/dashboard/resume",
+                icon: FileText,
             },
             {
                 title: "Settings",
