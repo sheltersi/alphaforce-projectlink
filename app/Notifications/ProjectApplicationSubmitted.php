@@ -4,15 +4,11 @@ namespace App\Notifications;
 
 use App\Models\Project;
 use App\Models\ProjectApplication;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ProjectApplicationSubmitted extends Notification implements ShouldQueue
+class ProjectApplicationSubmitted extends Notification
 {
-    use Queueable;
-
     public function __construct(
         public ProjectApplication $application,
     ) {}
@@ -37,7 +33,10 @@ class ProjectApplicationSubmitted extends Notification implements ShouldQueue
             ->when($this->application->cover_letter, function (MailMessage $mail, string $coverLetter): void {
                 $mail->line('Cover letter:')->line($coverLetter);
             })
-            ->action('View project', url('/projects/'.$project->slug))
+            ->action('Review applicant', route('projects.applications.show', [
+                'project' => $project,
+                'application' => $this->application,
+            ]))
             ->line('Please review the application when you have a moment.');
     }
 }

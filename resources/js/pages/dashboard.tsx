@@ -977,6 +977,32 @@ export default function Dashboard() {
                             </section>
 
                             {/* CTA Card */}
+                            <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-sand-50 p-5 shadow-sm animate-fade-in-up stagger-3 dark:to-harbor-950/30">
+                                <div className="absolute -top-8 -right-8 size-32 rounded-full bg-amber/10 blur-2xl" />
+                                <div className="absolute -bottom-10 -left-10 size-28 rounded-full bg-sienna/10 blur-2xl" />
+                                <div className="relative">
+                                    <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-sienna-500 to-sienna-700 text-white shadow-lg shadow-sienna/20">
+                                        <FileText className="size-5" />
+                                    </div>
+                                    <h2 className="mt-3 font-extrabold text-foreground">
+                                        Digital Resume
+                                    </h2>
+                                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                                        A beautifully formatted, printable
+                                        view of your profile — share it with
+                                        project managers in one click.
+                                    </p>
+                                    <Link
+                                        href="/dashboard/resume"
+                                        className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-sienna-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-sienna/20 transition-all hover:-translate-y-0.5 hover:bg-sienna-700 hover:shadow-xl"
+                                    >
+                                        View my resume
+                                        <ArrowRight className="size-3.5" />
+                                    </Link>
+                                </div>
+                            </section>
+
+                            {/* CTA Card */}
                             <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sienna-500 via-sienna-600 to-sienna-800 p-5 text-white animate-fade-in-up stagger-4">
                                 <div className="absolute -top-8 -right-8 size-32 rounded-full bg-white/5 blur-2xl" />
                                 <div className="absolute -bottom-8 -left-8 size-28 rounded-full bg-amber/10 blur-2xl" />

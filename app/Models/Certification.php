@@ -23,6 +23,8 @@ class Certification extends Model
     protected function casts(): array
     {
         return [
+            'issue_date' => 'date',
+            'expiry_date' => 'date',
             'sort_order' => 'integer',
         ];
     }

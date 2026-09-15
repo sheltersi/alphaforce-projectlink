@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreParticipantProfileRequest;
 use App\Models\ParticipantDocument;
+use App\Models\ParticipantProfile;
 use App\Services\ParticipantProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -85,6 +86,82 @@ class ParticipantProfileController extends Controller
     public function update(StoreParticipantProfileRequest $request): JsonResponse|RedirectResponse
     {
         return $this->store($request);
+    }
+
+    /**
+     * Render the participant's digital resume, sourced directly from the
+     * profile (skills, education, experience, certifications). If the user
+     * hasn't built a profile yet, fall back to a soft empty state.
+     */
+    public function resume(Request $request): InertiaResponse|RedirectResponse
+    {
+        $profile = ParticipantProfile::with([
+            'skills',
+            'educations',
+            'workExperiences',
+            'certifications',
+        ])->where('user_id', $request->user()->id)->first();
+
+        if (! $profile) {
+            return redirect()->route('onboarding.build-profile');
+        }
+
+        $resume = [
+            'full_name' => $profile->full_name,
+            'first_name' => $profile->first_name,
+            'last_name' => $profile->last_name,
+            'email' => $profile->email,
+            'phone' => $profile->phone,
+            'city' => $profile->city,
+            'country' => $profile->country,
+            'nationality' => $profile->nationality,
+            'summary' => $profile->summary,
+            'photo_url' => $profile->photo_path
+                ? asset('storage/'.$profile->photo_path)
+                : null,
+            'skills' => $profile->skills->map(fn ($s) => ['name' => $s->name])->values(),
+            'educations' => $profile->educations->map(fn ($e) => [
+                'institution' => $e->institution,
+                'qualification' => $e->qualification,
+                'field_of_study' => $e->field_of_study,
+                'start_year' => $e->start_year,
+                'end_year' => $e->end_year,
+                'description' => $e->description,
+            ])->values(),
+            'experiences' => $profile->workExperiences->map(fn ($w) => [
+                'company' => $w->organisation,
+                'role' => $w->job_title,
+                'location' => $w->location,
+                'description' => $w->description,
+                'start_date' => $w->start_date?->format('M Y'),
+                'end_date' => $w->end_date?->format('M Y'),
+                'currently_working' => (bool) $w->currently_working,
+            ])->values(),
+            'certifications' => $profile->certifications->map(fn ($c) => [
+                'name' => $c->name,
+                'issuer' => $c->issuing_organisation,
+                'credential_number' => $c->credential_number,
+                'issue_date' => $c->issue_date?->format('M Y'),
+                'expiry_date' => $c->expiry_date?->format('M Y'),
+            ])->values(),
+            'profile_strength' => $profile->isComplete() ? 100 : max(40, min(
+                95,
+                (int) round(
+                    collect([
+                        $profile->summary,
+                        $profile->phone,
+                        $profile->city,
+                        $profile->nationality,
+                        $profile->skills->isNotEmpty(),
+                        $profile->educations->isNotEmpty(),
+                        $profile->workExperiences->isNotEmpty(),
+                        $profile->certifications->isNotEmpty(),
+                    ])->filter(fn ($v) => (is_bool($v) && $v) || (is_string($v) && trim($v) !== ''))->count() * 12,
+                ),
+            )),
+        ];
+
+        return Inertia::render('resume/index', ['resume' => $resume]);
     }
 
     public function downloadDocument(Request $request, int $documentId)

@@ -30,7 +30,11 @@ Route::middleware(['auth', 'verified', 'ensure.participant.profile'])->group(fun
     Route::get('applications', [ProjectController::class, 'applications'])->name('applications.index');
     Route::post('projects/{project}/like', [ProjectController::class, 'toggleLike'])->name('projects.like');
     Route::post('projects/{project}/apply', [ProjectController::class, 'apply'])->name('projects.apply');
+    Route::get('projects/{project}/applications/{application}', [ProjectController::class, 'showApplication'])
+        ->name('projects.applications.show');
     Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+    Route::get('dashboard/resume', [ParticipantProfileController::class, 'resume'])
+        ->name('dashboard.resume');
 });
 
 require __DIR__.'/settings.php';

@@ -268,4 +268,96 @@ class ProjectController extends Controller
 
         return back();
     }
+
+    /**
+     * Display a single application for review by the project creator.
+     *
+     * Restricted to the project creator and technical_admins so applicants'
+     * profile data is only exposed to people who actually need to evaluate it.
+     */
+    public function showApplication(Request $request, Project $project, ProjectApplication $application): InertiaResponse
+    {
+        $user = $request->user();
+
+        if ($project->created_by !== $user->id && ! $user->hasRole('technical_admin')) {
+            abort(403, 'Only the project manager can view this application.');
+        }
+
+        if ($application->project_id !== $project->id) {
+            abort(404);
+        }
+
+        $application->load([
+            'project.organisation',
+            'user.participantProfile' => function ($query): void {
+                $query->with([
+                    'skills',
+                    'educations',
+                    'workExperiences',
+                    'certifications',
+                ]);
+            },
+        ]);
+
+        $applicant = $application->user;
+        $profile = $applicant?->participantProfile;
+
+        $payload = [
+            'application' => [
+                'id' => $application->id,
+                'status' => $application->status,
+                'cover_letter' => $application->cover_letter,
+                'submitted_at' => $application->submitted_at?->format('M d, Y'),
+            ],
+            'project' => [
+                'id' => $project->id,
+                'slug' => $project->slug,
+                'title' => $project->title,
+                'organisation' => $project->organisation?->name,
+            ],
+            'applicant' => [
+                'id' => $applicant?->id,
+                'name' => $applicant?->name,
+                'email' => $applicant?->email,
+                'profile' => $profile ? [
+                    'first_name' => $profile->first_name,
+                    'last_name' => $profile->last_name,
+                    'phone' => $profile->phone,
+                    'city' => $profile->city,
+                    'country' => $profile->country,
+                    'nationality' => $profile->nationality,
+                    'summary' => $profile->summary,
+                    'photo_url' => $profile->photo_path
+                        ? asset('storage/'.$profile->photo_path)
+                        : null,
+                    'skills' => $profile->skills->map(fn ($s) => ['name' => $s->name])->all(),
+                    'educations' => $profile->educations->map(fn ($e) => [
+                        'institution' => $e->institution,
+                        'qualification' => $e->qualification,
+                        'field_of_study' => $e->field_of_study,
+                        'start_year' => $e->start_year,
+                        'end_year' => $e->end_year,
+                    ])->all(),
+                    'experiences' => $profile->workExperiences->map(fn ($w) => [
+                        'company' => $w->organisation,
+                        'role' => $w->job_title,
+                        'location' => $w->location,
+                        'description' => $w->description,
+                        'start_date' => $w->start_date?->format('M Y'),
+                        'end_date' => $w->end_date?->format('M Y'),
+                        'currently_working' => (bool) $w->currently_working,
+                    ])->all(),
+                    'certifications' => $profile->certifications->map(fn ($c) => [
+                        'name' => $c->name,
+                        'issuer' => $c->issuing_organisation,
+                        'credential_number' => $c->credential_number,
+                        'issue_date' => $c->issue_date?->format('M Y'),
+                        'expiry_date' => $c->expiry_date?->format('M Y'),
+                    ])->all(),
+                ] : null,
+            ],
+        ];
+
+        return Inertia::render('applications/show', ['application' => $payload]);
+    }
 }
