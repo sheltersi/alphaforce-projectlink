@@ -91,6 +91,12 @@ class User extends Authenticatable
         return $this->hasMany(ProjectApplication::class);
     }
 
+    /** @return HasMany<ResumeShareLink, $this> */
+    public function resumeShareLinks(): HasMany
+    {
+        return $this->hasMany(ResumeShareLink::class);
+    }
+
     /** @return HasMany<ProjectParticipant, $this> */
     public function projectParticipants(): HasMany
     {

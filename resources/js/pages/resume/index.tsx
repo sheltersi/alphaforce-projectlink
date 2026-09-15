@@ -3,20 +3,27 @@ import {
     Award,
     BriefcaseBusiness,
     CalendarRange,
+    Check,
+    Copy,
     Download,
+    Eye,
     Globe2,
     GraduationCap,
+    Link2,
     Mail,
     MapPin,
     Phone,
     Quote,
+    Share2,
     Sparkles,
+    Trash2,
     UserRound,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { useState } from "react";
 
 import { dashboard } from "@/routes";
-import { Head, Link, usePage } from "@inertiajs/react";
+import { Head, Link, router, usePage } from "@inertiajs/react";
 
 type Skill = { name: string };
 type Education = {
@@ -60,6 +67,15 @@ type Resume = {
     experiences: Experience[];
     certifications: Certification[];
     profile_strength: number;
+};
+
+type ShareLink = {
+    id: number;
+    url: string;
+    token: string;
+    expires_at: string | null;
+    created_at: string | null;
+    view_count: number;
 };
 
 function initialsOf(name: string): string {
@@ -108,8 +124,181 @@ function SkillPill({ children }: { children: ReactNode }) {
     );
 }
 
+function SharePanel({ shareLink }: { shareLink: ShareLink | null }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [isBusy, setIsBusy] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [expiryDays, setExpiryDays] = useState<number>(30);
+
+    const copy = async (url: string) => {
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            /* clipboard blocked */
+        }
+    };
+
+    const generate = () => {
+        setIsBusy(true);
+        router.post(
+            "/dashboard/resume/share",
+            { expires_in_days: expiryDays },
+            {
+                preserveScroll: true,
+                onFinish: () => setIsBusy(false),
+            },
+        );
+    };
+
+    const revoke = () => {
+        if (! confirm("Revoke this link? Anyone with it will lose access immediately.")) return;
+        setIsBusy(true);
+        router.delete("/dashboard/resume/share", {
+            preserveScroll: true,
+            onFinish: () => setIsBusy(false),
+        });
+    };
+
+    return (
+        <div className="print:hidden border-b border-border bg-background/60 backdrop-blur-sm">
+            <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
+                <button
+                    onClick={() => setIsOpen((v) => !v)}
+                    className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    aria-expanded={isOpen}
+                    aria-controls="share-panel"
+                >
+                    <Share2 className="size-3.5" />
+                    Share resume
+                    {shareLink && (
+                        <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-moss-50 px-2 py-0.5 text-[10px] font-bold text-moss-600 dark:bg-moss-900/30 dark:text-moss-300">
+                            <span className="size-1.5 rounded-full bg-moss-500" />
+                            Live
+                        </span>
+                    )}
+                </button>
+                {shareLink && (
+                    <span className="hidden items-center gap-1.5 text-[11px] font-semibold text-muted-foreground sm:inline-flex">
+                        <Eye className="size-3" />
+                        {shareLink.view_count} {shareLink.view_count === 1 ? "view" : "views"}
+                    </span>
+                )}
+            </div>
+
+            {isOpen && (
+                <div id="share-panel" className="mx-auto max-w-5xl px-4 pb-4 sm:px-6">
+                    <div className="rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+                        {shareLink ? (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <Link2 className="size-4 text-amber-500" />
+                                    <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                                        Active share link
+                                    </p>
+                                </div>
+                                <div className="flex flex-col gap-2 sm:flex-row">
+                                    <input
+                                        readOnly
+                                        value={shareLink.url}
+                                        onFocus={(e) => e.currentTarget.select()}
+                                        className="flex-1 rounded-lg border border-border/60 bg-sand-50 px-3 py-2 font-mono text-xs text-foreground dark:bg-harbor-950/30"
+                                        aria-label="Share link"
+                                    />
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => copy(shareLink.url)}
+                                            className="inline-flex items-center gap-1.5 rounded-lg bg-harbor px-3 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-harbor-600"
+                                        >
+                                            {copied ? (
+                                                <>
+                                                    <Check className="size-3.5" />
+                                                    Copied
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="size-3.5" />
+                                                    Copy
+                                                </>
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={revoke}
+                                            disabled={isBusy}
+                                            className="inline-flex items-center gap-1.5 rounded-lg border border-sienna-200 bg-card px-3 py-2 text-xs font-bold text-sienna-700 transition-colors hover:bg-sienna-50 disabled:opacity-60 dark:border-sienna-800 dark:text-sienna-300 dark:hover:bg-sienna-900/30"
+                                        >
+                                            <Trash2 className="size-3.5" />
+                                            Revoke
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                                    <span className="inline-flex items-center gap-1">
+                                        <Eye className="size-3" />
+                                        {shareLink.view_count} {shareLink.view_count === 1 ? "view" : "views"}
+                                    </span>
+                                    {shareLink.expires_at && (
+                                        <span>
+                                            Expires{" "}
+                                            {new Date(shareLink.expires_at).toLocaleDateString(
+                                                undefined,
+                                                { month: "short", day: "numeric", year: "numeric" },
+                                            )}
+                                        </span>
+                                    )}
+                                    {!shareLink.expires_at && <span>Never expires</span>}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2">
+                                    <Share2 className="size-4 text-amber-500" />
+                                    <p className="text-sm font-bold text-foreground">
+                                        Generate a shareable link
+                                    </p>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Anyone with the link can view your resume. You can revoke
+                                    it at any time.
+                                </p>
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                    <label className="text-xs font-semibold text-muted-foreground">
+                                        Expires in
+                                    </label>
+                                    <select
+                                        value={expiryDays}
+                                        onChange={(e) => setExpiryDays(Number(e.target.value))}
+                                        className="rounded-lg border border-border/60 bg-sand-50 px-3 py-1.5 text-xs font-semibold text-foreground dark:bg-harbor-950/30"
+                                    >
+                                        <option value={7}>7 days</option>
+                                        <option value={30}>30 days</option>
+                                        <option value={90}>90 days</option>
+                                        <option value={365}>1 year</option>
+                                    </select>
+                                    <button
+                                        onClick={generate}
+                                        disabled={isBusy}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-amber-600 disabled:opacity-60 sm:ml-auto"
+                                    >
+                                        <Share2 className="size-3.5" />
+                                        {isBusy ? "Generating…" : "Generate link"}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function ResumeIndex() {
-    const { resume } = usePage<{ resume: Resume }>().props;
+    const { resume, shareLink } = usePage<{
+        resume: Resume;
+        shareLink: ShareLink | null;
+    }>().props;
     const fullName = resume.full_name || "Your Name";
     const tagline =
         resume.summary?.split(/[.!?]/)[0]?.trim().slice(0, 100) ||
@@ -145,6 +334,8 @@ export default function ResumeIndex() {
                     </div>
                 </div>
             </div>
+
+            <SharePanel shareLink={shareLink ?? null} />
 
             <main className="min-h-screen bg-gradient-to-br from-sand-50 via-background to-sand-100 px-4 py-8 sm:px-6 sm:py-12 print:bg-white print:p-0">
                 <article className="mx-auto max-w-5xl overflow-hidden rounded-2xl bg-card shadow-xl ring-1 ring-border/50 print:shadow-none print:ring-0 print:rounded-none">

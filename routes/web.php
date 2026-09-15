@@ -37,6 +37,17 @@ Route::middleware(['auth', 'verified', 'ensure.participant.profile'])->group(fun
         ->name('dashboard.resume');
     Route::get('dashboard/resume/download', [ParticipantProfileController::class, 'downloadPdf'])
         ->name('dashboard.resume.download');
+    Route::post('dashboard/resume/share', [ParticipantProfileController::class, 'generateShareLink'])
+        ->name('dashboard.resume.share.generate');
+    Route::delete('dashboard/resume/share', [ParticipantProfileController::class, 'revokeShareLink'])
+        ->name('dashboard.resume.share.revoke');
 });
+
+// Public, unauthenticated resume view by share token.
+// Rate-limited to 30 requests per minute per IP to mitigate token brute-forcing.
+Route::middleware('throttle:30,1')->get(
+    'resume/{token}',
+    [ParticipantProfileController::class, 'viewSharedResume'],
+)->name('resume.public');
 
 require __DIR__.'/settings.php';

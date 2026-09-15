@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreParticipantProfileRequest;
 use App\Models\ParticipantDocument;
 use App\Models\ParticipantProfile;
+use App\Models\ResumeShareLink;
+use App\Models\User;
 use App\Services\ParticipantProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -161,7 +164,10 @@ class ParticipantProfileController extends Controller
             )),
         ];
 
-        return Inertia::render('resume/index', ['resume' => $resume]);
+        return Inertia::render('resume/index', [
+            'resume' => $resume,
+            'shareLink' => $this->activeShareLinkFor($request->user()),
+        ]);
     }
 
     /**
@@ -266,6 +272,153 @@ class ParticipantProfileController extends Controller
         }
 
         return Storage::disk($doc->disk)->download($doc->file_path, $doc->original_name);
+    }
+
+    /**
+     * Generate (or rotate) a public share link for the authenticated user's
+     * resume. Any previously active link for this user is revoked first so
+     * only one link can ever be live at a time.
+     */
+    public function generateShareLink(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'expires_in_days' => ['nullable', 'integer', 'min:1', 'max:365'],
+        ]);
+
+        $expiresAt = isset($validated['expires_in_days'])
+            ? now()->addDays((int) $validated['expires_in_days'])
+            : null;
+
+        DB::transaction(function () use ($user, $expiresAt) {
+            $user->resumeShareLinks()->active()->update(['revoked_at' => now()]);
+
+            ResumeShareLink::create([
+                'user_id' => $user->id,
+                'token' => ResumeShareLink::generateToken(),
+                'expires_at' => $expiresAt,
+            ]);
+        });
+
+        return back()->with('success', 'Share link generated.');
+    }
+
+    /**
+     * Revoke the authenticated user's currently active share link, if any.
+     */
+    public function revokeShareLink(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $revoked = DB::transaction(function () use ($user) {
+            return $user->resumeShareLinks()->active()->update(['revoked_at' => now()]);
+        });
+
+        return back()->with(
+            'success',
+            $revoked > 0 ? 'Share link revoked.' : 'No active share link to revoke.',
+        );
+    }
+
+    /**
+     * Public, unauthenticated route that renders a participant's resume using
+     * a valid share token. The token is the only authorization; rate limiting
+     * is applied via the route definition.
+     */
+    public function viewSharedResume(Request $request, string $token): InertiaResponse
+    {
+        $link = ResumeShareLink::with('user')->where('token', $token)->first();
+
+        if (! $link || ! $link->isActive()) {
+            abort(404, 'This share link is invalid, expired, or has been revoked.');
+        }
+
+        $link->recordView($request->ip());
+
+        $profile = ParticipantProfile::with([
+            'skills',
+            'educations',
+            'workExperiences',
+            'certifications',
+        ])->where('user_id', $link->user_id)->first();
+
+        if (! $profile) {
+            abort(404, 'Resume not found.');
+        }
+
+        $resume = [
+            'full_name' => $profile->full_name,
+            'photo_url' => $profile->photo_path
+                ? asset('storage/'.$profile->photo_path)
+                : null,
+            'summary' => $profile->summary,
+            'city' => $profile->city,
+            'country' => $profile->country,
+            'skills' => $profile->skills->map(fn ($s) => ['name' => $s->name])->values()->all(),
+            'educations' => $profile->educations->map(fn ($e) => [
+                'institution' => $e->institution,
+                'qualification' => $e->qualification,
+                'field_of_study' => $e->field_of_study,
+                'start_year' => $e->start_year,
+                'end_year' => $e->end_year,
+            ])->values()->all(),
+            'experiences' => $profile->workExperiences->map(fn ($w) => [
+                'company' => $w->organisation,
+                'role' => $w->job_title,
+                'location' => $w->location,
+                'description' => $w->description,
+                'start_date' => $w->start_date?->format('M Y'),
+                'end_date' => $w->end_date?->format('M Y'),
+                'currently_working' => (bool) $w->currently_working,
+            ])->values()->all(),
+            'certifications' => $profile->certifications->map(fn ($c) => [
+                'name' => $c->name,
+                'issuer' => $c->issuing_organisation,
+                'issue_date' => $c->issue_date?->format('M Y'),
+            ])->values()->all(),
+            'email' => $profile->email,
+            'profile_owner_name' => $link->user?->name,
+        ];
+
+        return Inertia::render('resume/public', [
+            'resume' => $resume,
+            'expires_at' => $link->expires_at?->toIso8601String(),
+            'last_viewed_at' => $link->last_viewed_at?->toIso8601String(),
+        ]);
+    }
+
+    /**
+     * Shape a share link model for JSON responses.
+     *
+     * @return array<string, mixed>
+     */
+    private function sharePayload(ResumeShareLink $link): array
+    {
+        return [
+            'id' => $link->id,
+            'url' => url('/resume/'.$link->token),
+            'token' => $link->token,
+            'expires_at' => $link->expires_at?->toIso8601String(),
+            'created_at' => $link->created_at?->toIso8601String(),
+            'view_count' => $link->view_count,
+        ];
+    }
+
+    /**
+     * Return the user's currently active share link as a payload, or null.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function activeShareLinkFor(?User $user): ?array
+    {
+        if (! $user) {
+            return null;
+        }
+
+        $link = $user->resumeShareLinks()->active()->latest('id')->first();
+
+        return $link ? $this->sharePayload($link) : null;
     }
 
     private function wantsJson(Request $request): bool
