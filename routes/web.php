@@ -35,6 +35,8 @@ Route::middleware(['auth', 'verified', 'ensure.participant.profile'])->group(fun
     Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('dashboard/resume', [ParticipantProfileController::class, 'resume'])
         ->name('dashboard.resume');
+    Route::get('dashboard/resume/download', [ParticipantProfileController::class, 'downloadPdf'])
+        ->name('dashboard.resume.download');
 });
 
 require __DIR__.'/settings.php';

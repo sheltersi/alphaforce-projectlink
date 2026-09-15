@@ -9,7 +9,6 @@ import {
     Mail,
     MapPin,
     Phone,
-    Printer,
     Quote,
     Sparkles,
     UserRound,
@@ -115,11 +114,6 @@ export default function ResumeIndex() {
     const tagline =
         resume.summary?.split(/[.!?]/)[0]?.trim().slice(0, 100) ||
         "Open to opportunities";
-
-    const handlePrint = () => {
-        if (typeof window !== "undefined") window.print();
-    };
-
     const location = [resume.city, resume.country].filter(Boolean).join(", ");
 
     return (
@@ -141,13 +135,13 @@ export default function ResumeIndex() {
                             <Sparkles className="size-3" />
                             Digital Resume
                         </span>
-                        <button
-                            onClick={handlePrint}
+                        <a
+                            href="/dashboard/resume/download"
                             className="inline-flex items-center gap-2 rounded-lg bg-sienna-700 px-4 py-2 text-sm font-bold text-white shadow-md transition-all hover:-translate-y-px hover:bg-sienna-800 hover:shadow-lg"
                         >
-                            <Printer className="size-4" />
-                            Print
-                        </button>
+                            <Download className="size-4" />
+                            Download PDF
+                        </a>
                     </div>
                 </div>
             </div>

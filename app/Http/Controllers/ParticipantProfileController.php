@@ -164,6 +164,91 @@ class ParticipantProfileController extends Controller
         return Inertia::render('resume/index', ['resume' => $resume]);
     }
 
+    /**
+     * Generate and download the participant's resume as a PDF.
+     */
+    public function downloadPdf(Request $request)
+    {
+        $profile = ParticipantProfile::with([
+            'skills',
+            'educations',
+            'workExperiences',
+            'certifications',
+        ])->where('user_id', $request->user()->id)->first();
+
+        if (! $profile) {
+            abort(404, 'Profile not found.');
+        }
+
+        $resume = [
+            'full_name' => $profile->full_name,
+            'first_name' => $profile->first_name,
+            'last_name' => $profile->last_name,
+            'email' => $profile->email,
+            'phone' => $profile->phone,
+            'city' => $profile->city,
+            'country' => $profile->country,
+            'nationality' => $profile->nationality,
+            'summary' => $profile->summary,
+            'photo_url' => $profile->photo_path
+                ? asset('storage/'.$profile->photo_path)
+                : null,
+            'skills' => $profile->skills->map(fn ($s) => ['name' => $s->name])->values()->all(),
+            'educations' => $profile->educations->map(fn ($e) => [
+                'institution' => $e->institution,
+                'qualification' => $e->qualification,
+                'field_of_study' => $e->field_of_study,
+                'start_year' => $e->start_year,
+                'end_year' => $e->end_year,
+                'description' => $e->description,
+            ])->values()->all(),
+            'experiences' => $profile->workExperiences->map(fn ($w) => [
+                'company' => $w->organisation,
+                'role' => $w->job_title,
+                'location' => $w->location,
+                'description' => $w->description,
+                'start_date' => $w->start_date?->format('M Y'),
+                'end_date' => $w->end_date?->format('M Y'),
+                'currently_working' => (bool) $w->currently_working,
+            ])->values()->all(),
+            'certifications' => $profile->certifications->map(fn ($c) => [
+                'name' => $c->name,
+                'issuer' => $c->issuing_organisation,
+                'credential_number' => $c->credential_number,
+                'issue_date' => $c->issue_date?->format('M Y'),
+                'expiry_date' => $c->expiry_date?->format('M Y'),
+            ])->values()->all(),
+            'profile_strength' => $profile->isComplete() ? 100 : max(40, min(
+                95,
+                (int) round(
+                    collect([
+                        $profile->summary,
+                        $profile->phone,
+                        $profile->city,
+                        $profile->nationality,
+                        $profile->skills->isNotEmpty(),
+                        $profile->educations->isNotEmpty(),
+                        $profile->workExperiences->isNotEmpty(),
+                        $profile->certifications->isNotEmpty(),
+                    ])->filter(fn ($v) => (is_bool($v) && $v) || (is_string($v) && trim($v) !== ''))->count() * 12,
+                ),
+            )),
+        ];
+
+        $location = implode(', ', array_filter([$resume['city'], $resume['country']]));
+        $tagline = $resume['summary']
+            ? preg_replace('/[.!?].*/s', '', $resume['summary'])
+            : 'Open to opportunities';
+        $initials = collect(str_word_count($resume['full_name'], 1))
+            ->map(fn ($w) => strtoupper($w[0]))
+            ->implode('');
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('resume.pdf', compact('resume', 'location', 'tagline', 'initials'));
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->download(str_replace(' ', '_', $resume['full_name']).'_resume.pdf');
+    }
+
     public function downloadDocument(Request $request, int $documentId)
     {
         $doc = ParticipantDocument::with('participantProfile.user')->findOrFail($documentId);
