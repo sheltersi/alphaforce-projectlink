@@ -48,6 +48,6 @@ class ProjectApplication extends Model
     /** @return HasOne<ProjectParticipant, $this> */
     public function participant(): HasOne
     {
-        return $this->hasOne(ProjectParticipant::class);
+        return $this->hasOne(ProjectParticipant::class, 'application_id');
     }
 }

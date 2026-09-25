@@ -82,7 +82,7 @@ function SectionHeader({
     return (
         <div className="mb-5 flex items-center gap-3">
             {Icon && (
-                <div className="flex size-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                <div className="flex size-8 items-center justify-center rounded-lg bg-sienna-100 text-sienna-700 dark:bg-sienna-900/40 dark:text-sienna-300">
                     <Icon className="size-4" />
                 </div>
             )}
@@ -177,8 +177,8 @@ export default function PublicResume({ resume, expires_at }: Props) {
                             {resume.summary ? (
                                 <section>
                                     <SectionHeader icon={Quote}>About</SectionHeader>
-                                    <div className="relative rounded-xl border-l-4 border-amber-400 bg-sand-50/50 p-5 dark:bg-sand-950/20">
-                                        <Quote className="absolute right-4 top-4 size-6 text-amber-200/50 dark:text-amber-800/30" />
+                                    <div className="relative rounded-xl border-l-4 border-sienna-400 bg-sand-50/50 p-5 dark:bg-sand-950/20">
+                                        <Quote className="absolute right-4 top-4 size-6 text-sienna-200/50 dark:text-sienna-800/30" />
                                         <p className="relative text-sm leading-7 text-foreground/85">
                                             {resume.summary}
                                         </p>
@@ -197,13 +197,13 @@ export default function PublicResume({ resume, expires_at }: Props) {
                                     <EmptyState message="No work experience added yet." />
                                 ) : (
                                     <div className="relative space-y-6">
-                                        <div className="absolute left-[11px] top-2 bottom-2 w-px bg-gradient-to-b from-amber-300 via-amber-200 to-transparent dark:from-amber-800 dark:via-amber-900" />
+                                        <div className="absolute left-[11px] top-2 bottom-2 w-px bg-gradient-to-b from-sienna-300 via-sienna-200 to-transparent dark:from-sienna-800 dark:via-sienna-900" />
                                         {resume.experiences.map((exp, idx) => (
                                             <div
                                                 key={`${exp.company}-${idx}`}
                                                 className="relative pl-8"
                                             >
-                                                <div className="absolute left-0 top-1.5 flex size-6 items-center justify-center rounded-full border-2 border-background bg-gradient-to-br from-amber-400 to-amber-600 shadow-sm">
+                                                <div className="absolute left-0 top-1.5 flex size-6 items-center justify-center rounded-full border-2 border-background bg-gradient-to-br from-sienna-400 to-sienna-600 shadow-sm">
                                                     <BriefcaseBusiness className="size-2.5 text-white" />
                                                 </div>
                                                 <div className="rounded-xl border border-border/60 bg-card p-5 shadow-sm">
@@ -212,7 +212,7 @@ export default function PublicResume({ resume, expires_at }: Props) {
                                                             <h3 className="text-base font-bold text-foreground">
                                                                 {exp.role ?? "Role"}
                                                             </h3>
-                                                            <p className="mt-0.5 text-sm font-semibold text-amber-600 dark:text-amber-400">
+                                                            <p className="mt-0.5 text-sm font-semibold text-sienna-600 dark:text-sienna-400">
                                                                 {exp.company}
                                                             </p>
                                                         </div>
@@ -251,7 +251,7 @@ export default function PublicResume({ resume, expires_at }: Props) {
                                         {resume.skills.map((skill) => (
                                             <span
                                                 key={skill.name}
-                                                className="inline-flex items-center rounded-lg bg-harbor-50 px-3 py-1.5 text-xs font-semibold text-harbor-700 ring-1 ring-harbor-100 dark:bg-harbor-950/40 dark:text-harbor-200 dark:ring-harbor-800/40"
+                                                className="inline-flex items-center rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-harbor-800 shadow-sm ring-1 ring-harbor-100 dark:bg-harbor-950/40 dark:text-harbor-200 dark:ring-harbor-800/40"
                                             >
                                                 {skill.name}
                                             </span>
@@ -274,7 +274,7 @@ export default function PublicResume({ resume, expires_at }: Props) {
                                                 <h3 className="text-base font-bold text-foreground">
                                                     {edu.qualification ?? "Qualification"}
                                                 </h3>
-                                                <p className="mt-0.5 text-sm font-semibold text-amber-600 dark:text-amber-400">
+                                                <p className="mt-0.5 text-sm font-semibold text-sienna-600 dark:text-sienna-400">
                                                     {edu.institution}
                                                 </p>
                                                 <p className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -305,7 +305,7 @@ export default function PublicResume({ resume, expires_at }: Props) {
                                                 <p className="text-sm font-bold text-foreground">
                                                     {cert.name}
                                                 </p>
-                                                <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400">
+                                                <p className="mt-0.5 text-xs text-sienna-600 dark:text-sienna-400">
                                                     {cert.issuer ?? "—"}
                                                 </p>
                                                 {cert.issue_date && (
