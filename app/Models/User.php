@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -33,7 +34,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     public const SEED_NAMES = [
         'Liam van der Berg',
@@ -77,6 +78,60 @@ class User extends Authenticatable
         return $this->belongsToMany(Organisation::class, 'organisation_users')
             ->withPivot(['role'])
             ->withTimestamps();
+    }
+
+    /**
+     * The organisation this user primarily acts under (first membership).
+     * Users with several memberships are scoped to this one for Phase 1.
+     */
+    public function currentOrganisation(): ?Organisation
+    {
+        return $this->organisations()->orderBy('organisations.id')->first();
+    }
+
+    public function organisationMembershipFor(Organisation|int $organisation): ?OrganisationUser
+    {
+        $organisationId = $organisation instanceof Organisation ? $organisation->id : $organisation;
+
+        return $this->organisationUsers()->where('organisation_id', $organisationId)->first();
+    }
+
+    public function belongsToOrganisation(Organisation|int $organisation): bool
+    {
+        return $this->organisationMembershipFor($organisation) !== null;
+    }
+
+    /**
+     * The user's pivot role within the given organisation, if any.
+     */
+    public function organisationRole(Organisation|int $organisation): ?string
+    {
+        return $this->organisationMembershipFor($organisation)?->role;
+    }
+
+    /**
+     * Organisation-management roles: Technical Admin and Project Manager,
+     * resolved from Spatie roles or the organisation pivot role.
+     */
+    public function isOrganisationManager(Organisation|int $organisation): bool
+    {
+        if ($this->hasRole('technical_admin') || $this->hasRole('project_manager')) {
+            return true;
+        }
+
+        return in_array(strtolower((string) $this->organisationRole($organisation)), ['admin', 'manager', 'technical_admin', 'project_manager'], true);
+    }
+
+    /**
+     * Technical Admin level access within the given organisation.
+     */
+    public function isOrganisationAdmin(Organisation|int $organisation): bool
+    {
+        if ($this->hasRole('technical_admin')) {
+            return true;
+        }
+
+        return in_array(strtolower((string) $this->organisationRole($organisation)), ['admin', 'technical_admin'], true);
     }
 
     /** @return HasMany<Project, $this> */
