@@ -55,13 +55,13 @@ const navGroups: NavGroup[] = [
                 href: `${dashboard()}#notifications`,
                 icon: Bell,
             },
-            {
-                title: "Analytics",
-                href: `${dashboard()}#analytics`,
-                icon: BarChart3,
-                badge: "New",
-                badgeTone: "accent",
-            },
+            // {
+            //     title: "Analytics",
+            //     href: `${dashboard()}#analytics`,
+            //     icon: BarChart3,
+            //     badge: "New",
+            //     badgeTone: "accent",
+            // },
         ],
     },
     {
@@ -84,13 +84,13 @@ const navGroups: NavGroup[] = [
                 href: "/applications",
                 icon: ClipboardList,
             },
-            {
-                title: "Tasks",
-                href: `${dashboard()}#tasks`,
-                icon: SquareCheck,
-                badge: "4",
-                badgeTone: "success",
-            },
+            // {
+            //     title: "Tasks",
+            //     href: `${dashboard()}#tasks`,
+            //     icon: SquareCheck,
+            //     badge: "4",
+            //     badgeTone: "success",
+            // },
             {
                 title: "Calendar",
                 href: `${dashboard()}#timesheets`,
@@ -103,23 +103,23 @@ const navGroups: NavGroup[] = [
             },
         ],
     },
-    {
-        label: "Community",
-        items: [
-            {
-                title: "Messages",
-                href: `${dashboard()}#messages`,
-                icon: MessageSquare,
-                badge: "5",
-                badgeTone: "accent",
-            },
-            {
-                title: "Team",
-                href: `${dashboard()}#team`,
-                icon: UsersRound,
-            },
-        ],
-    },
+    // {
+    //     label: "Community",
+    //     items: [
+    //         {
+    //             title: "Messages",
+    //             href: `${dashboard()}#messages`,
+    //             icon: MessageSquare,
+    //             badge: "5",
+    //             badgeTone: "accent",
+    //         },
+    //         {
+    //             title: "Team",
+    //             href: `${dashboard()}#team`,
+    //             icon: UsersRound,
+    //         },
+    //     ],
+    // },
     {
         label: "Support",
         items: [

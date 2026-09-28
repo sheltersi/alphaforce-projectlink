@@ -36,6 +36,22 @@ class AuthenticatedUserResource extends JsonResource
                     'role' => $organisation->pivot->role ?? null,
                 ])
                 ->values()),
+
+            'current_organisation' => $this->whenLoaded('organisations', function () {
+                $current = $this->organisations->sortBy('id')->first();
+
+                return $current === null ? null : [
+                    'id' => $current->id,
+                    'name' => $current->name,
+                    'slug' => $current->slug,
+                    'role' => $current->pivot->role ?? null,
+                ];
+            }),
+
+            'onboarding' => $this->whenLoaded('organisations', fn () => [
+                'completed' => $this->organisations->isNotEmpty(),
+                'step' => $this->organisations->isNotEmpty() ? null : 'organisation',
+            ]),
         ];
     }
 }

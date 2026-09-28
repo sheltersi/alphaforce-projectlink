@@ -89,6 +89,19 @@ class User extends Authenticatable
         return $this->organisations()->orderBy('organisations.id')->first();
     }
 
+    /**
+     * The user's in-progress onboarding draft: an organisation they created
+     * but are not a member of yet. Membership marks onboarding complete,
+     * so drafts stay invisible to all organisation-scoped endpoints.
+     */
+    public function onboardingDraft(): ?Organisation
+    {
+        return Organisation::where('created_by', $this->id)
+            ->whereDoesntHave('organisationUsers', fn ($query) => $query->where('user_id', $this->id))
+            ->latest('id')
+            ->first();
+    }
+
     public function organisationMembershipFor(Organisation|int $organisation): ?OrganisationUser
     {
         $organisationId = $organisation instanceof Organisation ? $organisation->id : $organisation;

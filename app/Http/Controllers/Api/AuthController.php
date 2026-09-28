@@ -4,16 +4,19 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\LoginRequest;
+use App\Http\Requests\Api\RegisterRequest;
 use App\Http\Resources\Organisation\AuthenticatedUserResource;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * Sanctum token authentication for the Organisation App API, consumed by
- * the separate organisation frontend. Login verifies credentials and
- * issues a personal access token, logout revokes the current token, and
- * `me` returns the token-authenticated user with organisation/role info.
+ * the separate organisation frontend. Register creates the account and
+ * issues a token with pending onboarding, login verifies credentials and
+ * issues a token, logout revokes the current token, and `me` returns the
+ * token-authenticated user with organisation/role info.
  */
 class AuthController extends Controller
 {
@@ -29,6 +32,28 @@ class AuthController extends Controller
             'message' => 'Authenticated.',
             'token' => $token,
             'token_type' => 'Bearer',
+        ]);
+    }
+
+    public function register(RegisterRequest $request): AuthenticatedUserResource
+    {
+        $validated = $request->validated();
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+        ]);
+
+        $token = $user->createToken('organisation-app')->plainTextToken;
+
+        $user->load(['roles', 'organisations']);
+
+        return (new AuthenticatedUserResource($user))->additional([
+            'message' => 'Registered. Continue to onboarding to create your organisation.',
+            'token' => $token,
+            'token_type' => 'Bearer',
+            'onboarding' => ['completed' => false, 'step' => 'organisation'],
         ]);
     }
 

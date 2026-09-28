@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\OrganisationController;
 use App\Http\Controllers\Api\OrganisationUserController;
 use App\Http\Controllers\Api\ProjectController;
@@ -21,6 +22,10 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login'])
         ->middleware('throttle:login')
         ->name('api.auth.login');
+
+    Route::post('register', [AuthController::class, 'register'])
+        ->middleware('throttle:10,1')
+        ->name('api.auth.register');
 
     Route::post('logout', [AuthController::class, 'logout'])
         ->middleware('auth:sanctum')
@@ -44,6 +49,13 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('onboarding', [OnboardingController::class, 'show'])
+        ->name('api.onboarding.show');
+    Route::put('onboarding', [OnboardingController::class, 'update'])
+        ->name('api.onboarding.update');
+    Route::post('onboarding/complete', [OnboardingController::class, 'complete'])
+        ->name('api.onboarding.complete');
+
     Route::name('api.')->group(function () {
         Route::apiResource('projects', ProjectController::class);
     });
