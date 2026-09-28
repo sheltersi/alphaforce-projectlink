@@ -36,6 +36,8 @@ class ProjectListResource extends JsonResource
                 'slug' => $this->organisation->slug,
             ]),
 
+            'creator' => new UserBriefResource($this->whenLoaded('creator')),
+
             'skills' => $this->whenLoaded('skills', fn () => $this->skills->pluck('name')->values()->all()),
 
             'applications_count' => $this->whenCounted('applications'),

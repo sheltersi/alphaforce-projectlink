@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\ResolvesCurrentOrganisation;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Organisation\OrganisationUserResource;
-use App\Models\Organisation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Gate;
  */
 class OrganisationUserController extends Controller
 {
+    use ResolvesCurrentOrganisation;
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $organisation = $this->currentOrganisation($request);
@@ -37,14 +39,5 @@ class OrganisationUserController extends Controller
         $member = $organisation->users()->where('users.id', $user->id)->firstOrFail();
 
         return new OrganisationUserResource($member);
-    }
-
-    protected function currentOrganisation(Request $request): Organisation
-    {
-        $organisation = $request->user()->currentOrganisation();
-
-        abort_if($organisation === null, 403, 'You do not belong to an organisation.');
-
-        return $organisation;
     }
 }

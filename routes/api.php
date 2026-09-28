@@ -3,11 +3,12 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OrganisationController;
 use App\Http\Controllers\Api\OrganisationUserController;
+use App\Http\Controllers\Api\ProjectController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Organisation App API (Phase 1)
+| Organisation App API (Phases 1–2)
 |--------------------------------------------------------------------------
 |
 | Stateless Sanctum token API consumed by the separate organisation
@@ -40,4 +41,19 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.organisation.users.index');
     Route::get('organisation/users/{user}', [OrganisationUserController::class, 'show'])
         ->name('api.organisation.users.show');
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::name('api.')->group(function () {
+        Route::apiResource('projects', ProjectController::class);
+    });
+
+    Route::post('projects/{project}/publish', [ProjectController::class, 'publish'])
+        ->name('api.projects.publish');
+    Route::post('projects/{project}/unpublish', [ProjectController::class, 'unpublish'])
+        ->name('api.projects.unpublish');
+    Route::post('projects/{project}/close', [ProjectController::class, 'close'])
+        ->name('api.projects.close');
+    Route::post('projects/{project}/archive', [ProjectController::class, 'archive'])
+        ->name('api.projects.archive');
 });

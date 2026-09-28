@@ -1,0 +1,296 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Api\Concerns\ResolvesCurrentOrganisation;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\ProjectIndexRequest;
+use App\Http\Requests\Api\StoreProjectRequest;
+use App\Http\Requests\Api\UpdateProjectRequest;
+use App\Http\Resources\Organisation\ProjectListResource;
+use App\Http\Resources\Organisation\ProjectResource;
+use App\Models\Project;
+use App\Models\ProjectApplication;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * Organisation App project management.
+ *
+ * All access is scoped to the authenticated user's own organisation
+ * (cross-org projects resolve to 404). Lifecycle mapping onto the
+ * existing statuses: publish (draft → open), unpublish (open → draft),
+ * close (open/in_progress → completed), archive (completed/cancelled →
+ * archived). Only drafts can be hard-deleted; history is preserved via
+ * close/archive since related records cascade.
+ */
+class ProjectController extends Controller
+{
+    use ResolvesCurrentOrganisation;
+
+    /**
+     * Statuses that still accept normal edits.
+     *
+     * @var array<int, string>
+     */
+    private const EDITABLE_STATUSES = [
+        Project::STATUS_DRAFT,
+        Project::STATUS_OPEN,
+        Project::STATUS_IN_PROGRESS,
+    ];
+
+    public function index(ProjectIndexRequest $request): AnonymousResourceCollection
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        Gate::authorize('viewAny', Project::class);
+
+        $filters = $request->validated();
+
+        $projects = $organisation->projects()
+            ->with(['skills', 'creator'])
+            ->withCount(['applications', 'participants'])
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(
+                fn ($query) => $query->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%")
+            ))
+            ->when($filters['project_manager'] ?? null, fn ($query, $manager) => $query->where('created_by', $manager))
+            ->when($filters['start_date'] ?? null, fn ($query, $date) => $query->whereDate('start_date', '>=', $date))
+            ->when($filters['end_date'] ?? null, fn ($query, $date) => $query->whereDate('end_date', '<=', $date))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return ProjectListResource::collection($projects);
+    }
+
+    public function store(StoreProjectRequest $request): JsonResponse
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        Gate::authorize('create', Project::class);
+
+        $validated = $request->validated();
+
+        $project = $organisation->projects()->create([
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'location' => $validated['location'] ?? null,
+            'start_date' => $validated['start_date'] ?? null,
+            'end_date' => $validated['end_date'] ?? null,
+            'positions' => $validated['positions'] ?? 1,
+            'created_by' => $validated['project_manager_id'] ?? $request->user()->id,
+            'status' => Project::STATUS_DRAFT,
+        ]);
+
+        if (array_key_exists('skill_ids', $validated)) {
+            $project->skills()->sync($validated['skill_ids']);
+        }
+
+        return $this->projectResponse($project, 'Project created.', 201);
+    }
+
+    public function show(Request $request, Project $project): ProjectResource
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('view', $project);
+
+        return new ProjectResource($this->loaded($project));
+    }
+
+    public function update(UpdateProjectRequest $request, Project $project): ProjectResource
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('update', $project);
+
+        if (! in_array($project->status, self::EDITABLE_STATUSES, true)) {
+            throw ValidationException::withMessages([
+                'project' => ["A {$project->status} project can no longer be modified."],
+            ]);
+        }
+
+        $validated = $request->validated();
+
+        $project->fill([
+            'title' => $validated['title'] ?? $project->title,
+            'description' => array_key_exists('description', $validated) ? $validated['description'] : $project->description,
+            'location' => array_key_exists('location', $validated) ? $validated['location'] : $project->location,
+            'start_date' => array_key_exists('start_date', $validated) ? $validated['start_date'] : $project->start_date,
+            'end_date' => array_key_exists('end_date', $validated) ? $validated['end_date'] : $project->end_date,
+            'positions' => $validated['positions'] ?? $project->positions,
+            'created_by' => $validated['project_manager_id'] ?? $project->created_by,
+        ])->save();
+
+        if (array_key_exists('skill_ids', $validated)) {
+            $project->skills()->sync($validated['skill_ids']);
+        }
+
+        return (new ProjectResource($this->loaded($project->fresh())))
+            ->additional(['message' => 'Project updated.']);
+    }
+
+    public function destroy(Request $request, Project $project): JsonResponse
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('delete', $project);
+
+        if ($project->status !== Project::STATUS_DRAFT) {
+            throw ValidationException::withMessages([
+                'project' => ['Only draft projects can be deleted. Archive the project to retire it instead.'],
+            ]);
+        }
+
+        $project->delete();
+
+        return response()->json(['message' => 'Project deleted.']);
+    }
+
+    public function publish(Request $request, Project $project): ProjectResource
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('publish', $project);
+
+        $this->ensureTransition($project, [Project::STATUS_DRAFT], 'publish', Project::STATUS_OPEN);
+
+        $missing = collect(['description', 'start_date', 'end_date'])
+            ->filter(function (string $field) use ($project): bool {
+                $value = $project->{$field};
+
+                return $value === null || $value === '';
+            })
+            ->values();
+
+        if ($missing->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'project' => ["Cannot publish: missing {$missing->join(', ')}."],
+            ]);
+        }
+
+        $project->update(['status' => Project::STATUS_OPEN]);
+
+        return (new ProjectResource($this->loaded($project->fresh())))
+            ->additional(['message' => 'Project published.']);
+    }
+
+    public function unpublish(Request $request, Project $project): ProjectResource
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('unpublish', $project);
+
+        $this->ensureTransition($project, [Project::STATUS_OPEN], 'unpublish', Project::STATUS_DRAFT);
+
+        $hasActiveApplications = $project->applications()
+            ->whereNotIn('status', [ProjectApplication::STATUS_WITHDRAWN, ProjectApplication::STATUS_REJECTED])
+            ->exists();
+
+        if ($hasActiveApplications) {
+            throw ValidationException::withMessages([
+                'project' => ['Cannot unpublish a project with active applications.'],
+            ]);
+        }
+
+        $project->update(['status' => Project::STATUS_DRAFT]);
+
+        return (new ProjectResource($this->loaded($project->fresh())))
+            ->additional(['message' => 'Project unpublished.']);
+    }
+
+    public function close(Request $request, Project $project): ProjectResource
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('close', $project);
+
+        $this->ensureTransition(
+            $project,
+            [Project::STATUS_OPEN, Project::STATUS_IN_PROGRESS],
+            'close',
+            Project::STATUS_COMPLETED
+        );
+
+        $project->update(['status' => Project::STATUS_COMPLETED]);
+
+        return (new ProjectResource($this->loaded($project->fresh())))
+            ->additional(['message' => 'Project closed.']);
+    }
+
+    public function archive(Request $request, Project $project): ProjectResource
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('archive', $project);
+
+        $this->ensureTransition(
+            $project,
+            [Project::STATUS_COMPLETED, Project::STATUS_CANCELLED],
+            'archive',
+            Project::STATUS_ARCHIVED
+        );
+
+        $project->update(['status' => Project::STATUS_ARCHIVED]);
+
+        return (new ProjectResource($this->loaded($project->fresh())))
+            ->additional(['message' => 'Project archived.']);
+    }
+
+    /**
+     * Confine the route-bound project to the viewer's organisation.
+     * Anything else resolves to 404 so cross-org existence never leaks.
+     */
+    protected function scoped(int $organisationId, Project $project): void
+    {
+        abort_if($project->organisation_id !== $organisationId, 404);
+    }
+
+    /**
+     * @param  array<int, string>  $from
+     *
+     * @throws ValidationException
+     */
+    protected function ensureTransition(Project $project, array $from, string $action, string $to): void
+    {
+        if ($project->status === $to || ! in_array($project->status, $from, true)) {
+            throw ValidationException::withMessages([
+                'project' => ["A {$project->status} project cannot be {$action}d."],
+            ]);
+        }
+    }
+
+    protected function loaded(Project $project): Project
+    {
+        return $project->load(['creator', 'skills'])
+            ->loadCount(['applications', 'participants']);
+    }
+
+    protected function projectResponse(Project $project, string $message, int $status): JsonResponse
+    {
+        return (new ProjectResource($this->loaded($project)))
+            ->additional(['message' => $message])
+            ->response(request())
+            ->setStatusCode($status);
+    }
+}
