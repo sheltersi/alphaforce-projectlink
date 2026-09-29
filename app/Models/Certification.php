@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\YearMonth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,8 +24,8 @@ class Certification extends Model
     protected function casts(): array
     {
         return [
-            'issue_date' => 'date',
-            'expiry_date' => 'date',
+            'issue_date' => YearMonth::class,
+            'expiry_date' => YearMonth::class,
             'sort_order' => 'integer',
         ];
     }

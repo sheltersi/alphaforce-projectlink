@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Api\Concerns\ResolvesCurrentOrganisation;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\ProjectApplicationIndexRequest;
 use App\Http\Requests\Api\ProjectIndexRequest;
 use App\Http\Requests\Api\StoreProjectRequest;
 use App\Http\Requests\Api\UpdateProjectRequest;
+use App\Http\Resources\Organisation\ApplicationResource;
 use App\Http\Resources\Organisation\ProjectListResource;
 use App\Http\Resources\Organisation\ProjectResource;
 use App\Models\Project;
@@ -138,6 +140,29 @@ class ProjectController extends Controller
 
         return (new ProjectResource($this->loaded($project->fresh())))
             ->additional(['message' => 'Project updated.']);
+    }
+
+    /**
+     * Paginated applications for a single project (review queue).
+     * Applicant data uses the privacy-filtered ParticipantResource.
+     */
+    public function applications(ProjectApplicationIndexRequest $request, Project $project): AnonymousResourceCollection
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('viewApplications', $project);
+
+        $applications = $project->applications()
+            ->with(['user.participantProfile.skills', 'participant'])
+            ->when($request->validated('status'), fn ($query, $status) => $query->where('status', $status))
+            ->latest('submitted_at')
+            ->latest('id')
+            ->paginate(15)
+            ->withQueryString();
+
+        return ApplicationResource::collection($applications);
     }
 
     public function destroy(Request $request, Project $project): JsonResponse

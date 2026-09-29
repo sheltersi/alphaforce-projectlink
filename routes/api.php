@@ -60,6 +60,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('projects', ProjectController::class);
     });
 
+    Route::get('projects/{project}/applications', [ProjectController::class, 'applications'])
+        ->name('api.projects.applications.index');
     Route::post('projects/{project}/publish', [ProjectController::class, 'publish'])
         ->name('api.projects.publish');
     Route::post('projects/{project}/unpublish', [ProjectController::class, 'unpublish'])

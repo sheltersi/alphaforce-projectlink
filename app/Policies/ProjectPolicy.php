@@ -65,6 +65,11 @@ class ProjectPolicy
         return $this->canManage($user, $project);
     }
 
+    public function viewApplications(User $user, Project $project): bool
+    {
+        return $this->canManage($user, $project);
+    }
+
     protected function inManagedOrganisation(User $user, Project $project): bool
     {
         if ($project->organisation_id === null) {
