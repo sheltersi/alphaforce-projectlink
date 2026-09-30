@@ -24,12 +24,16 @@ class ProjectApplication extends Model
         'status',
         'cover_letter',
         'submitted_at',
+        'reviewed_at',
+        'reviewed_by',
+        'rejection_reason',
     ];
 
     protected function casts(): array
     {
         return [
             'submitted_at' => 'datetime',
+            'reviewed_at' => 'datetime',
         ];
     }
 
@@ -43,6 +47,12 @@ class ProjectApplication extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 
     /** @return HasOne<ProjectParticipant, $this> */

@@ -7,12 +7,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ProjectApplicationIndexRequest;
 use App\Http\Requests\Api\ProjectIndexRequest;
 use App\Http\Requests\Api\StoreProjectRequest;
+use App\Http\Requests\Api\UpdateApplicationRequest;
 use App\Http\Requests\Api\UpdateProjectRequest;
 use App\Http\Resources\Organisation\ApplicationResource;
 use App\Http\Resources\Organisation\ProjectListResource;
 use App\Http\Resources\Organisation\ProjectResource;
 use App\Models\Project;
 use App\Models\ProjectApplication;
+use App\Models\ProjectParticipant;
+use App\Notifications\ProjectApplicationAccepted;
+use App\Notifications\ProjectApplicationRejected;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -145,6 +149,7 @@ class ProjectController extends Controller
     /**
      * Paginated applications for a single project (review queue).
      * Applicant data uses the privacy-filtered ParticipantResource.
+     * Supports ?search= matching user name/email and profile first/last name.
      */
     public function applications(ProjectApplicationIndexRequest $request, Project $project): AnonymousResourceCollection
     {
@@ -154,15 +159,119 @@ class ProjectController extends Controller
 
         Gate::authorize('viewApplications', $project);
 
+        $filters = $request->validated();
+
         $applications = $project->applications()
-            ->with(['user.participantProfile.skills', 'participant'])
-            ->when($request->validated('status'), fn ($query, $status) => $query->where('status', $status))
+            ->with(['user.participantProfile.skills', 'participant', 'reviewer'])
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $like = "%{$search}%";
+
+                $query->where(function ($query) use ($like) {
+                    $query->whereHas('user', fn ($query) => $query
+                        ->where('name', 'like', $like)
+                        ->orWhere('email', 'like', $like))
+                        ->orWhereHas('user.participantProfile', fn ($query) => $query
+                            ->where('first_name', 'like', $like)
+                            ->orWhere('last_name', 'like', $like));
+                });
+            })
             ->latest('submitted_at')
             ->latest('id')
             ->paginate(15)
             ->withQueryString();
 
         return ApplicationResource::collection($applications);
+    }
+
+    /**
+     * Single application with full eager loads for the review detail page.
+     */
+    public function showApplication(Request $request, Project $project, ProjectApplication $application): ApplicationResource
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('reviewApplications', $project);
+
+        $this->scopedApplication($project, $application);
+
+        return new ApplicationResource($this->loadedApplication($application));
+    }
+
+    /**
+     * Reviewer decision on an application.
+     *
+     * Frontend contract: PATCH with {status, rejection_reason?}.
+     * Transition rules (422 on violation): submitted/under_review/shortlisted
+     * may move to accepted/rejected/under_review/shortlisted; accepted is
+     * terminal; rejected may only be re-rejected (reason update); withdrawn
+     * is terminal for reviewers (applicant must re-apply, which reuses the row).
+     */
+    public function updateApplication(UpdateApplicationRequest $request, Project $project, ProjectApplication $application): ApplicationResource
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('reviewApplications', $project);
+
+        $this->scopedApplication($project, $application);
+
+        $validated = $request->validated();
+        $from = $application->status;
+        $to = $validated['status'];
+
+        $this->ensureApplicationTransition($from, $to);
+
+        if ($to === ProjectApplication::STATUS_ACCEPTED) {
+            $application->update([
+                'status' => $to,
+                'rejection_reason' => null,
+                'reviewed_at' => now(),
+                'reviewed_by' => $request->user()->id,
+            ]);
+
+            $participant = ProjectParticipant::firstOrCreate(
+                ['project_id' => $project->id, 'user_id' => $application->user_id],
+                [
+                    'application_id' => $application->id,
+                    'role' => 'participant',
+                    'status' => ProjectParticipant::STATUS_ACTIVE,
+                    'joined_at' => now()->toDateString(),
+                ],
+            );
+
+            if ($participant->application_id === null) {
+                $participant->update(['application_id' => $application->id]);
+            }
+
+            $application->user->notify(new ProjectApplicationAccepted($application->fresh('project')));
+
+            $message = 'Application accepted.';
+        } elseif ($to === ProjectApplication::STATUS_REJECTED) {
+            $application->update([
+                'status' => $to,
+                'rejection_reason' => $validated['rejection_reason'] ?? null,
+                'reviewed_at' => now(),
+                'reviewed_by' => $request->user()->id,
+            ]);
+
+            $application->user->notify(new ProjectApplicationRejected($application->fresh('project')));
+
+            $message = 'Application rejected.';
+        } else {
+            $application->update([
+                'status' => $to,
+                'rejection_reason' => null,
+            ]);
+
+            $message = 'Application updated.';
+        }
+
+        return (new ApplicationResource($this->loadedApplication($application->fresh())))
+            ->additional(['message' => $message]);
     }
 
     public function destroy(Request $request, Project $project): JsonResponse
@@ -289,6 +398,72 @@ class ProjectController extends Controller
     protected function scoped(int $organisationId, Project $project): void
     {
         abort_if($project->organisation_id !== $organisationId, 404);
+    }
+
+    /**
+     * Confine the route-bound application to its project (404 otherwise).
+     */
+    protected function scopedApplication(Project $project, ProjectApplication $application): void
+    {
+        abort_if($application->project_id !== $project->id, 404);
+    }
+
+    /**
+     * Full eager loads for the review detail page: applicant profile with
+     * skills, educations, work experiences and certifications, plus the
+     * post-acceptance assignment, reviewer and project.
+     */
+    protected function loadedApplication(ProjectApplication $application): ProjectApplication
+    {
+        return $application->load([
+            'user.participantProfile.skills',
+            'user.participantProfile.educations',
+            'user.participantProfile.workExperiences',
+            'user.participantProfile.certifications',
+            'participant',
+            'reviewer',
+            'project',
+        ]);
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    protected function ensureApplicationTransition(string $from, string $to): void
+    {
+        $reviewable = [
+            ProjectApplication::STATUS_SUBMITTED,
+            ProjectApplication::STATUS_UNDER_REVIEW,
+            ProjectApplication::STATUS_SHORTLISTED,
+        ];
+
+        if ($from === ProjectApplication::STATUS_ACCEPTED) {
+            throw ValidationException::withMessages([
+                'status' => ['An accepted application can no longer be changed.'],
+            ]);
+        }
+
+        if ($from === ProjectApplication::STATUS_WITHDRAWN) {
+            throw ValidationException::withMessages([
+                'status' => ['A withdrawn application can no longer be reviewed. The applicant may re-apply.'],
+            ]);
+        }
+
+        if ($from === ProjectApplication::STATUS_REJECTED) {
+            if ($to !== ProjectApplication::STATUS_REJECTED) {
+                throw ValidationException::withMessages([
+                    'status' => ['A rejected application cannot be accepted. The applicant may re-apply.'],
+                ]);
+            }
+
+            return;
+        }
+
+        if (! in_array($from, $reviewable, true)) {
+            throw ValidationException::withMessages([
+                'status' => ["An application with status {$from} cannot be reviewed."],
+            ]);
+        }
     }
 
     /**

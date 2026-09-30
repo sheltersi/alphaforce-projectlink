@@ -30,6 +30,7 @@ class ProjectApplicationIndexRequest extends FormRequest
                 ProjectApplication::STATUS_REJECTED,
                 ProjectApplication::STATUS_WITHDRAWN,
             ])],
+            'search' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 }

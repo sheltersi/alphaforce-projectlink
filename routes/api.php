@@ -62,6 +62,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('projects/{project}/applications', [ProjectController::class, 'applications'])
         ->name('api.projects.applications.index');
+    Route::get('projects/{project}/applications/{application}', [ProjectController::class, 'showApplication'])
+        ->name('api.projects.applications.show');
+    Route::patch('projects/{project}/applications/{application}', [ProjectController::class, 'updateApplication'])
+        ->name('api.projects.applications.update');
     Route::post('projects/{project}/publish', [ProjectController::class, 'publish'])
         ->name('api.projects.publish');
     Route::post('projects/{project}/unpublish', [ProjectController::class, 'unpublish'])

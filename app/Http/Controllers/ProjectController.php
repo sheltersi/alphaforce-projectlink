@@ -235,8 +235,14 @@ class ProjectController extends Controller
             abort(422, 'This project is not accepting applications.');
         }
 
-        $withdrawn = [ProjectApplication::STATUS_WITHDRAWN];
-        if ($user->projectApplications()->where('project_id', $project->id)->whereNotIn('status', $withdrawn)->exists()) {
+        // Ruling on the unique(project_id, user_id) conflict: the unique
+        // constraint is kept, and re-applying after withdrawn/rejected reuses
+        // the existing row (reset to submitted, review fields cleared) so a
+        // second row never 500s. Any other existing status blocks with 409.
+        $reapplyable = [ProjectApplication::STATUS_WITHDRAWN, ProjectApplication::STATUS_REJECTED];
+        $existing = $user->projectApplications()->where('project_id', $project->id)->first();
+
+        if ($existing && ! in_array($existing->status, $reapplyable, true)) {
             $message = 'You have already applied to this project.';
 
             if ($request->expectsJson()) {
@@ -248,13 +254,26 @@ class ProjectController extends Controller
             return back();
         }
 
-        $application = ProjectApplication::create([
-            'project_id' => $project->id,
-            'user_id' => $user->id,
-            'status' => ProjectApplication::STATUS_SUBMITTED,
-            'cover_letter' => $request->validated('cover_letter'),
-            'submitted_at' => now(),
-        ]);
+        if ($existing) {
+            $existing->update([
+                'status' => ProjectApplication::STATUS_SUBMITTED,
+                'cover_letter' => $request->validated('cover_letter'),
+                'submitted_at' => now(),
+                'reviewed_at' => null,
+                'reviewed_by' => null,
+                'rejection_reason' => null,
+            ]);
+
+            $application = $existing->fresh();
+        } else {
+            $application = ProjectApplication::create([
+                'project_id' => $project->id,
+                'user_id' => $user->id,
+                'status' => ProjectApplication::STATUS_SUBMITTED,
+                'cover_letter' => $request->validated('cover_letter'),
+                'submitted_at' => now(),
+            ]);
+        }
 
         $project->creator->notify(new ProjectApplicationSubmitted($application));
 
