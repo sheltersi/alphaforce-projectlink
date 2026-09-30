@@ -62,6 +62,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('projects/{project}/applications', [ProjectController::class, 'applications'])
         ->name('api.projects.applications.index');
+    Route::get('projects/{project}/participants', [ProjectController::class, 'participants'])
+        ->name('api.projects.participants.index');
     Route::get('projects/{project}/applications/{application}', [ProjectController::class, 'showApplication'])
         ->name('api.projects.applications.show');
     Route::patch('projects/{project}/applications/{application}', [ProjectController::class, 'updateApplication'])

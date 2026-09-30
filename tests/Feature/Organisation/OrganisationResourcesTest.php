@@ -129,9 +129,9 @@ it('serializes applications with project, applicant and assignment when loaded',
     ]);
 
     $bare = resolveJson(new ApplicationResource(ProjectApplication::find($application->id)));
-    expect($bare)->toHaveKeys(['id', 'project_id', 'user_id', 'status', 'cover_letter', 'submitted_at']);
-    expect($bare)->not->toHaveKey('reviewed_at');
-    expect($bare)->not->toHaveKey('reviewed_by');
+    expect($bare)->toHaveKeys(['id', 'project_id', 'user_id', 'status', 'cover_letter', 'submitted_at', 'reviewed_at', 'reviewed_by', 'rejection_reason']);
+    expect($bare['reviewed_at'])->toBeNull();
+    expect($bare['reviewed_by'])->toBeNull();
     expect($bare)->not->toHaveKey('project');
 
     $loaded = ProjectApplication::with(['project', 'user.participantProfile.skills', 'participant'])->find($application->id);

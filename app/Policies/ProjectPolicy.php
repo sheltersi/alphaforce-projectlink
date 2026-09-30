@@ -11,9 +11,13 @@ use App\Models\User;
  *
  * - Viewing/listing/creating requires membership plus an
  *   organisation-management role (Technical Admin or Project Manager).
- * - Updating, lifecycle transitions and deletion additionally require the
- *   user to be the project creator or a Technical Admin, following the
- *   existing creator-or-admin precedent (ProjectController@showApplication).
+ * - Viewing review queues (applications, participants) is open to every
+ *   organisation manager, so organisation creators/admins and all project
+ *   managers can see who applied and who was accepted.
+ * - Updating, lifecycle transitions, deletion and application decisions
+ *   additionally require the user to be the project creator or a Technical
+ *   Admin, following the existing creator-or-admin precedent
+ *   (ProjectController@showApplication).
  * - Participants and outsiders are denied; cross-org access is denied.
  */
 class ProjectPolicy
@@ -67,7 +71,7 @@ class ProjectPolicy
 
     public function viewApplications(User $user, Project $project): bool
     {
-        return $this->canManage($user, $project);
+        return $this->inManagedOrganisation($user, $project);
     }
 
     public function reviewApplications(User $user, Project $project): bool

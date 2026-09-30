@@ -6,11 +6,13 @@ use App\Http\Controllers\Api\Concerns\ResolvesCurrentOrganisation;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ProjectApplicationIndexRequest;
 use App\Http\Requests\Api\ProjectIndexRequest;
+use App\Http\Requests\Api\ProjectParticipantIndexRequest;
 use App\Http\Requests\Api\StoreProjectRequest;
 use App\Http\Requests\Api\UpdateApplicationRequest;
 use App\Http\Requests\Api\UpdateProjectRequest;
 use App\Http\Resources\Organisation\ApplicationResource;
 use App\Http\Resources\Organisation\ProjectListResource;
+use App\Http\Resources\Organisation\ProjectParticipantResource;
 use App\Http\Resources\Organisation\ProjectResource;
 use App\Models\Project;
 use App\Models\ProjectApplication;
@@ -185,7 +187,47 @@ class ProjectController extends Controller
     }
 
     /**
+     * Paginated accepted participants for a single project.
+     * Participant data uses the privacy-filtered ParticipantResource.
+     * Supports ?status= and ?search= (user name/email, profile first/last name).
+     * Authorised with the same review-queue Gate (creator / admin).
+     */
+    public function participants(ProjectParticipantIndexRequest $request, Project $project): AnonymousResourceCollection
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('viewApplications', $project);
+
+        $filters = $request->validated();
+
+        $participants = $project->participants()
+            ->with(['user.participantProfile.skills', 'application'])
+            ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('project_participants.status', $status))
+            ->when($filters['search'] ?? null, function ($query, $search) {
+                $like = "%{$search}%";
+
+                $query->where(function ($query) use ($like) {
+                    $query->whereHas('user', fn ($query) => $query
+                        ->where('name', 'like', $like)
+                        ->orWhere('email', 'like', $like))
+                        ->orWhereHas('user.participantProfile', fn ($query) => $query
+                            ->where('first_name', 'like', $like)
+                            ->orWhere('last_name', 'like', $like));
+                });
+            })
+            ->orderBy('joined_at')
+            ->orderBy('id')
+            ->paginate(15)
+            ->withQueryString();
+
+        return ProjectParticipantResource::collection($participants);
+    }
+
+    /**
      * Single application with full eager loads for the review detail page.
+     * Read access follows the queue (every organisation manager may view).
      */
     public function showApplication(Request $request, Project $project, ProjectApplication $application): ApplicationResource
     {
@@ -193,7 +235,7 @@ class ProjectController extends Controller
 
         $this->scoped($organisation->id, $project);
 
-        Gate::authorize('reviewApplications', $project);
+        Gate::authorize('viewApplications', $project);
 
         $this->scopedApplication($project, $application);
 
@@ -482,8 +524,13 @@ class ProjectController extends Controller
 
     protected function loaded(Project $project): Project
     {
-        return $project->load(['creator', 'skills'])
-            ->loadCount(['applications', 'participants']);
+        return $project->load([
+            'creator',
+            'skills',
+            'participants' => fn ($query) => $query->orderBy('joined_at')->orderBy('id'),
+            'participants.user.participantProfile.skills',
+            'participants.application',
+        ])->loadCount(['applications', 'participants']);
     }
 
     protected function projectResponse(Project $project, string $message, int $status): JsonResponse

@@ -4,6 +4,7 @@ use App\Models\Organisation;
 use App\Models\ParticipantProfile;
 use App\Models\Project;
 use App\Models\ProjectApplication;
+use App\Models\ProjectParticipant;
 use App\Models\Skill;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
@@ -157,7 +158,7 @@ it('lets technical admins review applications on any organisation project', func
         ->assertJsonPath('meta.total', 1);
 });
 
-it('forbids other project managers, participants and outsiders', function () {
+it('forbids participants and outsiders but lets every manager view', function () {
     ['orgA' => $orgA, 'managerA' => $managerA, 'managerA2' => $managerA2, 'participantA' => $participantA, 'outsider' => $outsider] = makeReviewSetup();
     $project = Project::factory()->create([
         'organisation_id' => $orgA->id,
@@ -168,9 +169,31 @@ it('forbids other project managers, participants and outsiders', function () {
 
     $uri = "/api/projects/{$project->id}/applications";
 
-    $this->getJson($uri, reviewHeaders($managerA2))->assertForbidden();
+    // Any organisation manager (not just the creator) may view the queue.
+    $this->getJson($uri, reviewHeaders($managerA2))->assertOk();
     $this->getJson($uri, reviewHeaders($participantA))->assertForbidden();
     $this->getJson($uri, reviewHeaders($outsider))->assertForbidden();
+});
+
+it('lets every manager view but only the creator or admin decide', function () {
+    ['orgA' => $orgA, 'adminA' => $adminA, 'managerA' => $managerA, 'managerA2' => $managerA2] = makeReviewSetup();
+    $project = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+    $application = applyTo($project, makeApplicant());
+
+    $uri = "/api/projects/{$project->id}/applications/{$application->id}";
+
+    // Read: another manager may view the detail…
+    $this->getJson($uri, reviewHeaders($managerA2))->assertOk();
+    // …but deciding stays creator-or-admin-only.
+    $this->patchJson($uri, ['status' => 'accepted'], reviewHeaders($managerA2))->assertForbidden();
+
+    // Creator and admin may decide.
+    $this->patchJson($uri, ['status' => 'shortlisted'], reviewHeaders($managerA))->assertOk();
+    $this->patchJson($uri, ['status' => 'under_review'], reviewHeaders($adminA))->assertOk();
 });
 
 it('returns 404 for another organisation project applications', function () {
@@ -222,4 +245,141 @@ it('returns an empty list when a project has no applications', function () {
         ->assertOk()
         ->assertJsonPath('data', [])
         ->assertJsonPath('meta.total', 0);
+});
+
+// ---------------------------------------------------------------------------
+// Participants (accepted applicants)
+// ---------------------------------------------------------------------------
+
+function addParticipant(Project $project, User $user, string $status = ProjectParticipant::STATUS_ACTIVE): ProjectParticipant
+{
+    return ProjectParticipant::factory()->create([
+        'project_id' => $project->id,
+        'user_id' => $user->id,
+        'status' => $status,
+    ]);
+}
+
+it('rejects unauthenticated participants access', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA] = makeReviewSetup();
+    $project = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+
+    $this->getJson("/api/projects/{$project->id}/participants")->assertUnauthorized();
+});
+
+it('lets the creator list project participants with privacy-filtered details', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA] = makeReviewSetup();
+    $project = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+
+    $member1 = makeApplicant();
+    $member2 = makeApplicant();
+    addParticipant($project, $member1);
+    addParticipant($project, $member2, ProjectParticipant::STATUS_COMPLETED);
+
+    // Participant on another project must not leak in.
+    $other = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+    addParticipant($other, makeApplicant());
+
+    $response = $this->getJson("/api/projects/{$project->id}/participants", reviewHeaders($managerA));
+
+    $response->assertOk()->assertJsonStructure([
+        'data' => [[
+            'id', 'project_id', 'user_id', 'role', 'status', 'joined_at', 'participant',
+        ]],
+        'links',
+        'meta',
+    ]);
+
+    expect($response->json('meta.total'))->toBe(2);
+
+    $byUser = collect($response->json('data'))->keyBy('user_id');
+    expect($byUser[$member1->id]['status'])->toBe(ProjectParticipant::STATUS_ACTIVE);
+    expect($byUser[$member2->id]['status'])->toBe(ProjectParticipant::STATUS_COMPLETED);
+    expect($byUser[$member1->id]['participant']['email'])->toBe($member1->email);
+    expect($byUser[$member1->id]['participant']['profile']['skills'][0]['name'])->toBe('Mentoring');
+
+    // Sensitive applicant data must never leak.
+    expect($response->getContent())->not->toContain('ID-SECRET-123');
+});
+
+it('filters participants by status and search', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA] = makeReviewSetup();
+    $project = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+
+    $zara = User::factory()->create(['name' => 'Zara Almeida', 'email' => 'zara@example.com']);
+    $zara->assignRole('participant');
+    addParticipant($project, $zara);
+    addParticipant($project, makeApplicant(), ProjectParticipant::STATUS_WITHDRAWN);
+
+    $headers = reviewHeaders($managerA);
+
+    $byStatus = $this->getJson("/api/projects/{$project->id}/participants?status=active", $headers)->assertOk();
+    expect($byStatus->json('meta.total'))->toBe(1);
+    expect($byStatus->json('data.0.user_id'))->toBe($zara->id);
+
+    $bySearch = $this->getJson("/api/projects/{$project->id}/participants?search=zara", $headers)->assertOk();
+    expect($bySearch->json('meta.total'))->toBe(1);
+    expect($bySearch->json('data.0.user_id'))->toBe($zara->id);
+
+    $this->getJson("/api/projects/{$project->id}/participants?status=bogus", $headers)
+        ->assertStatus(422)->assertJsonValidationErrors('status');
+});
+
+it('forbids participants access for outsiders and returns 404 cross-org', function () {
+    ['orgA' => $orgA, 'orgB' => $orgB, 'managerA' => $managerA, 'managerA2' => $managerA2, 'participantA' => $participantA, 'outsider' => $outsider, 'adminA' => $adminA, 'adminB' => $adminB] = makeReviewSetup();
+    $project = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+    addParticipant($project, makeApplicant());
+
+    $uri = "/api/projects/{$project->id}/participants";
+
+    // Any organisation manager (not just the creator) may view participants.
+    $this->getJson($uri, reviewHeaders($managerA2))->assertOk();
+    $this->getJson($uri, reviewHeaders($participantA))->assertForbidden();
+    $this->getJson($uri, reviewHeaders($outsider))->assertForbidden();
+
+    $theirs = Project::factory()->create([
+        'organisation_id' => $orgB->id,
+        'created_by' => $adminB->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+
+    $this->getJson("/api/projects/{$theirs->id}/participants", reviewHeaders($adminA))
+        ->assertNotFound();
+});
+
+it('exposes participants on the project detail response', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA] = makeReviewSetup();
+    $project = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+    $member = makeApplicant();
+    addParticipant($project, $member);
+
+    $this->getJson("/api/projects/{$project->id}", reviewHeaders($managerA))
+        ->assertOk()
+        ->assertJsonPath('data.participants_count', 1)
+        ->assertJsonPath('data.participants.0.user_id', $member->id)
+        ->assertJsonPath('data.participants.0.participant.email', $member->email);
 });
