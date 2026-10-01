@@ -9,6 +9,7 @@ use App\Models\Skill;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     $this->seed(RoleSeeder::class);
@@ -382,4 +383,227 @@ it('exposes participants on the project detail response', function () {
         ->assertJsonPath('data.participants_count', 1)
         ->assertJsonPath('data.participants.0.user_id', $member->id)
         ->assertJsonPath('data.participants.0.participant.email', $member->email);
+});
+
+// ---------------------------------------------------------------------------
+// Assignment (Phase 2)
+// ---------------------------------------------------------------------------
+
+it('creates an active but unassigned participant on accept', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA] = makeReviewSetup();
+    $project = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+    $application = applyTo($project, makeApplicant());
+
+    $this->patchJson(
+        "/api/projects/{$project->id}/applications/{$application->id}",
+        ['status' => ProjectApplication::STATUS_ACCEPTED],
+        reviewHeaders($managerA)
+    )->assertOk();
+
+    $participant = ProjectParticipant::where('project_id', $project->id)
+        ->where('user_id', $application->user_id)
+        ->firstOrFail();
+
+    expect($participant->status)->toBe(ProjectParticipant::STATUS_ACTIVE);
+    expect($participant->role)->toBeNull();
+    expect($participant->joined_at)->not->toBeNull();
+});
+
+it('shows a single participant with full loads', function () {
+    ['orgA' => $orgA, 'orgB' => $orgB, 'managerA' => $managerA, 'participantA' => $participantA, 'adminA' => $adminA, 'adminB' => $adminB] = makeReviewSetup();
+    $project = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+    $member = makeApplicant();
+    $participant = addParticipant($project, $member);
+
+    $this->getJson("/api/projects/{$project->id}/participants/{$participant->id}", reviewHeaders($managerA))
+        ->assertOk()
+        ->assertJsonPath('data.id', $participant->id)
+        ->assertJsonPath('data.participant.id', $member->id)
+        ->assertJsonStructure(['data' => ['role', 'team', 'start_date', 'end_date', 'work_location', 'working_hours', 'notes', 'status', 'participant', 'application', 'project']]);
+
+    $this->getJson("/api/projects/{$project->id}/participants/{$participant->id}", reviewHeaders($participantA))->assertForbidden();
+
+    $theirs = Project::factory()->create([
+        'organisation_id' => $orgB->id,
+        'created_by' => $adminB->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+    $foreign = ProjectParticipant::factory()->create(['project_id' => $theirs->id]);
+
+    $this->getJson("/api/projects/{$project->id}/participants/{$foreign->id}", reviewHeaders($managerA))->assertNotFound();
+    $this->getJson("/api/projects/{$theirs->id}/participants/{$foreign->id}", reviewHeaders($adminA))->assertNotFound();
+});
+
+it('assigns an unassigned participant and edits in place without new rows', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA, 'participantA' => $participantA] = makeReviewSetup();
+    $project = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+    $participant = ProjectParticipant::factory()->create([
+        'project_id' => $project->id,
+        'role' => null,
+        'status' => ProjectParticipant::STATUS_ACTIVE,
+    ]);
+
+    $uri = "/api/projects/{$project->id}/participants/{$participant->id}";
+    $headers = reviewHeaders($managerA);
+
+    // Role is required when the member has none yet.
+    $this->patchJson($uri, ['team' => 'Alpha'], $headers)
+        ->assertStatus(422)->assertJsonValidationErrors('role');
+
+    // Status cannot be sent via PATCH.
+    $this->patchJson($uri, ['role' => 'Mentor', 'status' => 'active'], $headers)
+        ->assertStatus(422)->assertJsonValidationErrors('status');
+
+    // Date sanity.
+    $this->patchJson($uri, ['role' => 'Mentor', 'start_date' => '2026-11-01', 'end_date' => '2026-10-01'], $headers)
+        ->assertStatus(422)->assertJsonValidationErrors('end_date');
+
+    // First assignment fills the role; status stays active.
+    $this->patchJson($uri, [
+        'role' => 'Mentor',
+        'team' => 'Alpha',
+        'start_date' => '2026-10-01',
+        'end_date' => '2026-12-31',
+        'work_location' => 'Amsterdam',
+        'working_hours' => '8h/week',
+        'notes' => 'Onboard Monday.',
+    ], $headers)
+        ->assertOk()
+        ->assertJsonPath('data.status', ProjectParticipant::STATUS_ACTIVE)
+        ->assertJsonPath('data.role', 'Mentor')
+        ->assertJsonPath('data.team', 'Alpha')
+        ->assertJsonPath('message', 'Assignment updated.');
+
+    expect(ProjectParticipant::where('project_id', $project->id)->count())->toBe(1);
+
+    // Subsequent edit updates in place.
+    $this->patchJson($uri, ['team' => 'Beta'], $headers)
+        ->assertOk()
+        ->assertJsonPath('data.status', ProjectParticipant::STATUS_ACTIVE)
+        ->assertJsonPath('data.team', 'Beta')
+        ->assertJsonPath('data.role', 'Mentor');
+
+    // Participants cannot edit.
+    $this->patchJson($uri, ['team' => 'Gamma'], reviewHeaders($participantA))->assertForbidden();
+});
+
+it('enforces the participant status lifecycle', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA] = makeReviewSetup();
+    $project = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+    $headers = reviewHeaders($managerA);
+
+    $make = fn (string $status) => ProjectParticipant::factory()->create([
+        'project_id' => $project->id,
+        'status' => $status,
+    ]);
+    $url = fn (ProjectParticipant $p) => "/api/projects/{$project->id}/participants/{$p->id}/status";
+
+    // Legal moves: active → completed, active → withdrawn.
+    $participant = $make(ProjectParticipant::STATUS_ACTIVE);
+    $this->postJson($url($participant), ['status' => 'completed'], $headers)->assertOk()->assertJsonPath('data.status', 'completed');
+
+    $participant = $make(ProjectParticipant::STATUS_ACTIVE);
+    $this->postJson($url($participant), ['status' => 'withdrawn'], $headers)->assertOk()->assertJsonPath('data.status', 'withdrawn');
+
+    // Terminal states reject every move.
+    foreach ([ProjectParticipant::STATUS_COMPLETED, ProjectParticipant::STATUS_WITHDRAWN] as $terminal) {
+        $this->postJson($url($make($terminal)), ['status' => 'completed'], $headers)
+            ->assertStatus(422)->assertJsonValidationErrors('status');
+    }
+
+    // Bogus status fails validation, not transition logic.
+    $this->postJson($url($make(ProjectParticipant::STATUS_ACTIVE)), ['status' => 'bogus'], $headers)
+        ->assertStatus(422)->assertJsonValidationErrors('status');
+});
+
+it('lists distinct roles and filters the index by role', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA] = makeReviewSetup();
+    $project = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+    addParticipant($project, makeApplicant())->update(['role' => 'Mentor']);
+    addParticipant($project, makeApplicant())->update(['role' => 'Developer']);
+
+    $headers = reviewHeaders($managerA);
+
+    $roles = $this->getJson("/api/projects/{$project->id}/roles", $headers)->assertOk();
+    expect($roles->json('data'))->toEqualCanonicalizing(['Developer', 'Mentor']);
+
+    $filtered = $this->getJson("/api/projects/{$project->id}/participants?role=Mentor", $headers)->assertOk();
+    expect($filtered->json('meta.total'))->toBe(1);
+    expect($filtered->json('data.0.role'))->toBe('Mentor');
+});
+
+it('lists all participant users regardless of membership without duplicates', function () {
+    ['orgA' => $orgA, 'orgB' => $orgB, 'managerA' => $managerA, 'participantA' => $participantA] = makeReviewSetup();
+    $member = makeApplicant();
+    $orgA->users()->attach($member->id, ['role' => 'member']);
+    $foreign = makeApplicant();
+    $orgB->users()->attach($foreign->id, ['role' => 'member']);
+    foreach (range(1, 2) as $index) {
+        $project = Project::factory()->create(['organisation_id' => $orgA->id, 'created_by' => $managerA->id]);
+        addParticipant($project, $member);
+        addParticipant($project, $foreign);
+    }
+    $unaffiliated = User::factory()->create();
+    $unaffiliated->assignRole(Role::findByName('participant', 'web'));
+    $headers = reviewHeaders($managerA);
+    $response = $this->getJson('/api/participants', $headers)
+        ->assertOk()->assertJsonPath('meta.total', 4);
+    expect(array_column($response->json('data'), 'id'))->toEqualCanonicalizing([$member->id, $participantA->id, $foreign->id, $unaffiliated->id]);
+    $this->getJson('/api/participants?search='.urlencode($member->email), $headers)
+        ->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.id', $member->id)
+        ->assertJsonMissingPath('data.0.profile.id_number');
+    $this->getJson('/api/participants?search=Applicant', $headers)
+        ->assertOk()->assertJsonPath('meta.total', 2);
+    $this->getJson('/api/participants?search[]=invalid', $headers)
+        ->assertUnprocessable()->assertJsonValidationErrors('search');
+});
+
+it('authorises participant user routes and restricts details to participant roles', function () {
+    ['orgA' => $orgA, 'orgB' => $orgB, 'managerA' => $managerA, 'participantA' => $participantA, 'outsider' => $outsider] = makeReviewSetup();
+    $member = makeApplicant();
+    $orgA->users()->attach($member->id, ['role' => 'member']);
+    $foreign = makeApplicant();
+    $orgB->users()->attach($foreign->id, ['role' => 'member']);
+    $uri = "/api/participants/{$member->id}";
+
+    $this->getJson('/api/participants')->assertUnauthorized();
+    $this->getJson($uri)->assertUnauthorized();
+    $headers = reviewHeaders($managerA);
+    $this->getJson($uri, $headers)
+        ->assertOk()->assertJsonPath('data.id', $member->id)
+        ->assertJsonStructure(['data' => ['name', 'email', 'profile' => ['skills', 'educations', 'work_experiences', 'certifications']]])
+        ->assertJsonMissingPath('data.profile.id_number');
+    $this->getJson("/api/participants/{$participantA->id}", $headers)
+        ->assertOk()->assertJsonPath('data.profile', null);
+    $this->getJson("/api/participants/{$foreign->id}", $headers)
+        ->assertOk()->assertJsonPath('data.id', $foreign->id);
+    $unaffiliated = User::factory()->create();
+    $unaffiliated->assignRole(Role::findByName('participant', 'web'));
+    $this->getJson("/api/participants/{$unaffiliated->id}", $headers)
+        ->assertOk()->assertJsonPath('data.id', $unaffiliated->id);
+    $this->getJson("/api/participants/{$managerA->id}", $headers)->assertNotFound();
+    foreach ([$participantA, $outsider] as $user) {
+        $this->getJson('/api/participants', reviewHeaders($user))->assertForbidden();
+        $this->getJson($uri, reviewHeaders($user))->assertForbidden();
+    }
 });

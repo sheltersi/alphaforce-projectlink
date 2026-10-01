@@ -12,7 +12,9 @@ class ProjectParticipant extends Model
     use HasFactory;
 
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_WITHDRAWN = 'withdrawn';
 
     protected $fillable = [
@@ -20,6 +22,12 @@ class ProjectParticipant extends Model
         'user_id',
         'application_id',
         'role',
+        'team',
+        'start_date',
+        'end_date',
+        'work_location',
+        'working_hours',
+        'notes',
         'status',
         'joined_at',
     ];
@@ -27,6 +35,8 @@ class ProjectParticipant extends Model
     protected function casts(): array
     {
         return [
+            'start_date' => 'date',
+            'end_date' => 'date',
             'joined_at' => 'date',
         ];
     }

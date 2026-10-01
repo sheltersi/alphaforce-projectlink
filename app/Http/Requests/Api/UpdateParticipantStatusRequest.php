@@ -7,9 +7,14 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Validates the project participants listing filter.
+ * Validates a participant status transition.
+ *
+ * Frontend contract: POST /api/projects/{project}/participants/{participant}/status
+ * with {status: completed|withdrawn}. Only active members can move, to a
+ * terminal state; legality of the move itself is enforced in the
+ * controller (422 with {message, errors} on violation).
  */
-class ProjectParticipantIndexRequest extends FormRequest
+class UpdateParticipantStatusRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -22,13 +27,10 @@ class ProjectParticipantIndexRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['sometimes', Rule::in([
-                ProjectParticipant::STATUS_ACTIVE,
+            'status' => ['required', Rule::in([
                 ProjectParticipant::STATUS_COMPLETED,
                 ProjectParticipant::STATUS_WITHDRAWN,
             ])],
-            'search' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'role' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 }

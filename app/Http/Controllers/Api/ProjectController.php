@@ -9,6 +9,8 @@ use App\Http\Requests\Api\ProjectIndexRequest;
 use App\Http\Requests\Api\ProjectParticipantIndexRequest;
 use App\Http\Requests\Api\StoreProjectRequest;
 use App\Http\Requests\Api\UpdateApplicationRequest;
+use App\Http\Requests\Api\UpdateParticipantRequest;
+use App\Http\Requests\Api\UpdateParticipantStatusRequest;
 use App\Http\Requests\Api\UpdateProjectRequest;
 use App\Http\Resources\Organisation\ApplicationResource;
 use App\Http\Resources\Organisation\ProjectListResource;
@@ -189,8 +191,8 @@ class ProjectController extends Controller
     /**
      * Paginated accepted participants for a single project.
      * Participant data uses the privacy-filtered ParticipantResource.
-     * Supports ?status= and ?search= (user name/email, profile first/last name).
-     * Authorised with the same review-queue Gate (creator / admin).
+     * Supports ?status=, ?role= and ?search= (user name/email, profile
+     * first/last name). Every organisation manager may view.
      */
     public function participants(ProjectParticipantIndexRequest $request, Project $project): AnonymousResourceCollection
     {
@@ -205,6 +207,7 @@ class ProjectController extends Controller
         $participants = $project->participants()
             ->with(['user.participantProfile.skills', 'application'])
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('project_participants.status', $status))
+            ->when($filters['role'] ?? null, fn ($query, $role) => $query->where('project_participants.role', $role))
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $like = "%{$search}%";
 
@@ -223,6 +226,124 @@ class ProjectController extends Controller
             ->withQueryString();
 
         return ProjectParticipantResource::collection($participants);
+    }
+
+    /**
+     * Single participant with full eager loads for the detail page and
+     * the edit form (profile collections, application, project).
+     * Same org-scoping (404) and manager gate (403) as the index.
+     */
+    public function showParticipant(Request $request, Project $project, ProjectParticipant $participant): ProjectParticipantResource
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('viewApplications', $project);
+
+        $this->scopedParticipant($project, $participant);
+
+        return new ProjectParticipantResource($this->loadedParticipant($participant));
+    }
+
+    /**
+     * Assign / edit a participant in place (never creates rows).
+     *
+     * A role is required when the member has none yet (first assignment);
+     * assignment state is derived from the role column (empty role = Not
+     * Assigned), not from a status. Status itself is rejected here (use
+     * the status action). Returns the updated resource so detail + edit
+     * form update in place.
+     */
+    public function updateParticipant(UpdateParticipantRequest $request, Project $project, ProjectParticipant $participant): ProjectParticipantResource
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('reviewApplications', $project);
+
+        $this->scopedParticipant($project, $participant);
+
+        $validated = $request->validated();
+
+        if (blank($participant->role) && blank($validated['role'] ?? null)) {
+            throw ValidationException::withMessages([
+                'role' => ['A role is required for the first assignment.'],
+            ]);
+        }
+
+        $participant->fill([
+            'role' => array_key_exists('role', $validated) ? $validated['role'] : $participant->role,
+            'team' => array_key_exists('team', $validated) ? $validated['team'] : $participant->team,
+            'start_date' => array_key_exists('start_date', $validated) ? $validated['start_date'] : $participant->start_date,
+            'end_date' => array_key_exists('end_date', $validated) ? $validated['end_date'] : $participant->end_date,
+            'work_location' => array_key_exists('work_location', $validated) ? $validated['work_location'] : $participant->work_location,
+            'working_hours' => array_key_exists('working_hours', $validated) ? $validated['working_hours'] : $participant->working_hours,
+            'notes' => array_key_exists('notes', $validated) ? $validated['notes'] : $participant->notes,
+        ]);
+
+        $participant->save();
+
+        $message = 'Assignment updated.';
+
+        return (new ProjectParticipantResource($this->loadedParticipant($participant->fresh())))
+            ->additional(['message' => $message]);
+    }
+
+    /**
+     * Explicit status transition for a participant.
+     *
+     * Legal moves: active → completed|withdrawn. Terminal: completed,
+     * withdrawn (re-entry is via re-application).
+     */
+    public function updateParticipantStatus(UpdateParticipantStatusRequest $request, Project $project, ProjectParticipant $participant): ProjectParticipantResource
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('reviewApplications', $project);
+
+        $this->scopedParticipant($project, $participant);
+
+        $to = $request->validated('status');
+
+        $this->ensureParticipantTransition($participant->status, $to);
+
+        $participant->update(['status' => $to]);
+
+        $message = match ($to) {
+            ProjectParticipant::STATUS_COMPLETED => 'Participant marked as completed.',
+            ProjectParticipant::STATUS_WITHDRAWN => 'Participant withdrawn.',
+            default => 'Participant status updated.',
+        };
+
+        return (new ProjectParticipantResource($this->loadedParticipant($participant->fresh())))
+            ->additional(['message' => $message]);
+    }
+
+    /**
+     * Distinct role values already used on a project, for the Position
+     * dropdown. Roles are free-text per project (no config table), so
+     * this aggregates what exists; an empty list means free-text input.
+     */
+    public function participantRoles(Request $request, Project $project): JsonResponse
+    {
+        $organisation = $this->currentOrganisation($request);
+
+        $this->scoped($organisation->id, $project);
+
+        Gate::authorize('viewApplications', $project);
+
+        $roles = $project->participants()
+            ->whereNotNull('role')
+            ->distinct()
+            ->orderBy('role')
+            ->pluck('role')
+            ->values();
+
+        return response()->json(['data' => $roles]);
     }
 
     /**
@@ -275,11 +396,15 @@ class ProjectController extends Controller
                 'reviewed_by' => $request->user()->id,
             ]);
 
+            // Accept creates an active row with no role yet (empty role =
+            // Not Assigned; the Assign action fills it in). Idempotent:
+            // never duplicates (unique [project_id, user_id]), never
+            // overwrites an existing row.
             $participant = ProjectParticipant::firstOrCreate(
                 ['project_id' => $project->id, 'user_id' => $application->user_id],
                 [
                     'application_id' => $application->id,
-                    'role' => 'participant',
+                    'role' => null,
                     'status' => ProjectParticipant::STATUS_ACTIVE,
                     'joined_at' => now()->toDateString(),
                 ],
@@ -448,6 +573,55 @@ class ProjectController extends Controller
     protected function scopedApplication(Project $project, ProjectApplication $application): void
     {
         abort_if($application->project_id !== $project->id, 404);
+    }
+
+    /**
+     * Confine the route-bound participant to its project (404 otherwise).
+     */
+    protected function scopedParticipant(Project $project, ProjectParticipant $participant): void
+    {
+        abort_if($participant->project_id !== $project->id, 404);
+    }
+
+    /**
+     * Full eager loads for the participant detail page and edit form:
+     * profile collections, application (with submitted/reviewed dates)
+     * and project.
+     */
+    protected function loadedParticipant(ProjectParticipant $participant): ProjectParticipant
+    {
+        return $participant->load([
+            'user.participantProfile.skills',
+            'user.participantProfile.educations',
+            'user.participantProfile.workExperiences',
+            'user.participantProfile.certifications',
+            'application',
+            'project',
+        ]);
+    }
+
+    /**
+     * Legal participant moves: active → completed|withdrawn.
+     * completed and withdrawn are terminal (re-entry is via
+     * re-application).
+     *
+     * @throws ValidationException
+     */
+    protected function ensureParticipantTransition(string $from, string $to): void
+    {
+        $allowed = match ($from) {
+            ProjectParticipant::STATUS_ACTIVE => [
+                ProjectParticipant::STATUS_COMPLETED,
+                ProjectParticipant::STATUS_WITHDRAWN,
+            ],
+            default => [],
+        };
+
+        if (! in_array($to, $allowed, true)) {
+            throw ValidationException::withMessages([
+                'status' => ["A participant with status {$from} cannot move to {$to}."],
+            ]);
+        }
     }
 
     /**

@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\OrganisationController;
 use App\Http\Controllers\Api\OrganisationUserController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\ParticipantController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -48,6 +49,14 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.organisation.users.show');
 });
 
+// participants
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('participants', [ParticipantController::class, 'participants'])
+        ->name('api.participants.index');
+    Route::get('participants/{participant}', [ParticipantController::class, 'showParticipant'])
+        ->name('api.participants.show');
+});
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('onboarding', [OnboardingController::class, 'show'])
         ->name('api.onboarding.show');
@@ -64,6 +73,14 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.projects.applications.index');
     Route::get('projects/{project}/participants', [ProjectController::class, 'participants'])
         ->name('api.projects.participants.index');
+    Route::get('projects/{project}/roles', [ProjectController::class, 'participantRoles'])
+        ->name('api.projects.roles.index');
+    Route::get('projects/{project}/participants/{participant}', [ProjectController::class, 'showParticipant'])
+        ->name('api.projects.participants.show');
+    Route::patch('projects/{project}/participants/{participant}', [ProjectController::class, 'updateParticipant'])
+        ->name('api.projects.participants.update');
+    Route::post('projects/{project}/participants/{participant}/status', [ProjectController::class, 'updateParticipantStatus'])
+        ->name('api.projects.participants.status');
     Route::get('projects/{project}/applications/{application}', [ProjectController::class, 'showApplication'])
         ->name('api.projects.applications.show');
     Route::patch('projects/{project}/applications/{application}', [ProjectController::class, 'updateApplication'])
