@@ -24,6 +24,7 @@ use App\Notifications\ProjectApplicationRejected;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
@@ -273,6 +274,22 @@ class ProjectController extends Controller
             ]);
         }
 
+        $assignmentRole = $validated['role'] ?? $participant->role;
+        $hasOtherActiveAssignment = $participant->status === ProjectParticipant::STATUS_ACTIVE
+            && filled($assignmentRole)
+            && $participant->user->projectParticipants()
+                ->where('status', ProjectParticipant::STATUS_ACTIVE)
+                ->whereNotNull('role')
+                ->where('role', '<>', '')
+                ->where('id', '<>', $participant->id)
+                ->exists();
+
+        if ($hasOtherActiveAssignment) {
+            throw ValidationException::withMessages([
+                'role' => ['This user already has an active project assignment.'],
+            ]);
+        }
+
         $participant->fill([
             'role' => array_key_exists('role', $validated) ? $validated['role'] : $participant->role,
             'team' => array_key_exists('team', $validated) ? $validated['team'] : $participant->team,
@@ -284,6 +301,7 @@ class ProjectController extends Controller
         ]);
 
         $participant->save();
+        $participant->user->syncProjectParticipationRole();
 
         $message = 'Assignment updated.';
 
@@ -312,6 +330,7 @@ class ProjectController extends Controller
         $this->ensureParticipantTransition($participant->status, $to);
 
         $participant->update(['status' => $to]);
+        $participant->user->syncProjectParticipationRole();
 
         $message = match ($to) {
             ProjectParticipant::STATUS_COMPLETED => 'Participant marked as completed.',
@@ -531,7 +550,10 @@ class ProjectController extends Controller
             Project::STATUS_COMPLETED
         );
 
-        $project->update(['status' => Project::STATUS_COMPLETED]);
+        DB::transaction(function () use ($project): void {
+            $project->update(['status' => Project::STATUS_COMPLETED]);
+            $this->endActiveAssignments($project);
+        });
 
         return (new ProjectResource($this->loaded($project->fresh())))
             ->additional(['message' => 'Project closed.']);
@@ -552,7 +574,10 @@ class ProjectController extends Controller
             Project::STATUS_ARCHIVED
         );
 
-        $project->update(['status' => Project::STATUS_ARCHIVED]);
+        DB::transaction(function () use ($project): void {
+            $project->update(['status' => Project::STATUS_ARCHIVED]);
+            $this->endActiveAssignments($project);
+        });
 
         return (new ProjectResource($this->loaded($project->fresh())))
             ->additional(['message' => 'Project archived.']);
@@ -565,6 +590,19 @@ class ProjectController extends Controller
     protected function scoped(int $organisationId, Project $project): void
     {
         abort_if($project->organisation_id !== $organisationId, 404);
+    }
+
+    protected function endActiveAssignments(Project $project): void
+    {
+        $participants = $project->participants()
+            ->where('status', ProjectParticipant::STATUS_ACTIVE)
+            ->with('user')
+            ->get();
+
+        foreach ($participants as $participant) {
+            $participant->update(['status' => ProjectParticipant::STATUS_COMPLETED]);
+            $participant->user->syncProjectParticipationRole();
+        }
     }
 
     /**

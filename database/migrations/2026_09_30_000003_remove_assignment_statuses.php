@@ -38,6 +38,8 @@ return new class extends Migration
                     ->change();
             });
         }
+
+        $this->createActiveAssignmentConstraint();
     }
 
     /**
@@ -45,6 +47,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        $this->dropActiveAssignmentConstraint();
+
         if (DB::getDriverName() === 'pgsql') {
             DB::statement('ALTER TABLE project_participants DROP CONSTRAINT IF EXISTS project_participants_status_check');
             DB::statement("ALTER TABLE project_participants ALTER COLUMN status TYPE VARCHAR(255), ALTER COLUMN status SET NOT NULL, ALTER COLUMN status SET DEFAULT 'active'");
@@ -56,5 +60,37 @@ return new class extends Migration
                     ->change();
             });
         }
+
+        $this->createActiveAssignmentConstraint();
+    }
+
+    private function createActiveAssignmentConstraint(): void
+    {
+        if (DB::getDriverName() === 'mysql') {
+            Schema::table('project_participants', function (Blueprint $table) {
+                $table->unsignedBigInteger('active_assigned_user_id')
+                    ->nullable()
+                    ->virtualAs("CASE WHEN status = 'active' AND role IS NOT NULL AND role <> '' THEN user_id ELSE NULL END");
+                $table->unique('active_assigned_user_id', 'project_participants_one_active_assignment_per_user');
+            });
+
+            return;
+        }
+
+        DB::statement("CREATE UNIQUE INDEX project_participants_one_active_assignment_per_user ON project_participants (user_id) WHERE status = 'active' AND role IS NOT NULL AND role <> ''");
+    }
+
+    private function dropActiveAssignmentConstraint(): void
+    {
+        if (DB::getDriverName() === 'mysql') {
+            Schema::table('project_participants', function (Blueprint $table) {
+                $table->dropUnique('project_participants_one_active_assignment_per_user');
+                $table->dropColumn('active_assigned_user_id');
+            });
+
+            return;
+        }
+
+        DB::statement('DROP INDEX IF EXISTS project_participants_one_active_assignment_per_user');
     }
 };

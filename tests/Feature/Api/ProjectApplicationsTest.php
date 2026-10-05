@@ -488,7 +488,7 @@ it('assigns an unassigned participant and edits in place without new rows', func
         ->assertJsonPath('data.team', 'Alpha')
         ->assertJsonPath('message', 'Assignment updated.');
 
-    expect($participant->user->fresh()->hasRole('candidate'))->toBeTrue();
+    expect($participant->user->fresh()->hasRole('participant'))->toBeTrue();
 
     expect(ProjectParticipant::where('project_id', $project->id)->count())->toBe(1);
 
@@ -501,6 +501,42 @@ it('assigns an unassigned participant and edits in place without new rows', func
 
     // Participants cannot edit.
     $this->patchJson($uri, ['team' => 'Gamma'], reviewHeaders($participantA))->assertForbidden();
+});
+
+it('rejects a second active project assignment for the same user', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA] = makeReviewSetup();
+    $projectA = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_IN_PROGRESS,
+    ]);
+    $projectB = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_IN_PROGRESS,
+    ]);
+    $user = makeApplicant();
+    $activeAssignment = ProjectParticipant::factory()->create([
+        'project_id' => $projectA->id,
+        'user_id' => $user->id,
+        'role' => 'Mentor',
+    ]);
+    $user->syncProjectParticipationRole();
+    $unassigned = ProjectParticipant::factory()->create([
+        'project_id' => $projectB->id,
+        'user_id' => $user->id,
+        'role' => null,
+    ]);
+
+    $this->patchJson(
+        "/api/projects/{$projectB->id}/participants/{$unassigned->id}",
+        ['role' => 'Developer'],
+        reviewHeaders($managerA),
+    )->assertUnprocessable()->assertJsonValidationErrors('role');
+
+    expect($user->fresh()->hasRole('participant'))->toBeTrue();
+    expect($activeAssignment->fresh()->role)->toBe('Mentor');
+    expect($unassigned->fresh()->role)->toBeNull();
 });
 
 it('enforces the participant status lifecycle', function () {
@@ -517,7 +553,10 @@ it('enforces the participant status lifecycle', function () {
             'project_id' => $project->id,
             'status' => $status,
         ]);
-        $participant->user->assignRole(Role::findByName('candidate', 'web'));
+        $participant->user->assignRole(Role::findByName(
+            $status === ProjectParticipant::STATUS_ACTIVE ? 'participant' : 'candidate',
+            'web',
+        ));
 
         return $participant;
     };
@@ -573,11 +612,10 @@ it('lists active participants without duplicates', function () {
     $foreign->removeRole(Role::findByName('candidate', 'web'));
     $foreign->assignRole(Role::findByName('participant', 'web'));
     $orgB->users()->attach($foreign->id, ['role' => 'member']);
-    foreach (range(1, 2) as $index) {
-        $project = Project::factory()->create(['organisation_id' => $orgA->id, 'created_by' => $managerA->id]);
-        addParticipant($project, $member);
-        addParticipant($project, $foreign);
-    }
+    $memberProject = Project::factory()->create(['organisation_id' => $orgA->id, 'created_by' => $managerA->id]);
+    addParticipant($memberProject, $member);
+    $foreignProject = Project::factory()->create(['organisation_id' => $orgB->id]);
+    addParticipant($foreignProject, $foreign);
     $unaffiliated = User::factory()->create();
     $unaffiliated->assignRole(Role::findByName('candidate', 'web'));
     $headers = reviewHeaders($managerA);

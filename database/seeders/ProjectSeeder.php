@@ -43,6 +43,10 @@ class ProjectSeeder extends Seeder
 
         $this->seedApplications($participants);
         $this->seedParticipants($admin, $participants);
+        foreach ($participants as $participant) {
+            $participant->syncProjectParticipationRole();
+        }
+        $admin->syncProjectParticipationRole();
         $this->seedTimesheets($manager);
     }
 

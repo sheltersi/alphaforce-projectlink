@@ -4,6 +4,7 @@ use App\Models\Organisation;
 use App\Models\ParticipantProfile;
 use App\Models\Project;
 use App\Models\ProjectApplication;
+use App\Models\ProjectParticipant;
 use App\Models\Skill;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
@@ -406,10 +407,22 @@ it('closes open projects and rejects invalid closes', function () {
     $headers = projectHeaders($managerA);
 
     $open = makeOrgProject($orgA, $managerA, Project::STATUS_OPEN);
+    $workingUser = User::factory()->create();
+    $workingUser->assignRole('participant');
+    $membership = ProjectParticipant::factory()->create([
+        'project_id' => $open->id,
+        'user_id' => $workingUser->id,
+        'role' => 'Mentor',
+        'status' => ProjectParticipant::STATUS_ACTIVE,
+    ]);
+
     $this->postJson("/api/projects/{$open->id}/close", [], $headers)
         ->assertOk()
         ->assertJsonPath('data.status', Project::STATUS_COMPLETED)
         ->assertJsonPath('message', 'Project closed.');
+
+    expect($membership->fresh()->status)->toBe(ProjectParticipant::STATUS_COMPLETED);
+    expect($workingUser->fresh()->hasRole('candidate'))->toBeTrue();
 
     $draft = makeOrgProject($orgA, $managerA);
     $this->postJson("/api/projects/{$draft->id}/close", [], $headers)
