@@ -14,6 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -169,6 +170,21 @@ class User extends Authenticatable
     public function projectParticipants(): HasMany
     {
         return $this->hasMany(ProjectParticipant::class);
+    }
+
+    public function syncProjectParticipationRole(): void
+    {
+        $isActivelyAssigned = $this->projectParticipants()
+            ->where('status', ProjectParticipant::STATUS_ACTIVE)
+            ->whereNotNull('role')
+            ->where('role', '<>', '')
+            ->exists();
+
+        $desiredRole = Role::findByName($isActivelyAssigned ? 'participant' : 'candidate', 'web');
+        $otherParticipationRole = Role::findByName($isActivelyAssigned ? 'candidate' : 'participant', 'web');
+
+        $this->removeRole($otherParticipationRole);
+        $this->assignRole($desiredRole);
     }
 
     /** @return HasMany<ProjectLike, $this> */

@@ -30,11 +30,9 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $input['password'],
         ]);
 
-        // New registrations are participants by default – this ensures the
-        // onboarding guard treats them as needing a participant profile.
         if (method_exists($user, 'assignRole')) {
             try {
-                $user->assignRole('participant');
+                $user->syncProjectParticipationRole();
             } catch (\Throwable $e) {
                 // Role may not exist in testing without seeder – ignore.
             }

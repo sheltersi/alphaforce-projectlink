@@ -15,6 +15,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ProjectSeeder extends Seeder
 {
@@ -30,7 +31,7 @@ class ProjectSeeder extends Seeder
 
         $participants = collect([]);
         foreach (range(1, 8) as $i) {
-            $participants->push($this->user("participant{$i}@example.com", $this->participantName($i), 'participant'));
+            $participants->push($this->user("participant{$i}@example.com", $this->participantName($i), 'candidate'));
         }
 
         $this->seedParticipantProfiles($participants);
@@ -83,7 +84,7 @@ class ProjectSeeder extends Seeder
 
     private function resetProjectTables(): void
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        Schema::disableForeignKeyConstraints();
 
         foreach ([
             'timesheet_entries',
@@ -96,7 +97,7 @@ class ProjectSeeder extends Seeder
             DB::table($table)->truncate();
         }
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        Schema::enableForeignKeyConstraints();
     }
 
     private function user(string $email, string $name, string $role): User
@@ -249,6 +250,12 @@ class ProjectSeeder extends Seeder
                 ],
             );
         }
+
+        foreach ($participants as $participant) {
+            $participant->syncProjectParticipationRole();
+        }
+
+        $admin->syncProjectParticipationRole();
     }
 
     private function seedTimesheets(User $manager): void

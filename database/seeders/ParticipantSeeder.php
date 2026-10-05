@@ -115,9 +115,7 @@ class ParticipantSeeder extends Seeder
         $user = User::firstOrCreate(['name' => $name], ['email' => $email, 'password' => 'password']);
         $user->update(['email' => $email]);
 
-        if (! $user->hasRole('participant')) {
-            $user->assignRole('participant');
-        }
+        $user->syncProjectParticipationRole();
 
         return $user;
     }

@@ -23,22 +23,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('project_participants', function (Blueprint $table) {
-            $table->enum('status', [
-                'pending_assignment',
-                'assigned',
-                'active',
-                'completed',
-                'withdrawn',
-                'removed',
-            ])->default('active')->change();
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE project_participants DROP CONSTRAINT IF EXISTS project_participants_status_check');
+            DB::statement("ALTER TABLE project_participants ALTER COLUMN status TYPE VARCHAR(255), ALTER COLUMN status SET NOT NULL, ALTER COLUMN status SET DEFAULT 'active'");
+            DB::statement("ALTER TABLE project_participants ADD CONSTRAINT project_participants_status_check CHECK (status IN ('pending_assignment', 'assigned', 'active', 'completed', 'withdrawn', 'removed'))");
+        } else {
+            Schema::table('project_participants', function (Blueprint $table) {
+                $table->enum('status', ['pending_assignment', 'assigned', 'active', 'completed', 'withdrawn', 'removed'])
+                    ->default('active')
+                    ->change();
+            });
+        }
 
-            $table->string('team', 255)->nullable()->after('role');
-            $table->date('start_date')->nullable()->after('team');
-            $table->date('end_date')->nullable()->after('start_date');
-            $table->string('work_location', 255)->nullable()->after('end_date');
-            $table->string('working_hours', 255)->nullable()->after('work_location');
-            $table->text('notes')->nullable()->after('working_hours');
+        Schema::table('project_participants', function (Blueprint $table) {
+            $table->string('team', 255)->nullable();
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->string('work_location', 255)->nullable();
+            $table->string('working_hours', 255)->nullable();
+            $table->text('notes')->nullable();
         });
     }
 
@@ -60,10 +63,18 @@ return new class extends Migration
                 'working_hours',
                 'notes',
             ]);
-
-            $table->enum('status', ['active', 'completed', 'withdrawn'])
-                ->default('active')
-                ->change();
         });
+
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE project_participants DROP CONSTRAINT IF EXISTS project_participants_status_check');
+            DB::statement("ALTER TABLE project_participants ALTER COLUMN status TYPE VARCHAR(255), ALTER COLUMN status SET NOT NULL, ALTER COLUMN status SET DEFAULT 'active'");
+            DB::statement("ALTER TABLE project_participants ADD CONSTRAINT project_participants_status_check CHECK (status IN ('active', 'completed', 'withdrawn'))");
+        } else {
+            Schema::table('project_participants', function (Blueprint $table) {
+                $table->enum('status', ['active', 'completed', 'withdrawn'])
+                    ->default('active')
+                    ->change();
+            });
+        }
     }
 };

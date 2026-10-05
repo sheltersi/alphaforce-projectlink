@@ -28,9 +28,6 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Test User', 'password' => 'password'],
         );
 
-        // Assign default participant role to test user if not already assigned
-        if (! $user->hasRole('participant')) {
-            $user->assignRole('participant');
-        }
+        $user->syncProjectParticipationRole();
     }
 }

@@ -26,8 +26,10 @@ class RegisterResponse implements RegisterResponseContract
     private function shouldRedirectToOnboarding($user): bool
     {
         try {
-            $isParticipant = method_exists($user, 'hasRole') ? $user->hasRole('participant') : false;
-            if (! $isParticipant) {
+            $requiresParticipantProfile = method_exists($user, 'hasAnyRole')
+                ? $user->hasAnyRole(['candidate', 'participant'])
+                : false;
+            if (! $requiresParticipantProfile) {
                 return false;
             }
 

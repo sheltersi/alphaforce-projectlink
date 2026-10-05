@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Fortify\Features;
@@ -28,6 +29,8 @@ test('new users can register', function () {
     ]);
 
     $this->assertAuthenticated();
-    // New registrations are participants without a profile, so they are sent to onboarding
+    // New candidates without a profile are sent to onboarding.
     $response->assertRedirect(route('onboarding.build-profile', absolute: false));
+
+    expect(User::where('email', 'test@example.com')->firstOrFail()->hasRole('candidate'))->toBeTrue();
 });

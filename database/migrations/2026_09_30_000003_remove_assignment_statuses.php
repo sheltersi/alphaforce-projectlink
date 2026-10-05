@@ -27,11 +27,17 @@ return new class extends Migration
             ->where('status', 'removed')
             ->update(['status' => 'withdrawn']);
 
-        Schema::table('project_participants', function (Blueprint $table) {
-            $table->enum('status', ['active', 'completed', 'withdrawn'])
-                ->default('active')
-                ->change();
-        });
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE project_participants DROP CONSTRAINT IF EXISTS project_participants_status_check');
+            DB::statement("ALTER TABLE project_participants ALTER COLUMN status TYPE VARCHAR(255), ALTER COLUMN status SET NOT NULL, ALTER COLUMN status SET DEFAULT 'active'");
+            DB::statement("ALTER TABLE project_participants ADD CONSTRAINT project_participants_status_check CHECK (status IN ('active', 'completed', 'withdrawn'))");
+        } else {
+            Schema::table('project_participants', function (Blueprint $table) {
+                $table->enum('status', ['active', 'completed', 'withdrawn'])
+                    ->default('active')
+                    ->change();
+            });
+        }
     }
 
     /**
@@ -39,15 +45,16 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('project_participants', function (Blueprint $table) {
-            $table->enum('status', [
-                'pending_assignment',
-                'assigned',
-                'active',
-                'completed',
-                'withdrawn',
-                'removed',
-            ])->default('active')->change();
-        });
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE project_participants DROP CONSTRAINT IF EXISTS project_participants_status_check');
+            DB::statement("ALTER TABLE project_participants ALTER COLUMN status TYPE VARCHAR(255), ALTER COLUMN status SET NOT NULL, ALTER COLUMN status SET DEFAULT 'active'");
+            DB::statement("ALTER TABLE project_participants ADD CONSTRAINT project_participants_status_check CHECK (status IN ('pending_assignment', 'assigned', 'active', 'completed', 'withdrawn', 'removed'))");
+        } else {
+            Schema::table('project_participants', function (Blueprint $table) {
+                $table->enum('status', ['pending_assignment', 'assigned', 'active', 'completed', 'withdrawn', 'removed'])
+                    ->default('active')
+                    ->change();
+            });
+        }
     }
 };

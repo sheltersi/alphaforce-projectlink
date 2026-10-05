@@ -53,20 +53,18 @@ class EnsureParticipantProfile
             }
         }
 
-        // Only enforce for explicit participants. Other roles (technical_admin, project_manager)
-        // and users without any role (e.g. test factories) are exempt. New registrations
-        // via CreateNewUser are explicitly assigned the 'participant' role, so they will be
-        // correctly enforced.
+        // Candidates and active participants must complete their profile. Management roles
+        // and users without either participation role are exempt.
         try {
-            $isParticipant = method_exists($user, 'hasRole')
-                ? $user->hasRole('participant')
+            $requiresParticipantProfile = method_exists($user, 'hasAnyRole')
+                ? $user->hasAnyRole(['candidate', 'participant'])
                 : false;
         } catch (\Throwable $e) {
             // Roles table may not exist in testing without RefreshDatabase – treat as not participant.
             return $next($request);
         }
 
-        if (! $isParticipant) {
+        if (! $requiresParticipantProfile) {
             return $next($request);
         }
 

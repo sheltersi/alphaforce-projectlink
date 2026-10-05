@@ -284,6 +284,7 @@ class ProjectController extends Controller
         ]);
 
         $participant->save();
+        $participant->user->syncProjectParticipationRole();
 
         $message = 'Assignment updated.';
 
@@ -312,6 +313,7 @@ class ProjectController extends Controller
         $this->ensureParticipantTransition($participant->status, $to);
 
         $participant->update(['status' => $to]);
+        $participant->user->syncProjectParticipationRole();
 
         $message = match ($to) {
             ProjectParticipant::STATUS_COMPLETED => 'Participant marked as completed.',

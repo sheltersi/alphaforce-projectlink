@@ -75,7 +75,7 @@ it('registers a user with a token and pending onboarding', function () {
         ->assertJsonStructure(['data', 'token']);
 
     $user = User::where('email', 'jordan@example.com')->firstOrFail();
-    expect($user->roles)->toBeEmpty();
+    expect($user->hasRole('candidate'))->toBeTrue();
     expect($user->currentOrganisation())->toBeNull();
     $this->assertDatabaseMissing('organisations', ['created_by' => $user->id]);
 

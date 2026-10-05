@@ -12,18 +12,18 @@ beforeEach(function () {
     $this->seed(RoleSeeder::class);
 });
 
-test('participant without profile is redirected from dashboard to onboarding', function () {
+test('candidate without profile is redirected from dashboard to onboarding', function () {
     $user = User::factory()->create(['email_verified_at' => now()]);
-    $user->assignRole('participant');
+    $user->assignRole('candidate');
 
     $response = $this->actingAs($user)->get('/dashboard');
 
     $response->assertRedirect(route('onboarding.build-profile'));
 });
 
-test('participant without profile can access onboarding', function () {
+test('candidate without profile can access onboarding', function () {
     $user = User::factory()->create(['email_verified_at' => now()]);
-    $user->assignRole('participant');
+    $user->assignRole('candidate');
 
     $response = $this->actingAs($user)->get('/onboarding/build-profile');
 
