@@ -6,6 +6,7 @@ use App\Http\Requests\ApplyProjectRequest;
 use App\Models\Project;
 use App\Models\ProjectApplication;
 use App\Models\ProjectLike;
+use App\Models\ProjectParticipant;
 use App\Notifications\ProjectApplicationSubmitted;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +23,34 @@ class ProjectController extends Controller
     {
         $user = $request->user();
 
+        $currentProjects = $user->projectParticipants()
+            ->with('project.organisation')
+            ->where('status', ProjectParticipant::STATUS_ACTIVE)
+            ->whereNotNull('role')
+            ->where('role', '<>', '')
+            ->whereHas('project', fn ($query) => $query->whereNotIn('status', [
+                Project::STATUS_COMPLETED,
+                Project::STATUS_CANCELLED,
+                Project::STATUS_ARCHIVED,
+            ]))
+            ->latest('updated_at')
+            ->get()
+            ->map(fn (ProjectParticipant $membership): array => $this->projectMembershipPayload($membership))
+            ->values();
+
+        $pastProjects = $user->projectParticipants()
+            ->with('project.organisation')
+            ->whereIn('status', [ProjectParticipant::STATUS_COMPLETED, ProjectParticipant::STATUS_WITHDRAWN])
+            ->latest('updated_at')
+            ->get()
+            ->map(fn (ProjectParticipant $membership): array => $this->projectMembershipPayload($membership))
+            ->values();
+
+        $myProjects = [
+            'current' => $currentProjects,
+            'past' => $pastProjects,
+        ];
+
         $projects = Project::query()
             ->with(['organisation', 'skills'])
             ->withCount('likes as likes_count')
@@ -30,7 +59,7 @@ class ProjectController extends Controller
             ->get();
 
         if ($projects->isEmpty()) {
-            return Inertia::render('projects/discover', ['projects' => []]);
+            return Inertia::render('projects/discover', ['projects' => [], 'myProjects' => $myProjects]);
         }
 
         $projectIds = $projects->pluck('id');
@@ -71,7 +100,26 @@ class ProjectController extends Controller
             ];
         });
 
-        return Inertia::render('projects/discover', ['projects' => $payload]);
+        return Inertia::render('projects/discover', ['projects' => $payload, 'myProjects' => $myProjects]);
+    }
+
+    /** @return array<string, int|string|null> */
+    private function projectMembershipPayload(ProjectParticipant $membership): array
+    {
+        $project = $membership->project;
+
+        return [
+            'id' => $project->id,
+            'title' => $project->title,
+            'organisation' => $project->organisation?->name,
+            'location' => $project->location,
+            'project_status' => $project->status,
+            'membership_status' => $membership->status,
+            'role' => $membership->role,
+            'team' => $membership->team,
+            'start_date' => ($membership->start_date ?? $project->start_date)?->format('M j, Y'),
+            'end_date' => ($membership->end_date ?? $project->end_date)?->format('M j, Y'),
+        ];
     }
 
     /**

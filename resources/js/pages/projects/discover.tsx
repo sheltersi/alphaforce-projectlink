@@ -42,6 +42,19 @@ type DiscoverProject = {
     application_status: string | null;
 };
 
+type MyProject = {
+    id: number;
+    title: string;
+    organisation: string | null;
+    location: string | null;
+    project_status: string;
+    membership_status: "active" | "completed" | "withdrawn";
+    role: string | null;
+    team: string | null;
+    start_date: string | null;
+    end_date: string | null;
+};
+
 type ApplicationMeta = {
     label: string;
     className: string;
@@ -92,7 +105,10 @@ function canApplyTo(status: string | null): boolean {
 }
 
 export default function DiscoverProjects() {
-    const { projects } = usePage().props as unknown as { projects: DiscoverProject[] };
+    const { projects, myProjects } = usePage().props as unknown as {
+        projects: DiscoverProject[];
+        myProjects: { current: MyProject[]; past: MyProject[] };
+    };
 
     const [query, setQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<"all" | "open" | "in_progress">("all");
@@ -173,8 +189,70 @@ export default function DiscoverProjects() {
                         </div>
                     </div>
 
+                    <section id="my-projects" className="mt-8 scroll-mt-6 animate-fade-in-up stagger-1">
+                        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-wide text-sienna dark:text-sienna-300">
+                                    Your work
+                                </p>
+                                <h2 className="mt-1 text-xl font-extrabold text-foreground">My projects</h2>
+                            </div>
+                            <span className="text-xs font-semibold text-muted-foreground">
+                                {myProjects.current.length} current · {myProjects.past.length} past
+                            </span>
+                        </div>
+
+                        <div className="mt-4 grid gap-6 lg:grid-cols-2">
+                            {([
+                                { title: "Working now", projects: myProjects.current, empty: "No active project assignments." },
+                                { title: "Past projects", projects: myProjects.past, empty: "Completed or withdrawn projects will appear here." },
+                            ] as const).map((group) => (
+                                <section key={group.title} aria-label={group.title}>
+                                    <h3 className="text-sm font-bold text-foreground">{group.title}</h3>
+                                    {group.projects.length > 0 ? (
+                                        <div className="mt-2 divide-y divide-border">
+                                            {group.projects.map((project) => (
+                                                <article key={`${project.id}-${project.membership_status}`} className="flex items-center justify-between gap-4 py-3">
+                                                    <div className="min-w-0">
+                                                        <Link
+                                                            href={projectsShow({ project: project.id }).url}
+                                                            className="truncate text-sm font-bold text-foreground hover:text-sienna dark:hover:text-sienna-300"
+                                                        >
+                                                            {project.title}
+                                                        </Link>
+                                                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                                                            {[project.organisation ?? "Independent project", project.role, project.team]
+                                                                .filter(Boolean)
+                                                                .join(" · ")}
+                                                        </p>
+                                                    </div>
+                                                    <span className={cn(
+                                                        "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase",
+                                                        project.membership_status === "active"
+                                                            ? "bg-moss-100 text-moss-700 dark:bg-moss-800/40 dark:text-moss-300"
+                                                            : "bg-secondary text-secondary-foreground",
+                                                    )}>
+                                                        {project.membership_status === "active"
+                                                            ? "Active"
+                                                            : project.membership_status === "completed"
+                                                              ? "Completed"
+                                                              : "Withdrawn"}
+                                                    </span>
+                                                </article>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="mt-2 border-t border-border py-3 text-sm text-muted-foreground">
+                                            {group.empty}
+                                        </p>
+                                    )}
+                                </section>
+                            ))}
+                        </div>
+                    </section>
+
                     {/* Toolbar: search + filters */}
-                    <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center animate-fade-in-up stagger-1">
+                    <div className="mt-8 flex flex-col gap-3 lg:flex-row lg:items-center animate-fade-in-up stagger-2">
                         <div className="relative flex-1">
                             <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" />
                             <input

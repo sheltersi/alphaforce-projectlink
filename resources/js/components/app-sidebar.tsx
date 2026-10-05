@@ -76,7 +76,7 @@ const navGroups: NavGroup[] = [
             },
             {
                 title: "My projects",
-                href: `${dashboard()}#projects`,
+                href: `${projectsIndex({}).url}#my-projects`,
                 icon: BriefcaseBusiness,
             },
             {

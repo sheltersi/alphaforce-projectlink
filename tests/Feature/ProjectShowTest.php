@@ -82,3 +82,52 @@ it('renders the my applications page for the current user', function () {
             ->where('applications.0.status', 'shortlisted');
     });
 });
+
+it('shows the authenticated user current and past projects on discovery', function () {
+    $participant = User::factory()->create();
+    $participant->markEmailAsVerified();
+    $otherUser = User::factory()->create();
+    $organisation = Organisation::factory()->create();
+
+    $currentProject = Project::factory()->create([
+        'organisation_id' => $organisation->id,
+        'status' => 'in_progress',
+    ]);
+    $pastProject = Project::factory()->create([
+        'organisation_id' => $organisation->id,
+        'status' => 'completed',
+    ]);
+    $otherProject = Project::factory()->create([
+        'organisation_id' => $organisation->id,
+        'status' => 'in_progress',
+    ]);
+
+    ProjectParticipant::create([
+        'project_id' => $currentProject->id,
+        'user_id' => $participant->id,
+        'role' => 'Mentor',
+        'status' => 'active',
+    ]);
+    ProjectParticipant::create([
+        'project_id' => $pastProject->id,
+        'user_id' => $participant->id,
+        'role' => 'Mentor',
+        'status' => 'completed',
+    ]);
+    ProjectParticipant::create([
+        'project_id' => $otherProject->id,
+        'user_id' => $otherUser->id,
+        'role' => 'Developer',
+        'status' => 'active',
+    ]);
+
+    $this->actingAs($participant)
+        ->get(route('projects.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('projects/discover')
+            ->has('myProjects.current', 1)
+            ->where('myProjects.current.0.id', $currentProject->id)
+            ->has('myProjects.past', 1)
+            ->where('myProjects.past.0.id', $pastProject->id));
+});
