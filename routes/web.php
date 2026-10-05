@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ParticipantProfileController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TimesheetController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -27,6 +28,14 @@ Route::middleware(['auth', 'verified', 'ensure.participant.profile'])->group(fun
 
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('my-projects', [ProjectController::class, 'myProjects'])->name('my-projects.index');
+
+    Route::get('timesheets', [TimesheetController::class, 'index'])->name('timesheets.index');
+    Route::post('timesheets/entries', [TimesheetController::class, 'store'])->name('timesheets.entries.store');
+    Route::match(['put', 'patch'], 'timesheets/entries/{entry}', [TimesheetController::class, 'update'])->name('timesheets.entries.update');
+    Route::delete('timesheets/entries/{entry}', [TimesheetController::class, 'destroy'])->name('timesheets.entries.destroy');
+    Route::post('timesheets/submit', [TimesheetController::class, 'submitWeek'])->name('timesheets.submit');
+    Route::post('timesheets/entries/{entry}/approve', [TimesheetController::class, 'approve'])->name('timesheets.entries.approve');
+    Route::post('timesheets/entries/{entry}/reject', [TimesheetController::class, 'reject'])->name('timesheets.entries.reject');
     Route::get('applications', [ProjectController::class, 'applications'])->name('applications.index');
     Route::post('projects/{project}/like', [ProjectController::class, 'toggleLike'])->name('projects.like');
     Route::post('projects/{project}/apply', [ProjectController::class, 'apply'])->name('projects.apply');

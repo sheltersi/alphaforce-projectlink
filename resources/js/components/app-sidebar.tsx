@@ -37,6 +37,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { dashboard } from "@/routes";
 import { index as myProjectsIndex } from "@/routes/my-projects";
 import { index as projectsIndex } from "@/routes/projects";
+import { index as timesheetsIndex } from "@/routes/timesheets";
 import type { NavGroup } from "@/types";
 import { Link, usePage } from "@inertiajs/react";
 
@@ -98,7 +99,7 @@ const navGroups: NavGroup[] = [
             },
             {
                 title: "Timesheets",
-                href: `${dashboard()}#timesheets`,
+                href: timesheetsIndex({}).url,
                 icon: Clock3,
             },
         ],

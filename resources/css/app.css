@@ -335,6 +335,155 @@
     }
 }
 
+/* Timesheet calendar (react-big-calendar) — AlphaForce theme */
+.ts-cal .rbc-calendar {
+    font-family: inherit;
+    color: var(--foreground);
+}
+.ts-cal .rbc-header {
+    padding: 10px 4px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--foreground);
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+}
+.ts-cal .rbc-header + .rbc-header {
+    border-left: 1px solid var(--border);
+}
+.ts-cal .rbc-time-view,
+.ts-cal .rbc-time-content,
+.ts-cal .rbc-time-header-content,
+.ts-cal .rbc-day-slot,
+.ts-cal .rbc-timeslot-group,
+.ts-cal .rbc-time-slot {
+    border-color: var(--border);
+}
+.ts-cal .rbc-time-content {
+    border-top: 1px solid var(--border);
+}
+.ts-cal .rbc-today {
+    background-color: rgba(197, 106, 46, 0.06);
+}
+.dark .ts-cal .rbc-today {
+    background-color: rgba(213, 127, 63, 0.08);
+}
+.ts-cal .rbc-day-slot.rbc-today {
+    background-color: transparent;
+}
+.ts-cal .rbc-time-gutter .rbc-timeslot-group {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted-foreground);
+}
+.ts-cal .rbc-current-time-indicator {
+    background-color: #b4522a;
+    height: 2px;
+}
+.ts-cal .rbc-slot-selection {
+    background-color: rgba(197, 106, 46, 0.15);
+}
+.ts-cal .rbc-event {
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+}
+.ts-cal .rbc-event:focus {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+}
+.ts-cal .rbc-event.rbc-selected {
+    background: transparent;
+}
+.ts-event-draft,
+.ts-event-submitted,
+.ts-event-approved,
+.ts-event-rejected {
+    border-radius: 10px;
+    border: 1px solid;
+    box-shadow: 0 2px 8px rgba(30, 47, 68, 0.08);
+}
+.ts-event-draft {
+    background: #d8e0e9;
+    border-color: #8aa3be;
+    color: #1e2f44;
+}
+.dark .ts-event-draft {
+    background: #1e2f44;
+    border-color: #3d6592;
+    color: #d8e0e9;
+}
+.ts-event-submitted {
+    background: #f6e3d2;
+    border-color: #d57f3f;
+    color: #7a3418;
+}
+.dark .ts-event-submitted {
+    background: rgba(213, 127, 63, 0.18);
+    border-color: #d57f3f;
+    color: #eec39e;
+}
+.ts-event-approved {
+    background: #e8e9d8;
+    border-color: #6b6f3c;
+    color: #464826;
+}
+.dark .ts-event-approved {
+    background: rgba(107, 111, 60, 0.25);
+    border-color: #a9ab69;
+    color: #d3d5b3;
+}
+.ts-event-rejected {
+    background: #f4ddd1;
+    border-color: #b4522a;
+    border-style: dashed;
+    color: #7a3418;
+}
+.dark .ts-event-rejected {
+    background: rgba(180, 82, 42, 0.2);
+    border-color: #da916b;
+    border-style: dashed;
+    color: #e7b79e;
+}
+.ts-event-inner {
+    padding: 4px 8px;
+    line-height: 1.25;
+}
+.ts-event-time {
+    font-size: 10px;
+    font-weight: 800;
+    opacity: 0.75;
+}
+.ts-event-title {
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ts-event-desc {
+    font-size: 11px;
+    opacity: 0.8;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.ts-legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 9999px;
+}
+.ts-legend-draft { background: #8aa3be; }
+.ts-legend-submitted { background: #d57f3f; }
+.ts-legend-approved { background: #6b6f3c; }
+.ts-legend-rejected {
+    background: repeating-linear-gradient(45deg, #b4522a, #b4522a 2px, transparent 2px, transparent 4px);
+    border: 1px solid #b4522a;
+}
+
 /* Animations */
 @keyframes float-soft {
     0%,
