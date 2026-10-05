@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\ParticipantProfileController;
 use App\Http\Controllers\ProjectController;
-use App\Models\Project;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -27,6 +26,7 @@ Route::middleware(['auth', 'verified', 'ensure.participant.profile'])->group(fun
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
+    Route::get('my-projects', [ProjectController::class, 'myProjects'])->name('my-projects.index');
     Route::get('applications', [ProjectController::class, 'applications'])->name('applications.index');
     Route::post('projects/{project}/like', [ProjectController::class, 'toggleLike'])->name('projects.like');
     Route::post('projects/{project}/apply', [ProjectController::class, 'apply'])->name('projects.apply');

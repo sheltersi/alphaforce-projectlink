@@ -850,7 +850,8 @@ export default function ShowProject() {
 
 ShowProject.layout = {
     breadcrumbs: [
-        { title: "Workspace", href: projectsIndex({}).url },
+        { title: "Workspace", href: dashboard().url },
         { title: "Discover projects", href: projectsIndex({}).url },
+        { title: "Project details", href: "#" },
     ],
 };

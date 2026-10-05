@@ -22,6 +22,8 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { dashboard } from "@/routes";
+import { index as myProjectsIndex } from "@/routes/my-projects";
 import { index as projectsIndex, show as projectsShow, apply as projectsApply, like as projectsLike } from "@/routes/projects";
 
 type DiscoverProject = {
@@ -40,19 +42,6 @@ type DiscoverProject = {
     likes_count: number;
     liked_by_me: boolean;
     application_status: string | null;
-};
-
-type MyProject = {
-    id: number;
-    title: string;
-    organisation: string | null;
-    location: string | null;
-    project_status: string;
-    membership_status: "active" | "completed" | "withdrawn";
-    role: string | null;
-    team: string | null;
-    start_date: string | null;
-    end_date: string | null;
 };
 
 type ApplicationMeta = {
@@ -100,18 +89,14 @@ function applicationMeta(status: string | null): ApplicationMeta | null {
     }
 }
 
-function canApplyTo(status: string | null): boolean {
-    return status === null || status === "withdrawn" || status === "rejected";
-}
-
 export default function DiscoverProjects() {
-    const { projects, myProjects } = usePage().props as unknown as {
+    const { projects } = usePage().props as unknown as {
         projects: DiscoverProject[];
-        myProjects: { current: MyProject[]; past: MyProject[] };
     };
 
     const [query, setQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<"all" | "open" | "in_progress">("all");
+    const [savedOnly, setSavedOnly] = useState(false);
     const [liking, setLiking] = useState<Set<number>>(new Set());
     const [applyProject, setApplyProject] = useState<DiscoverProject | null>(null);
 
@@ -120,18 +105,24 @@ export default function DiscoverProjects() {
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
         return projects.filter((project) => {
-            const matchesStatus = statusFilter === "all" || project.status === statusFilter;
-            if (!q) {
-                return matchesStatus;
-            }
+            if (statusFilter !== "all" && project.status !== statusFilter) return false;
+            if (savedOnly && !project.liked_by_me) return false;
+            if (!q) return true;
             const haystack = (
                 [project.title, project.organisation, project.location, ...project.skills].join(" ")
             ).toLowerCase();
-            return matchesStatus && haystack.includes(q);
+            return haystack.includes(q);
         });
-    }, [projects, query, statusFilter]);
+    }, [projects, query, statusFilter, savedOnly]);
 
+    const hasActiveFilters = query.trim().length > 0 || statusFilter !== "all" || savedOnly;
     const totalLikes = projects.filter((p) => p.liked_by_me).length;
+
+    function clearFilters() {
+        setQuery("");
+        setStatusFilter("all");
+        setSavedOnly(false);
+    }
 
     function toggleLike(project: DiscoverProject) {
         if (liking.has(project.id)) {
@@ -167,7 +158,7 @@ export default function DiscoverProjects() {
             <Head title="Discover projects" />
             <main className="min-h-full bg-background px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
                 <div className="mx-auto max-w-7xl">
-                    {/* Header */}
+                    {/* Header — discover-only. "My projects" lives on /my-projects. */}
                     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end animate-fade-in-up">
                         <div>
                             <p className="text-sm font-bold text-sienna dark:text-sienna-300">
@@ -177,93 +168,63 @@ export default function DiscoverProjects() {
                                 Discover projects
                             </h1>
                             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-                                Browse open opportunities, like the ones you love, and
-                                apply in a few clicks.
+                                Browse open opportunities, save the ones you love, and
+                                apply in a few clicks. Your assignments live under{" "}
+                                <Link href={myProjectsIndex({}).url} className="font-bold text-sienna underline underline-offset-4 hover:text-sienna-600 dark:text-sienna-300">
+                                    My projects
+                                </Link>
+                                .
                             </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold text-secondary-foreground">
-                                <Heart className="size-3.5 text-sienna dark:text-sienna-300" />
-                                {totalLikes} saved
-                            </span>
-                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setSavedOnly((v) => !v)}
+                            aria-pressed={savedOnly}
+                            title={savedOnly ? "Show all projects" : "Show saved projects only"}
+                            className={cn(
+                                "inline-flex h-9 items-center gap-1.5 self-start rounded-full px-3 py-1.5 text-xs font-bold transition-colors sm:self-auto",
+                                savedOnly
+                                    ? "bg-sienna text-white shadow-sm hover:bg-sienna-600"
+                                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+                            )}
+                        >
+                            <Heart className={cn("size-3.5", savedOnly ? "fill-current" : "text-sienna dark:text-sienna-300")} />
+                            {totalLikes} saved
+                        </button>
                     </div>
 
-                    <section id="my-projects" className="mt-8 scroll-mt-6 animate-fade-in-up stagger-1">
-                        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
-                            <div>
-                                <p className="text-xs font-bold uppercase tracking-wide text-sienna dark:text-sienna-300">
-                                    Your work
-                                </p>
-                                <h2 className="mt-1 text-xl font-extrabold text-foreground">My projects</h2>
-                            </div>
-                            <span className="text-xs font-semibold text-muted-foreground">
-                                {myProjects.current.length} current · {myProjects.past.length} past
-                            </span>
-                        </div>
-
-                        <div className="mt-4 grid gap-6 lg:grid-cols-2">
-                            {([
-                                { title: "Working now", projects: myProjects.current, empty: "No active project assignments." },
-                                { title: "Past projects", projects: myProjects.past, empty: "Completed or withdrawn projects will appear here." },
-                            ] as const).map((group) => (
-                                <section key={group.title} aria-label={group.title}>
-                                    <h3 className="text-sm font-bold text-foreground">{group.title}</h3>
-                                    {group.projects.length > 0 ? (
-                                        <div className="mt-2 divide-y divide-border">
-                                            {group.projects.map((project) => (
-                                                <article key={`${project.id}-${project.membership_status}`} className="flex items-center justify-between gap-4 py-3">
-                                                    <div className="min-w-0">
-                                                        <Link
-                                                            href={projectsShow({ project: project.id }).url}
-                                                            className="truncate text-sm font-bold text-foreground hover:text-sienna dark:hover:text-sienna-300"
-                                                        >
-                                                            {project.title}
-                                                        </Link>
-                                                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                                                            {[project.organisation ?? "Independent project", project.role, project.team]
-                                                                .filter(Boolean)
-                                                                .join(" · ")}
-                                                        </p>
-                                                    </div>
-                                                    <span className={cn(
-                                                        "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase",
-                                                        project.membership_status === "active"
-                                                            ? "bg-moss-100 text-moss-700 dark:bg-moss-800/40 dark:text-moss-300"
-                                                            : "bg-secondary text-secondary-foreground",
-                                                    )}>
-                                                        {project.membership_status === "active"
-                                                            ? "Active"
-                                                            : project.membership_status === "completed"
-                                                              ? "Completed"
-                                                              : "Withdrawn"}
-                                                    </span>
-                                                </article>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="mt-2 border-t border-border py-3 text-sm text-muted-foreground">
-                                            {group.empty}
-                                        </p>
-                                    )}
-                                </section>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* Toolbar: search + filters */}
-                    <div className="mt-8 flex flex-col gap-3 lg:flex-row lg:items-center animate-fade-in-up stagger-2">
+                    {/* Toolbar: search + filters. Scoped to discovery results only. */}
+                    <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center animate-fade-in-up stagger-1">
                         <div className="relative flex-1">
+                            <label htmlFor="discover-search" className="sr-only">
+                                Search projects, organisations, skills, locations
+                            </label>
                             <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" />
                             <input
+                                id="discover-search"
                                 type="search"
                                 value={query}
                                 onChange={(event) => setQuery(event.target.value)}
                                 placeholder="Search projects, organisations, skills, locations…"
-                                className="w-full rounded-xl border border-border bg-card py-3 pr-4 pl-11 text-sm text-foreground placeholder:text-muted-foreground focus:border-sienna/50 focus:ring-2 focus:ring-sienna/20 focus:outline-none transition-shadow"
+                                autoComplete="off"
+                                className="w-full rounded-xl border border-border bg-card py-3 pr-10 pl-11 text-sm text-foreground placeholder:text-muted-foreground focus:border-sienna/50 focus:ring-2 focus:ring-sienna/20 focus:outline-none transition-shadow"
                             />
+                            {query && (
+                                <button
+                                    type="button"
+                                    onClick={() => setQuery("")}
+                                    aria-label="Clear search"
+                                    className="absolute top-1/2 right-3 -translate-y-1/2 rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                                >
+                                    <X className="size-4" />
+                                </button>
+                            )}
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card p-1.5">
+                        <div
+                            role="group"
+                            aria-label="Filter by project status"
+                            className="flex items-center gap-1.5 rounded-xl border border-border bg-card p-1.5"
+                        >
                             {([
                                 { value: "all", label: "All" },
                                 { value: "open", label: "Open" },
@@ -271,9 +232,11 @@ export default function DiscoverProjects() {
                             ] as const).map((option) => (
                                 <button
                                     key={option.value}
+                                    type="button"
+                                    aria-pressed={statusFilter === option.value}
                                     onClick={() => setStatusFilter(option.value)}
                                     className={cn(
-                                        "rounded-lg px-3.5 py-2 text-xs font-bold transition-colors",
+                                        "rounded-lg px-3.5 py-2 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-harbor/40 focus-visible:outline-none",
                                         statusFilter === option.value
                                             ? "bg-harbor text-white shadow-sm"
                                             : "text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -285,26 +248,45 @@ export default function DiscoverProjects() {
                         </div>
                     </div>
 
+                    <p className="mt-4 text-xs font-semibold text-muted-foreground" role="status" aria-live="polite">
+                        Showing {filtered.length} of {projects.length} projects
+                        {hasActiveFilters && (
+                            <>
+                                {" · "}
+                                <button
+                                    type="button"
+                                    onClick={clearFilters}
+                                    className="font-bold text-sienna underline underline-offset-4 hover:text-sienna-600 dark:text-sienna-300"
+                                >
+                                    Clear filters
+                                </button>
+                            </>
+                        )}
+                    </p>
+
                     {/* Results */}
                     {filtered.length > 0 ? (
-                        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        <div className="mt-4 grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
                             {filtered.map((project, idx) => {
                                 const meta = applicationMeta(project.application_status);
                                 const gradient = gradients[idx % gradients.length];
+                                const isLiking = liking.has(project.id);
                                 return (
                                     <article
                                         key={project.id}
-                                        className="glass-card premium-shadow-hover group relative flex flex-col overflow-hidden rounded-2xl p-5 transition-all duration-300 animate-fade-in-up"
-                                        style={{ animationDelay: `${idx * 40}ms` }}
+                                        className="glass-card premium-shadow-hover group relative flex h-full flex-col overflow-hidden rounded-2xl p-5 pt-6 transition-all duration-300 animate-fade-in-up"
+                                        style={{ animationDelay: `${Math.min(idx, 8) * 40}ms` }}
                                     >
                                         <div
+                                            aria-hidden
                                             className={cn(
-                                                "pointer-events-none absolute inset-x-0 top-0 h-1.5 opacity-80",
+                                                "pointer-events-none absolute inset-x-0 top-0 h-1.5",
                                                 gradient,
                                             )}
                                         />
                                         <div className="flex items-start justify-between gap-3">
                                             <span
+                                                aria-hidden
                                                 className={cn(
                                                     "flex size-11 items-center justify-center rounded-xl text-white shadow-lg",
                                                     gradient,
@@ -313,77 +295,80 @@ export default function DiscoverProjects() {
                                                 <BriefcaseBusiness className="size-5" />
                                             </span>
                                             <button
+                                                type="button"
                                                 onClick={() => toggleLike(project)}
-                                                disabled={liking.has(project.id)}
+                                                disabled={isLiking}
+                                                aria-pressed={project.liked_by_me}
+                                                aria-label={project.liked_by_me ? `Unsave ${project.title}` : `Save ${project.title}`}
+                                                title={project.liked_by_me ? "Saved — click to unsave" : "Save this project"}
                                                 className={cn(
-                                                    "flex items-center gap-1 rounded-lg px-1.5 py-1 transition-colors",
+                                                    "flex min-h-9 min-w-9 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-sienna/40 focus-visible:outline-none",
                                                     project.liked_by_me
-                                                        ? "text-sienna"
+                                                        ? "bg-sienna-100 text-sienna dark:bg-sienna-900/40 dark:text-sienna-300"
                                                         : "text-muted-foreground hover:bg-accent hover:text-sienna",
-                                                    liking.has(project.id) && "opacity-50",
+                                                    isLiking && "opacity-50",
                                                 )}
-                                                aria-label={project.liked_by_me ? `Unlike ${project.title}` : `Like ${project.title}`}
                                             >
                                                 <Heart
                                                     className={cn(
-                                                        "size-4 transition-transform group-hover:scale-110",
-                                                        project.liked_by_me && "fill-sienna",
+                                                        "size-4",
+                                                        project.liked_by_me && "fill-current",
                                                     )}
                                                 />
-                                                <span className="text-[11px] font-bold">
+                                                <span className="text-[11px] font-bold tabular-nums">
                                                     {project.likes_count}
                                                 </span>
                                             </button>
                                         </div>
 
-                                        <div className="mt-3 flex items-center gap-2">
+                                        <div className="mt-3 flex flex-wrap items-center gap-2">
                                             {project.match > 0 && (
                                                 <span className="inline-flex items-center rounded-full bg-moss-100 px-2.5 py-0.5 text-[11px] font-extrabold text-moss-700 dark:bg-moss-800/40 dark:text-moss-300">
                                                     {project.match}% match
                                                 </span>
                                             )}
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wide">
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
                                                 {project.status === "open" ? "Open" : "In progress"}
                                             </span>
                                         </div>
 
-                                        <h2 className="mt-2 text-[16px] font-extrabold leading-snug text-foreground">
+                                        <h2 className="mt-2 text-[16px] leading-snug font-extrabold text-foreground">
                                             <Link
                                                 href={projectsShow({ project: project.id }).url}
-                                                className="transition-colors hover:text-sienna dark:hover:text-sienna-300"
+                                                className="transition-colors hover:text-sienna hover:underline hover:underline-offset-4 dark:hover:text-sienna-300"
                                             >
                                                 {project.title}
                                             </Link>
                                         </h2>
-                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
                                             {project.organisation ?? "Independent project"}
                                         </p>
 
-                                        <p className="mt-3 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
+                                        <p className="mt-3 line-clamp-2 min-h-10 text-[13px] leading-relaxed text-muted-foreground">
                                             {project.description ?? "No description provided."}
                                         </p>
 
                                         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-medium text-muted-foreground">
                                             {project.location && (
                                                 <span className="inline-flex items-center gap-1">
-                                                    <MapPin className="size-3.5 text-sienna dark:text-sienna-300" />
-                                                    {project.location}
+                                                    <MapPin className="size-3.5 shrink-0 text-sienna dark:text-sienna-300" />
+                                                    <span className="truncate">{project.location}</span>
                                                 </span>
                                             )}
                                             <span className="inline-flex items-center gap-1">
-                                                <UsersRound className="size-3.5 text-sienna dark:text-sienna-300" />
+                                                <UsersRound className="size-3.5 shrink-0 text-sienna dark:text-sienna-300" />
                                                 {project.positions} positions
                                             </span>
                                             {project.end_date && (
                                                 <span className="inline-flex items-center gap-1">
-                                                    <CalendarDays className="size-3.5 text-sienna dark:text-sienna-300" />
+                                                    <CalendarDays className="size-3.5 shrink-0 text-sienna dark:text-sienna-300" />
                                                     Ends {new Date(project.end_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                                                 </span>
                                             )}
                                         </div>
 
                                         {project.skills.length > 0 && (
-                                            <div className="mt-3 flex flex-wrap gap-1.5">
+                                            <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Required skills">
                                                 {project.skills.slice(0, 4).map((skill) => (
                                                     <span
                                                         key={skill}
@@ -400,11 +385,12 @@ export default function DiscoverProjects() {
                                             </div>
                                         )}
 
-                                        <div className="mt-4 flex items-center gap-2 pt-1">
+                                        <div className="mt-auto pt-4">
+                                            <div className="flex w-full items-center gap-2 border-t border-border/60 pt-4">
                                             {meta ? (
                                                 <span
                                                     className={cn(
-                                                        "inline-flex items-center rounded-xl px-4 py-2.5 text-xs font-extrabold",
+                                                        "inline-flex h-10 flex-1 items-center justify-center rounded-xl px-4 text-xs font-extrabold",
                                                         meta.className,
                                                     )}
                                                 >
@@ -412,8 +398,9 @@ export default function DiscoverProjects() {
                                                 </span>
                                             ) : (
                                                 <button
+                                                    type="button"
                                                     onClick={() => setApplyProject(project)}
-                                                    className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-harbor px-4 text-sm font-bold text-white shadow-lg shadow-harbor/20 transition-all duration-300 hover:bg-harbor-700 hover:shadow-xl hover:shadow-harbor/25 hover:-translate-y-0.5 dark:bg-harbor-600 dark:hover:bg-harbor-500"
+                                                    className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-harbor px-4 text-sm font-bold text-white shadow-lg shadow-harbor/20 transition-all duration-300 hover:-translate-y-0.5 hover:bg-harbor-700 hover:shadow-xl hover:shadow-harbor/25 focus-visible:ring-2 focus-visible:ring-harbor/40 focus-visible:outline-none dark:bg-harbor-600 dark:hover:bg-harbor-500"
                                                 >
                                                     <Send className="size-4" />
                                                     {project.application_status === "rejected"
@@ -423,47 +410,58 @@ export default function DiscoverProjects() {
                                             )}
                                             <Link
                                                 href={projectsShow({ project: project.id }).url}
-                                                className="inline-flex items-center justify-center text-xs font-bold text-sienna hover:text-sienna-600 dark:text-sienna-300 dark:hover:text-sienna-200"
+                                                aria-label={`View details for ${project.title}`}
+                                                className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-border px-4 text-xs font-bold text-foreground transition-colors hover:border-sienna/40 hover:bg-sienna-100 hover:text-sienna-700 focus-visible:ring-2 focus-visible:ring-sienna/40 focus-visible:outline-none dark:hover:bg-sienna-900/30 dark:hover:text-sienna-300"
                                             >
                                                 Details
-                                                <ArrowRight className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                                                <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
                                             </Link>
+                                            </div>
                                         </div>
                                     </article>
                                 );
                             })}
                         </div>
                     ) : (
-                        <div className="glass-card mt-6 rounded-2xl p-10 text-center animate-fade-in-up">
+                        <div className="glass-card mt-4 rounded-2xl p-10 text-center animate-fade-in-up">
                             <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-secondary">
-                                {query || statusFilter !== "all" ? (
+                                {hasActiveFilters ? (
                                     <Search className="size-5 text-sienna dark:text-sienna-300" />
                                 ) : (
                                     <Compass className="size-5 text-sienna dark:text-sienna-300" />
                                 )}
                             </div>
                             <h2 className="mt-4 text-lg font-extrabold text-foreground">
-                                {query || statusFilter !== "all"
-                                    ? "No projects match your filters"
+                                {hasActiveFilters
+                                    ? savedOnly && filtered.length === 0 && query.trim() === "" && statusFilter === "all"
+                                        ? "No saved projects yet"
+                                        : "No projects match your filters"
                                     : "No projects to discover yet"}
                             </h2>
                             <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                                {query || statusFilter !== "all"
-                                    ? "Try a different search term or clearing the status filter."
+                                {hasActiveFilters
+                                    ? "Try a different search term, clearing the status filter, or turning off “saved only”."
                                     : "New projects will appear here as organisations publish them."}
                             </p>
-                            {(query || statusFilter !== "all") && (
-                                <button
-                                    onClick={() => {
-                                        setQuery("");
-                                        setStatusFilter("all");
-                                    }}
-                                    className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-secondary px-4 py-2.5 text-xs font-bold text-secondary-foreground transition-colors hover:bg-secondary/80"
+                            <div className="mt-5 flex items-center justify-center gap-2">
+                                {hasActiveFilters && (
+                                    <button
+                                        type="button"
+                                        onClick={clearFilters}
+                                        className="inline-flex items-center gap-1.5 rounded-xl bg-secondary px-4 py-2.5 text-xs font-bold text-secondary-foreground transition-colors hover:bg-secondary/80"
+                                    >
+                                        <X className="size-3.5" />
+                                        Clear filters
+                                    </button>
+                                )}
+                                <Link
+                                    href={myProjectsIndex({}).url}
+                                    className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2.5 text-xs font-bold text-foreground transition-colors hover:bg-accent"
                                 >
-                                    <X className="size-3.5" />
-                                    Clear filters
-                                </button>
-                            )}
+                                    <BriefcaseBusiness className="size-3.5" />
+                                    Go to My projects
+                                </Link>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -504,12 +502,14 @@ export default function DiscoverProjects() {
 
                     <DialogFooter>
                         <button
+                            type="button"
                             onClick={() => { setApplyProject(null); form.reset(); }}
                             className="rounded-xl border border-border bg-background px-4 py-2.5 text-xs font-bold text-foreground transition-colors hover:bg-accent"
                         >
                             Cancel
                         </button>
                         <button
+                            type="button"
                             onClick={submitApplication}
                             disabled={form.processing}
                             className="inline-flex items-center gap-2 rounded-xl bg-harbor px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-harbor/20 transition-all duration-300 hover:bg-harbor-700 disabled:opacity-50 dark:bg-harbor-600"
@@ -526,7 +526,7 @@ export default function DiscoverProjects() {
 
 DiscoverProjects.layout = {
     breadcrumbs: [
-        { title: "Workspace", href: projectsIndex({}).url },
+        { title: "Workspace", href: dashboard().url },
         { title: "Discover projects", href: projectsIndex({}).url },
     ],
 };

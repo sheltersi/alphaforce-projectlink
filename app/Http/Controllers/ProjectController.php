@@ -18,38 +18,15 @@ class ProjectController extends Controller
 {
     /**
      * List discoverable projects with the current user's like/application state.
+     *
+     * This page is intentionally discover-only. The authenticated user's own
+     * assignments live on the dedicated "My projects" page (see myProjects()).
+     * Mixing the two on one scroll caused filter confusion (search only applied
+     * to discover cards) and pushed discovery below the fold.
      */
     public function index(Request $request): InertiaResponse
     {
         $user = $request->user();
-
-        $currentProjects = $user->projectParticipants()
-            ->with('project.organisation')
-            ->where('status', ProjectParticipant::STATUS_ACTIVE)
-            ->whereNotNull('role')
-            ->where('role', '<>', '')
-            ->whereHas('project', fn ($query) => $query->whereNotIn('status', [
-                Project::STATUS_COMPLETED,
-                Project::STATUS_CANCELLED,
-                Project::STATUS_ARCHIVED,
-            ]))
-            ->latest('updated_at')
-            ->get()
-            ->map(fn (ProjectParticipant $membership): array => $this->projectMembershipPayload($membership))
-            ->values();
-
-        $pastProjects = $user->projectParticipants()
-            ->with('project.organisation')
-            ->whereIn('status', [ProjectParticipant::STATUS_COMPLETED, ProjectParticipant::STATUS_WITHDRAWN])
-            ->latest('updated_at')
-            ->get()
-            ->map(fn (ProjectParticipant $membership): array => $this->projectMembershipPayload($membership))
-            ->values();
-
-        $myProjects = [
-            'current' => $currentProjects,
-            'past' => $pastProjects,
-        ];
 
         $projects = Project::query()
             ->with(['organisation', 'skills'])
@@ -59,7 +36,7 @@ class ProjectController extends Controller
             ->get();
 
         if ($projects->isEmpty()) {
-            return Inertia::render('projects/discover', ['projects' => [], 'myProjects' => $myProjects]);
+            return Inertia::render('projects/discover', ['projects' => []]);
         }
 
         $projectIds = $projects->pluck('id');
@@ -100,7 +77,59 @@ class ProjectController extends Controller
             ];
         });
 
-        return Inertia::render('projects/discover', ['projects' => $payload, 'myProjects' => $myProjects]);
+        return Inertia::render('projects/discover', ['projects' => $payload]);
+    }
+
+    /**
+     * Dedicated "My projects" page: current assignments vs past work.
+     *
+     * Every membership row belongs in exactly one bucket:
+     * - current: active membership on a project that is still running.
+     * - past: completed/withdrawn memberships, plus active memberships on
+     *   projects that have since finished (completed/cancelled/archived).
+     *
+     * Note: role is display info only and must not filter rows out — a null
+     * role previously hid real assignments. Stale rows whose project no
+     * longer exists are skipped instead of crashing the page.
+     */
+    public function myProjects(Request $request): InertiaResponse
+    {
+        $user = $request->user();
+
+        $finishedStatuses = [
+            Project::STATUS_COMPLETED,
+            Project::STATUS_CANCELLED,
+            Project::STATUS_ARCHIVED,
+        ];
+
+        $memberships = $user->projectParticipants()
+            ->with('project.organisation')
+            ->latest('updated_at')
+            ->get()
+            ->filter(fn (ProjectParticipant $membership): bool => $membership->project !== null);
+
+        $currentProjects = $memberships
+            ->filter(fn (ProjectParticipant $membership): bool => $membership->status === ProjectParticipant::STATUS_ACTIVE
+                && ! in_array($membership->project->status, $finishedStatuses, true))
+            ->map(fn (ProjectParticipant $membership): array => $this->projectMembershipPayload($membership))
+            ->values();
+
+        $pastProjects = $memberships
+            ->filter(fn (ProjectParticipant $membership): bool => in_array($membership->status, [
+                ProjectParticipant::STATUS_COMPLETED,
+                ProjectParticipant::STATUS_WITHDRAWN,
+            ], true)
+                || ($membership->status === ProjectParticipant::STATUS_ACTIVE
+                    && in_array($membership->project->status, $finishedStatuses, true)))
+            ->map(fn (ProjectParticipant $membership): array => $this->projectMembershipPayload($membership))
+            ->values();
+
+        return Inertia::render('projects/my-projects', [
+            'myProjects' => [
+                'current' => $currentProjects,
+                'past' => $pastProjects,
+            ],
+        ]);
     }
 
     /** @return array<string, int|string|null> */

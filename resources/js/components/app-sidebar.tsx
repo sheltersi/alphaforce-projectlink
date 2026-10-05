@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { dashboard } from "@/routes";
+import { index as myProjectsIndex } from "@/routes/my-projects";
 import { index as projectsIndex } from "@/routes/projects";
 import type { NavGroup } from "@/types";
 import { Link, usePage } from "@inertiajs/react";
@@ -71,12 +72,11 @@ const navGroups: NavGroup[] = [
                 title: "Discover projects",
                 href: projectsIndex({}).url,
                 icon: Compass,
-                badge: "12",
                 badgeTone: "accent",
             },
             {
                 title: "My projects",
-                href: `${projectsIndex({}).url}#my-projects`,
+                href: myProjectsIndex({}).url,
                 icon: BriefcaseBusiness,
             },
             {
