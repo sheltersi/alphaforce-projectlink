@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -22,10 +21,6 @@ class RoleSeeder extends Seeder
             Role::firstOrCreate(
                 ['name' => $role, 'guard_name' => 'web'],
             );
-        }
-
-        foreach (User::query()->lazyById(100) as $user) {
-            $user->syncProjectParticipationRole();
         }
 
         // Clear permission cache after seeding

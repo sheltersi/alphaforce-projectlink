@@ -31,7 +31,7 @@ class ProjectSeeder extends Seeder
 
         $participants = collect([]);
         foreach (range(1, 8) as $i) {
-            $participants->push($this->user("participant{$i}@example.com", $this->participantName($i), 'candidate'));
+            $participants->push($this->user("participant{$i}@example.com", $this->participantName($i), 'participant'));
         }
 
         $this->seedParticipantProfiles($participants);
@@ -251,11 +251,6 @@ class ProjectSeeder extends Seeder
             );
         }
 
-        foreach ($participants as $participant) {
-            $participant->syncProjectParticipationRole();
-        }
-
-        $admin->syncProjectParticipationRole();
     }
 
     private function seedTimesheets(User $manager): void

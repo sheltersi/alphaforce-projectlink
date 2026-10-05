@@ -28,6 +28,6 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Test User', 'password' => 'password'],
         );
 
-        $user->syncProjectParticipationRole();
+        $user->assignRole('candidate');
     }
 }

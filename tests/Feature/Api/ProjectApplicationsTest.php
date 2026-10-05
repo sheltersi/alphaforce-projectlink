@@ -254,15 +254,11 @@ it('returns an empty list when a project has no applications', function () {
 
 function addParticipant(Project $project, User $user, string $status = ProjectParticipant::STATUS_ACTIVE): ProjectParticipant
 {
-    $participant = ProjectParticipant::factory()->create([
+    return ProjectParticipant::factory()->create([
         'project_id' => $project->id,
         'user_id' => $user->id,
         'status' => $status,
     ]);
-
-    $user->syncProjectParticipationRole();
-
-    return $participant;
 }
 
 it('rejects unauthenticated participants access', function () {
@@ -459,6 +455,7 @@ it('assigns an unassigned participant and edits in place without new rows', func
         'role' => null,
         'status' => ProjectParticipant::STATUS_ACTIVE,
     ]);
+    $participant->user->assignRole(Role::findByName('candidate', 'web'));
 
     $uri = "/api/projects/{$project->id}/participants/{$participant->id}";
     $headers = reviewHeaders($managerA);
@@ -491,7 +488,7 @@ it('assigns an unassigned participant and edits in place without new rows', func
         ->assertJsonPath('data.team', 'Alpha')
         ->assertJsonPath('message', 'Assignment updated.');
 
-    expect($participant->user->fresh()->hasRole('participant'))->toBeTrue();
+    expect($participant->user->fresh()->hasRole('candidate'))->toBeTrue();
 
     expect(ProjectParticipant::where('project_id', $project->id)->count())->toBe(1);
 
@@ -515,10 +512,15 @@ it('enforces the participant status lifecycle', function () {
     ]);
     $headers = reviewHeaders($managerA);
 
-    $make = fn (string $status) => ProjectParticipant::factory()->create([
-        'project_id' => $project->id,
-        'status' => $status,
-    ]);
+    $make = function (string $status) use ($project): ProjectParticipant {
+        $participant = ProjectParticipant::factory()->create([
+            'project_id' => $project->id,
+            'status' => $status,
+        ]);
+        $participant->user->assignRole(Role::findByName('candidate', 'web'));
+
+        return $participant;
+    };
     $url = fn (ProjectParticipant $p) => "/api/projects/{$project->id}/participants/{$p->id}/status";
 
     // Legal moves: active → completed, active → withdrawn.
@@ -539,44 +541,6 @@ it('enforces the participant status lifecycle', function () {
     // Bogus status fails validation, not transition logic.
     $this->postJson($url($make(ProjectParticipant::STATUS_ACTIVE)), ['status' => 'bogus'], $headers)
         ->assertStatus(422)->assertJsonValidationErrors('status');
-});
-
-it('keeps participant role while another active assignment remains', function () {
-    ['orgA' => $orgA, 'managerA' => $managerA] = makeReviewSetup();
-    $projectA = Project::factory()->create([
-        'organisation_id' => $orgA->id,
-        'created_by' => $managerA->id,
-        'status' => Project::STATUS_IN_PROGRESS,
-    ]);
-    $projectB = Project::factory()->create([
-        'organisation_id' => $orgA->id,
-        'created_by' => $managerA->id,
-        'status' => Project::STATUS_IN_PROGRESS,
-    ]);
-    $user = User::factory()->create();
-    $user->assignRole('candidate');
-    $membershipA = ProjectParticipant::factory()->create([
-        'project_id' => $projectA->id,
-        'user_id' => $user->id,
-        'role' => 'Mentor',
-    ]);
-    $membershipB = ProjectParticipant::factory()->create([
-        'project_id' => $projectB->id,
-        'user_id' => $user->id,
-        'role' => 'Mentor',
-    ]);
-    $user->syncProjectParticipationRole();
-
-    expect($user->fresh()->hasRole('participant'))->toBeTrue();
-
-    $headers = reviewHeaders($managerA);
-    $this->postJson("/api/projects/{$projectA->id}/participants/{$membershipA->id}/status", ['status' => 'completed'], $headers)
-        ->assertOk();
-    expect($user->fresh()->hasRole('participant'))->toBeTrue();
-
-    $this->postJson("/api/projects/{$projectB->id}/participants/{$membershipB->id}/status", ['status' => 'withdrawn'], $headers)
-        ->assertOk();
-    expect($user->fresh()->hasRole('candidate'))->toBeTrue();
 });
 
 it('lists distinct roles and filters the index by role', function () {
@@ -602,8 +566,12 @@ it('lists distinct roles and filters the index by role', function () {
 it('lists active participants without duplicates', function () {
     ['orgA' => $orgA, 'orgB' => $orgB, 'managerA' => $managerA, 'participantA' => $participantA] = makeReviewSetup();
     $member = makeApplicant();
+    $member->removeRole(Role::findByName('candidate', 'web'));
+    $member->assignRole(Role::findByName('participant', 'web'));
     $orgA->users()->attach($member->id, ['role' => 'member']);
     $foreign = makeApplicant();
+    $foreign->removeRole(Role::findByName('candidate', 'web'));
+    $foreign->assignRole(Role::findByName('participant', 'web'));
     $orgB->users()->attach($foreign->id, ['role' => 'member']);
     foreach (range(1, 2) as $index) {
         $project = Project::factory()->create(['organisation_id' => $orgA->id, 'created_by' => $managerA->id]);
@@ -628,8 +596,12 @@ it('lists active participants without duplicates', function () {
 it('authorises participant user routes and restricts details to participant roles', function () {
     ['orgA' => $orgA, 'orgB' => $orgB, 'managerA' => $managerA, 'participantA' => $participantA, 'outsider' => $outsider] = makeReviewSetup();
     $member = makeApplicant();
+    $member->removeRole(Role::findByName('candidate', 'web'));
+    $member->assignRole(Role::findByName('participant', 'web'));
     $orgA->users()->attach($member->id, ['role' => 'member']);
     $foreign = makeApplicant();
+    $foreign->removeRole(Role::findByName('candidate', 'web'));
+    $foreign->assignRole(Role::findByName('participant', 'web'));
     $orgB->users()->attach($foreign->id, ['role' => 'member']);
     addParticipant(Project::factory()->create(['organisation_id' => $orgA->id]), $member);
     addParticipant(Project::factory()->create(['organisation_id' => $orgB->id]), $foreign);

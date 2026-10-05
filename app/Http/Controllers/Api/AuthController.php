@@ -45,7 +45,7 @@ class AuthController extends Controller
             'password' => $validated['password'],
         ]);
 
-        $user->syncProjectParticipationRole();
+        $user->assignRole('candidate');
 
         $token = $user->createToken('organisation-app')->plainTextToken;
 

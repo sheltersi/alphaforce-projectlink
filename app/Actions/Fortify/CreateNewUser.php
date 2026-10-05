@@ -32,7 +32,7 @@ class CreateNewUser implements CreatesNewUsers
 
         if (method_exists($user, 'assignRole')) {
             try {
-                $user->syncProjectParticipationRole();
+                $user->assignRole('candidate');
             } catch (\Throwable $e) {
                 // Role may not exist in testing without seeder – ignore.
             }
