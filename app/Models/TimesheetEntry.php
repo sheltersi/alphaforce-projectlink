@@ -7,6 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $timesheet_id
+ * @property Carbon $work_date
+ * @property string|null $start_time
+ * @property string|null $end_time
+ * @property string $hours
+ * @property string|null $description
+ * @property string $status
+ * @property int|null $reviewed_by
+ * @property Carbon|null $reviewed_at
+ * @property string|null $review_comment
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class TimesheetEntry extends Model
 {
     use HasFactory;

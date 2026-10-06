@@ -3,8 +3,10 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\OrganisationController;
+use App\Http\Controllers\Api\OrganisationTimesheetController;
 use App\Http\Controllers\Api\OrganisationUserController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\TimesheetController;
 use App\Http\Controllers\ParticipantController;
 use Illuminate\Support\Facades\Route;
 
@@ -47,6 +49,14 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.organisation.users.index');
     Route::get('organisation/users/{user}', [OrganisationUserController::class, 'show'])
         ->name('api.organisation.users.show');
+
+    // Manager-only timesheet review queue (Project Manager workflow).
+    Route::get('organisation/timesheets', [OrganisationTimesheetController::class, 'index'])
+        ->name('api.organisation.timesheets.index');
+    Route::post('organisation/timesheets/{entry}/approve', [OrganisationTimesheetController::class, 'approve'])
+        ->name('api.organisation.timesheets.approve');
+    Route::post('organisation/timesheets/{entry}/reject', [OrganisationTimesheetController::class, 'reject'])
+        ->name('api.organisation.timesheets.reject');
 });
 
 // participants
@@ -55,6 +65,36 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.participants.index');
     Route::get('participants/{participant}', [ParticipantController::class, 'showParticipant'])
         ->name('api.participants.show');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Participant App timesheet API (Phases 1–3)
+|--------------------------------------------------------------------------
+|
+| Stateless Sanctum token API for the participant calendar. Every query
+| is scoped to the authenticated participant's own assignments;
+| review/approval is manager-only via the organisation timesheet
+| endpoints above.
+|
+*/
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('timesheets/summary', [TimesheetController::class, 'summary'])
+        ->name('api.timesheets.summary');
+    Route::post('timesheets/submit', [TimesheetController::class, 'submitWeek'])
+        ->name('api.timesheets.submit-week');
+    Route::get('timesheets', [TimesheetController::class, 'index'])
+        ->name('api.timesheets.index');
+    Route::post('timesheets', [TimesheetController::class, 'store'])
+        ->name('api.timesheets.store');
+    Route::get('timesheets/{timesheet}', [TimesheetController::class, 'show'])
+        ->name('api.timesheets.show');
+    Route::put('timesheets/{timesheet}', [TimesheetController::class, 'update'])
+        ->name('api.timesheets.update');
+    Route::delete('timesheets/{timesheet}', [TimesheetController::class, 'destroy'])
+        ->name('api.timesheets.destroy');
+    Route::post('timesheets/{timesheet}/submit', [TimesheetController::class, 'submit'])
+        ->name('api.timesheets.submit');
 });
 
 Route::middleware('auth:sanctum')->group(function () {

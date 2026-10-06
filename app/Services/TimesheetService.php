@@ -50,13 +50,25 @@ class TimesheetService
     {
         [$start, $end] = $this->weekBounds($weekStart);
 
+        return $this->rangeEntries($user, $start, $end);
+    }
+
+    /**
+     * Entries of the user inside an arbitrary inclusive date range.
+     * Always scoped to the caller's own assignments — the frontend can
+     * never reach another participant's rows by changing an id.
+     *
+     * @return Collection<int, TimesheetEntry>
+     */
+    public function rangeEntries(User $user, Carbon $from, Carbon $to)
+    {
         return TimesheetEntry::query()
             ->with(['timesheet.participant.project', 'reviewer:id,name'])
             ->whereHas('timesheet.participant', fn ($query) => $query->where('user_id', $user->id))
             // whereDate: SQLite stores date casts with a time suffix, so
             // plain string bounds are not portable across drivers.
-            ->whereDate('work_date', '>=', $start->toDateString())
-            ->whereDate('work_date', '<=', $end->toDateString())
+            ->whereDate('work_date', '>=', $from->toDateString())
+            ->whereDate('work_date', '<=', $to->toDateString())
             ->orderBy('work_date')
             ->orderBy('start_time')
             ->get();
@@ -180,6 +192,30 @@ class TimesheetService
         $header = $entry->timesheet;
         $entry->delete();
         $this->refreshHeader($header->fresh());
+    }
+
+    /**
+     * Submit a single draft/rejected entry for review.
+     * Only the owning participant may submit, enforced by the policy.
+     */
+    public function submitEntry(TimesheetEntry $entry): TimesheetEntry
+    {
+        if (! in_array($entry->status, [TimesheetEntry::STATUS_DRAFT, TimesheetEntry::STATUS_REJECTED], true)) {
+            throw ValidationException::withMessages([
+                'entry' => 'Only draft entries can be submitted.',
+            ]);
+        }
+
+        if ($entry->durationMinutes() === null) {
+            throw ValidationException::withMessages([
+                'entry' => 'Add start and end times before submitting.',
+            ]);
+        }
+
+        $entry->update(['status' => TimesheetEntry::STATUS_SUBMITTED]);
+        $this->refreshHeader($entry->timesheet->fresh());
+
+        return $entry->fresh(['timesheet.participant.project', 'reviewer:id,name']);
     }
 
     /**
