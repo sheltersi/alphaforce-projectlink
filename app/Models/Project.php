@@ -2,13 +2,26 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
+use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
+/**
+ * @property Carbon|CarbonImmutable|null $start_date
+ * @property Carbon|CarbonImmutable|null $end_date
+ * @property int|null $applications_count
+ * @property int|null $accepted_participants_count
+ * @property int|null $active_participants_count
+ * @property float|string|null $total_hours_logged
+ *
+ * @use HasFactory<ProjectFactory>
+ */
 class Project extends Model
 {
     use HasFactory;

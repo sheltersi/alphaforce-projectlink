@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\OrganisationController;
+use App\Http\Controllers\Api\OrganisationReportController;
 use App\Http\Controllers\Api\OrganisationTimesheetController;
 use App\Http\Controllers\Api\OrganisationUserController;
 use App\Http\Controllers\Api\ProjectController;
@@ -44,6 +45,13 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.organisation.show');
     Route::put('organisation', [OrganisationController::class, 'update'])
         ->name('api.organisation.update');
+
+    Route::prefix('organisation/reports')->name('api.organisation.reports.')->controller(OrganisationReportController::class)->group(function () {
+        Route::get('summary', 'summary')->name('summary');
+        Route::get('projects', 'projects')->name('projects');
+        Route::get('participants', 'participants')->name('participants');
+        Route::get('timesheets', 'timesheets')->name('timesheets');
+    });
 
     Route::get('organisation/users', [OrganisationUserController::class, 'index'])
         ->name('api.organisation.users.index');

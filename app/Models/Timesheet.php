@@ -2,18 +2,32 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon|CarbonImmutable $period_start
+ * @property Carbon|CarbonImmutable $period_end
+ * @property float|string|null $submitted_hours
+ * @property float|string|null $approved_hours
+ * @property float|string|null $pending_hours
+ * @property float|string|null $rejected_hours
+ * @property float|string|null $total_hours
+ */
 class Timesheet extends Model
 {
     use HasFactory;
 
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_SUBMITTED = 'submitted';
+
     public const STATUS_APPROVED = 'approved';
+
     public const STATUS_REJECTED = 'rejected';
 
     protected $fillable = [
