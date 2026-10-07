@@ -394,57 +394,58 @@
     outline-offset: 1px;
 }
 .ts-cal .rbc-event.rbc-selected {
-    background: transparent;
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
 }
-.ts-event-draft,
-.ts-event-submitted,
-.ts-event-approved,
-.ts-event-rejected {
+.ts-cal .ts-event-draft,
+.ts-cal .ts-event-submitted,
+.ts-cal .ts-event-approved,
+.ts-cal .ts-event-rejected {
     border-radius: 10px;
     border: 1px solid;
     box-shadow: 0 2px 8px rgba(30, 47, 68, 0.08);
 }
-.ts-event-draft {
+.ts-cal .ts-event-draft {
     background: #d8e0e9;
     border-color: #8aa3be;
     color: #1e2f44;
 }
-.dark .ts-event-draft {
+.dark .ts-cal .ts-event-draft {
     background: #1e2f44;
     border-color: #3d6592;
     color: #d8e0e9;
 }
-.ts-event-submitted {
+.ts-cal .ts-event-submitted {
     background: #f6e3d2;
     border-color: #d57f3f;
     color: #7a3418;
 }
-.dark .ts-event-submitted {
+.dark .ts-cal .ts-event-submitted {
     background: rgba(213, 127, 63, 0.18);
     border-color: #d57f3f;
     color: #eec39e;
 }
-.ts-event-approved {
+.ts-cal .ts-event-approved {
     background: #e8e9d8;
     border-color: #6b6f3c;
     color: #464826;
 }
-.dark .ts-event-approved {
+.dark .ts-cal .ts-event-approved {
     background: rgba(107, 111, 60, 0.25);
     border-color: #a9ab69;
     color: #d3d5b3;
 }
-.ts-event-rejected {
-    background: #f4ddd1;
-    border-color: #b4522a;
+.ts-cal .ts-event-rejected {
+    background: #f9dcdc;
+    border-color: #d43d2a;
     border-style: dashed;
-    color: #7a3418;
+    color: #8f1d12;
 }
-.dark .ts-event-rejected {
-    background: rgba(180, 82, 42, 0.2);
-    border-color: #da916b;
+.dark .ts-cal .ts-event-rejected {
+    background: rgba(212, 61, 42, 0.22);
+    border-color: #ef7d6e;
     border-style: dashed;
-    color: #e7b79e;
+    color: #f3b3ab;
 }
 .ts-event-inner {
     padding: 4px 8px;
@@ -480,8 +481,8 @@
 .ts-legend-submitted { background: #d57f3f; }
 .ts-legend-approved { background: #6b6f3c; }
 .ts-legend-rejected {
-    background: repeating-linear-gradient(45deg, #b4522a, #b4522a 2px, transparent 2px, transparent 4px);
-    border: 1px solid #b4522a;
+    background: repeating-linear-gradient(45deg, #d43d2a, #d43d2a 2px, transparent 2px, transparent 4px);
+    border: 1px solid #d43d2a;
 }
 
 /* Animations */

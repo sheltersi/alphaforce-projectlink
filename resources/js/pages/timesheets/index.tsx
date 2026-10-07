@@ -838,6 +838,8 @@ export default function Timesheets() {
                                         'bg-moss-100 text-moss-700 dark:bg-moss-800/40 dark:text-moss-300',
                                     modalEntry.status === 'submitted' &&
                                         'bg-amber-100 text-amber-700 dark:bg-amber-700/30 dark:text-amber-300',
+                                    modalEntry.status === 'rejected' &&
+                                        'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
                                 )}
                             >
                                 {statusMeta[modalEntry.status].label}
