@@ -16,14 +16,15 @@ use Illuminate\Support\Facades\Gate;
 /**
  * Organisation App timesheet review/approval (Project Manager workflow).
  *
- * Manager-only queue over the entries of the viewer's own organisation:
- * every query is confined to projects of the authenticated user's
- * organisation (cross-org access resolves to 404, mirroring
- * ProjectController::scoped, so project/entry existence never leaks).
+ * Queue over entries in the viewer's organisation. Organisation managers
+ * can review all projects; project managers are scoped to projects assigned
+ * to them (cross-org access resolves to 404, so project/entry existence
+ * never leaks).
  *
  * All transitions go through TimesheetService::approveEntry/rejectEntry
  * so weekly header totals stay truthful, and authorisation comes from the
- * existing `review` policy decision (organisation managers only,
+ * existing `review` policy decision (organisation managers or the manager
+ * assigned to the entry's project,
  * `submitted` entries only, never own entries) — never reimplemented here.
  */
 class OrganisationTimesheetController extends Controller
@@ -42,8 +43,11 @@ class OrganisationTimesheetController extends Controller
     public function index(OrganisationTimesheetIndexRequest $request): AnonymousResourceCollection
     {
         $organisation = $this->currentOrganisation($request);
+        $user = $request->user();
+        $canReviewAllProjects = $user->isOrganisationManager($organisation->id);
+        $managedProjectIds = $organisation->projects()->where('created_by', $user->id)->select('id');
 
-        abort_unless($request->user()->isOrganisationManager($organisation->id), 403);
+        abort_unless($canReviewAllProjects || $managedProjectIds->exists(), 403);
 
         $filters = $request->validated();
 
@@ -52,6 +56,7 @@ class OrganisationTimesheetController extends Controller
             $project = Project::whereKey($filters['project_id'])->first();
 
             abort_if($project === null || $project->organisation_id !== $organisation->id, 404);
+            abort_if(! $canReviewAllProjects && $project->created_by !== $user->id, 404);
         }
 
         $entries = TimesheetEntry::query()
@@ -63,6 +68,13 @@ class OrganisationTimesheetController extends Controller
             ->whereHas(
                 'timesheet.participant.project',
                 fn ($query) => $query->where('organisation_id', $organisation->id)
+            )
+            ->when(
+                ! $canReviewAllProjects,
+                fn ($query) => $query->whereHas(
+                    'timesheet.participant.project',
+                    fn ($query) => $query->where('created_by', $user->id)
+                )
             )
             ->when(
                 $project !== null,

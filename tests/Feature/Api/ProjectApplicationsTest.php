@@ -666,3 +666,32 @@ it('authorises participant user routes and restricts details to participant role
         $this->getJson($uri, reviewHeaders($user))->assertForbidden();
     }
 });
+
+it('scopes participants visible to a member project manager to their assigned projects', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA, 'participantA' => $participantA] = makeReviewSetup();
+    $managedProject = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $participantA->id,
+        'status' => Project::STATUS_IN_PROGRESS,
+    ]);
+    $otherProject = Project::factory()->create([
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+        'status' => Project::STATUS_IN_PROGRESS,
+    ]);
+    $managedParticipant = makeApplicant();
+    $otherParticipant = makeApplicant();
+    addParticipant($managedProject, $managedParticipant);
+    addParticipant($otherProject, $otherParticipant);
+    $managedParticipant->syncProjectParticipationRole();
+    $otherParticipant->syncProjectParticipationRole();
+
+    $headers = reviewHeaders($participantA);
+    $this->getJson('/api/participants', $headers)
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $managedParticipant->id);
+    $this->getJson("/api/participants/{$managedParticipant->id}", $headers)
+        ->assertOk()->assertJsonPath('data.id', $managedParticipant->id);
+    $this->getJson("/api/participants/{$otherParticipant->id}", $headers)->assertNotFound();
+});

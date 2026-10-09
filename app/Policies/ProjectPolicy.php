@@ -9,11 +9,12 @@ use App\Models\User;
 /**
  * Authorisation for Organisation App project management.
  *
- * - Viewing/listing/creating requires membership plus an
+ * - Viewing all/listing/creating requires membership plus an
  *   organisation-management role (Technical Admin or Project Manager).
+ * - A member assigned as a project's creator/project manager can view and
+ *   manage that project without gaining organisation-wide access.
  * - Viewing review queues (applications, participants) is open to every
- *   organisation manager, so organisation creators/admins and all project
- *   managers can see who applied and who was accepted.
+ *   organisation manager and the member assigned to that project.
  * - Updating, lifecycle transitions, deletion and application decisions
  *   additionally require the user to be the project creator or a Technical
  *   Admin, following the existing creator-or-admin precedent
@@ -86,7 +87,8 @@ class ProjectPolicy
         }
 
         return $user->belongsToOrganisation($project->organisation_id)
-            && $user->isOrganisationManager($project->organisation_id);
+            && ($user->isOrganisationManager($project->organisation_id)
+                || $project->created_by === $user->id);
     }
 
     protected function canManage(User $user, Project $project): bool

@@ -8,6 +8,7 @@ use App\Models\ProjectParticipant;
 use App\Models\Skill;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
+use Illuminate\Support\Facades\Auth;
 
 beforeEach(function () {
     $this->seed(RoleSeeder::class);
@@ -52,6 +53,8 @@ function makeProjectSetup(): array
  */
 function projectHeaders(User $user): array
 {
+    Auth::forgetGuards();
+
     return ['Authorization' => 'Bearer '.$user->createToken('test-token')->plainTextToken];
 }
 
@@ -143,6 +146,69 @@ it('denies participants and outsiders project access', function () {
     $this->getJson('/api/projects', projectHeaders($participantA))->assertForbidden();
     $this->postJson('/api/projects', validProjectPayload(), projectHeaders($participantA))->assertForbidden();
     $this->getJson('/api/projects', projectHeaders($outsider))->assertForbidden();
+});
+
+it('lets an admin assign a member to manage only a specific project', function () {
+    ['orgA' => $orgA, 'adminA' => $adminA, 'managerA' => $managerA, 'managerA2' => $managerA2, 'participantA' => $participantA] = makeProjectSetup();
+    $assignedProject = makeOrgProject($orgA, $managerA);
+    $otherProject = makeOrgProject($orgA, $managerA2);
+
+    $this->patchJson("/api/projects/{$assignedProject->id}", [
+        'project_manager_id' => $participantA->id,
+    ], projectHeaders($adminA))
+        ->assertOk()
+        ->assertJsonPath('data.creator.id', $participantA->id);
+
+    $memberHeaders = projectHeaders($participantA);
+    $this->getJson('/api/projects', $memberHeaders)
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $assignedProject->id);
+    $this->getJson("/api/projects/{$assignedProject->id}", $memberHeaders)->assertOk();
+    $this->getJson("/api/projects/{$assignedProject->id}/applications", $memberHeaders)->assertOk();
+    $this->getJson("/api/projects/{$otherProject->id}", $memberHeaders)->assertForbidden();
+    $this->putJson("/api/projects/{$assignedProject->id}", ['title' => 'Member managed project'], $memberHeaders)
+        ->assertOk()
+        ->assertJsonPath('data.title', 'Member managed project');
+
+    Auth::forgetGuards();
+    $this->getJson('/api/auth/me', $memberHeaders)
+        ->assertOk()
+        ->assertJsonPath('data.current_organisation.role', 'member')
+        ->assertJsonPath('data.managed_projects_count', 1);
+});
+
+it('scopes the participant directory to projects assigned to a member project manager', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA, 'participantA' => $participantA] = makeProjectSetup();
+    $managedProject = makeOrgProject($orgA, $participantA);
+    $otherProject = makeOrgProject($orgA, $managerA);
+    $managedParticipant = User::factory()->create();
+    $managedParticipant->assignRole('participant');
+    $otherParticipant = User::factory()->create();
+    $otherParticipant->assignRole('participant');
+
+    ProjectParticipant::create([
+        'project_id' => $managedProject->id,
+        'user_id' => $managedParticipant->id,
+        'role' => 'Coordinator',
+        'status' => ProjectParticipant::STATUS_ACTIVE,
+        'joined_at' => now(),
+    ]);
+    ProjectParticipant::create([
+        'project_id' => $otherProject->id,
+        'user_id' => $otherParticipant->id,
+        'role' => 'Coordinator',
+        'status' => ProjectParticipant::STATUS_ACTIVE,
+        'joined_at' => now(),
+    ]);
+
+    $headers = projectHeaders($participantA);
+    $this->getJson('/api/participants', $headers)
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $managedParticipant->id);
+    $this->getJson("/api/participants/{$managedParticipant->id}", $headers)->assertOk();
+    $this->getJson("/api/participants/{$otherParticipant->id}", $headers)->assertNotFound();
 });
 
 it('filters projects by status, search, manager and dates', function () {
@@ -241,7 +307,8 @@ it('rejects invalid project data', function () {
         ->assertStatus(422)->assertJsonValidationErrors('project_manager_id');
 
     $this->postJson('/api/projects', validProjectPayload(['project_manager_id' => $participantA->id]), $headers)
-        ->assertStatus(422)->assertJsonValidationErrors('project_manager_id');
+        ->assertCreated()
+        ->assertJsonPath('data.creator.id', $participantA->id);
 });
 
 // ---------------------------------------------------------------------------

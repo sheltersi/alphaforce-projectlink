@@ -56,12 +56,18 @@ class ProjectController extends Controller
     public function index(ProjectIndexRequest $request): AnonymousResourceCollection
     {
         $organisation = $this->currentOrganisation($request);
+        $user = $request->user();
+        $canViewAllProjects = $user->isOrganisationManager($organisation);
 
-        Gate::authorize('viewAny', Project::class);
+        abort_unless(
+            $canViewAllProjects || $organisation->projects()->where('created_by', $user->id)->exists(),
+            403
+        );
 
         $filters = $request->validated();
 
         $projects = $organisation->projects()
+            ->when(! $canViewAllProjects, fn ($query) => $query->where('created_by', $user->id))
             ->with(['skills', 'creator'])
             ->withCount(['applications', 'participants'])
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))

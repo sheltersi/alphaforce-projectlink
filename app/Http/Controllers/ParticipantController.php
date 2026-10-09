@@ -4,24 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Api\Concerns\ResolvesCurrentOrganisation;
 use App\Http\Resources\Organisation\ParticipantResource;
-use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Gate;
 
 class ParticipantController extends Controller
 {
     use ResolvesCurrentOrganisation;
 
-    /**
-     * List all users with the participant role for organisation managers.
-     */
+    /** List participants across the organisation or projects managed by the current user. */
     public function participants(Request $request): AnonymousResourceCollection
     {
-        $this->currentOrganisation($request);
+        $organisation = $this->currentOrganisation($request);
+        $user = $request->user();
+        $canViewAll = $user->isOrganisationManager($organisation);
+        $managedProjectIds = $organisation->projects()->where('created_by', $user->id)->select('id');
 
-        Gate::authorize('viewAny', Project::class);
+        abort_unless($canViewAll || $managedProjectIds->exists(), 403);
 
         $filters = $request->validate([
             'search' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -30,6 +29,10 @@ class ParticipantController extends Controller
         $participants = User::query()
             ->role('participant', 'web')
             ->with('participantProfile.skills')
+            ->when(! $canViewAll, fn ($query) => $query->whereHas(
+                'projectParticipants',
+                fn ($participants) => $participants->whereIn('project_id', $managedProjectIds)
+            ))
             ->when(isset($filters['search']), function ($query) use ($filters) {
                 $like = "%{$filters['search']}%";
 
@@ -51,13 +54,26 @@ class ParticipantController extends Controller
 
     public function showParticipant(Request $request, User $participant): ParticipantResource
     {
-        $this->currentOrganisation($request);
+        $organisation = $this->currentOrganisation($request);
+        $user = $request->user();
+        $canViewAll = $user->isOrganisationManager($organisation);
+        $managedProjectIds = $organisation->projects()->where('created_by', $user->id)->select('id');
 
-        Gate::authorize('viewAny', Project::class);
+        if (! $canViewAll) {
+            abort_unless($managedProjectIds->exists(), 403);
+            abort_unless(
+                $participant->projectParticipants()->whereIn('project_id', $managedProjectIds)->exists(),
+                404
+            );
+        }
 
         $member = User::query()
             ->role('participant', 'web')
             ->where('users.id', $participant->id)
+            ->when(! $canViewAll, fn ($query) => $query->whereHas(
+                'projectParticipants',
+                fn ($participants) => $participants->whereIn('project_id', $managedProjectIds)
+            ))
             ->with([
                 'participantProfile.skills',
                 'participantProfile.educations',

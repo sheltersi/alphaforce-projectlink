@@ -29,6 +29,13 @@ class AuthenticatedUserResource extends JsonResource
             'participant_profile_complete' => $this->participantProfile()
                 ->with('skills')
                 ->first()?->isComplete() ?? false,
+            'managed_projects_count' => $this->whenLoaded('organisations', function (): int {
+                $organisation = $this->organisations->sortBy('id')->first();
+
+                return $organisation === null
+                    ? 0
+                    : $this->projects()->where('organisation_id', $organisation->id)->count();
+            }),
 
             'roles' => $this->whenLoaded('roles', fn () => $this->roles->pluck('name')->values()),
 

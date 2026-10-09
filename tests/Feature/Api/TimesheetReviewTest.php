@@ -117,6 +117,40 @@ it('lists only the manager organisation submitted entries', function () {
         ->assertJsonCount(0, 'data');
 });
 
+it('lets a member assigned as project manager review only their project timesheets', function () {
+    $setup = reviewQueueSetup();
+    $setup['project']->update(['created_by' => $setup['member']->id]);
+    $managedEntry = reviewSubmittedEntry($setup['assignment']);
+
+    $otherProject = Project::factory()->create([
+        'organisation_id' => $setup['org']->id,
+        'created_by' => $setup['manager']->id,
+        'status' => Project::STATUS_IN_PROGRESS,
+    ]);
+    $otherParticipant = User::factory()->create();
+    $otherAssignment = ProjectParticipant::create([
+        'project_id' => $otherProject->id,
+        'user_id' => $otherParticipant->id,
+        'role' => 'Designer',
+        'status' => ProjectParticipant::STATUS_ACTIVE,
+        'joined_at' => now(),
+    ]);
+    $otherEntry = reviewSubmittedEntry($otherAssignment);
+
+    $headers = reviewQueueHeaders($setup['member']);
+    $this->getJson('/api/organisation/timesheets', $headers)
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $managedEntry->id);
+
+    $this->postJson("/api/organisation/timesheets/{$managedEntry->id}/approve", [], $headers)
+        ->assertOk()
+        ->assertJsonPath('data.status', TimesheetEntry::STATUS_APPROVED);
+
+    $this->postJson("/api/organisation/timesheets/{$otherEntry->id}/approve", [], $headers)
+        ->assertForbidden();
+});
+
 it('approves a submitted entry and rolls up header totals', function () {
     $setup = reviewQueueSetup();
     $entry = reviewSubmittedEntry($setup['assignment']);

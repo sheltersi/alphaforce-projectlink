@@ -20,9 +20,9 @@ abstract class BaseProjectRequest extends FormRequest
     }
 
     /**
-     * Rules for the project manager assignment. The manager must be an
-     * organisation manager (Technical Admin or Project Manager) within
-     * the authenticated user's own organisation.
+     * Rules for the project manager assignment. A project manager must be
+     * a member of the authenticated user's own organisation; the project
+     * creator field scopes their management access to this project.
      *
      * @return array<int, mixed>
      */
@@ -36,8 +36,7 @@ abstract class BaseProjectRequest extends FormRequest
                 $manager = User::find($value);
 
                 if ($organisation === null || $manager === null
-                    || ! $manager->belongsToOrganisation($organisation)
-                    || ! $manager->isOrganisationManager($organisation)) {
+                    || ! $manager->belongsToOrganisation($organisation)) {
                     $fail('The selected project manager must belong to your organisation.');
                 }
             },

@@ -74,6 +74,7 @@ class TimesheetEntryPolicy
         }
 
         return $user->belongsToOrganisation($project->organisation_id)
-            && $user->isOrganisationManager($project->organisation_id);
+            && ($user->isOrganisationManager($project->organisation_id)
+                || $project->created_by === $user->id);
     }
 }
