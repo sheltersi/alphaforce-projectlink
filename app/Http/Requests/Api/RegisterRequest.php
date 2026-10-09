@@ -28,6 +28,7 @@ class RegisterRequest extends FormRequest
         return [
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
+            'invitation_token' => ['sometimes', 'required', 'string', 'size:64', 'alpha_num'],
         ];
     }
 }

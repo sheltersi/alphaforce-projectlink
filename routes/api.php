@@ -3,12 +3,15 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\OrganisationController;
+use App\Http\Controllers\Api\OrganisationInvitationController;
 use App\Http\Controllers\Api\OrganisationReportController;
 use App\Http\Controllers\Api\OrganisationTimesheetController;
 use App\Http\Controllers\Api\OrganisationUserController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\TimesheetController;
 use App\Http\Controllers\ParticipantController;
+use App\Http\Controllers\ParticipantProfileController;
+use App\Http\Middleware\EnsureTemporaryPasswordChanged;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,16 +34,20 @@ Route::prefix('auth')->group(function () {
         ->middleware('throttle:10,1')
         ->name('api.auth.register');
 
+    Route::put('password', [AuthController::class, 'changeTemporaryPassword'])
+        ->middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])
+        ->name('api.auth.password.change');
+
     Route::post('logout', [AuthController::class, 'logout'])
-        ->middleware('auth:sanctum')
+        ->middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])
         ->name('api.auth.logout');
 
     Route::get('me', [AuthController::class, 'me'])
-        ->middleware('auth:sanctum')
+        ->middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])
         ->name('api.auth.me');
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])->group(function () {
     Route::get('organisation', [OrganisationController::class, 'show'])
         ->name('api.organisation.show');
     Route::put('organisation', [OrganisationController::class, 'update'])
@@ -57,6 +64,12 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.organisation.users.index');
     Route::get('organisation/users/{user}', [OrganisationUserController::class, 'show'])
         ->name('api.organisation.users.show');
+    Route::get('organisation/invitations', [OrganisationInvitationController::class, 'index'])
+        ->name('api.organisation.invitations.index');
+    Route::post('organisation/invitations', [OrganisationInvitationController::class, 'store'])
+        ->name('api.organisation.invitations.store');
+    Route::post('organisation/invitations/accept', [OrganisationInvitationController::class, 'accept'])
+        ->name('api.organisation.invitations.accept');
 
     // Manager-only timesheet review queue (Project Manager workflow).
     Route::get('organisation/timesheets', [OrganisationTimesheetController::class, 'index'])
@@ -67,8 +80,18 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.organisation.timesheets.reject');
 });
 
+// Authenticated participant-profile editing for invited Organisation App members.
+Route::middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])->group(function () {
+    Route::get('participant/profile', [ParticipantProfileController::class, 'show'])
+        ->name('api.participant.profile.show');
+    Route::post('participant/profile', [ParticipantProfileController::class, 'store'])
+        ->name('api.participant.profile.store');
+    Route::put('participant/profile', [ParticipantProfileController::class, 'update'])
+        ->name('api.participant.profile.update');
+});
+
 // participants
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])->group(function () {
     Route::get('participants', [ParticipantController::class, 'participants'])
         ->name('api.participants.index');
     Route::get('participants/{participant}', [ParticipantController::class, 'showParticipant'])
@@ -86,7 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
 | endpoints above.
 |
 */
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])->group(function () {
     Route::get('timesheets/summary', [TimesheetController::class, 'summary'])
         ->name('api.timesheets.summary');
     Route::post('timesheets/submit', [TimesheetController::class, 'submitWeek'])
@@ -105,7 +128,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('api.timesheets.submit');
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])->group(function () {
     Route::get('onboarding', [OnboardingController::class, 'show'])
         ->name('api.onboarding.show');
     Route::put('onboarding', [OnboardingController::class, 'update'])

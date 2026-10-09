@@ -202,6 +202,7 @@ class ProjectSeeder extends Seeder
     private function seedParticipants(User $admin, iterable $participants): void
     {
         $activeProjects = Project::whereIn('status', [Project::STATUS_OPEN, Project::STATUS_IN_PROGRESS])->get();
+        $activeAssignmentUserIds = [];
 
         foreach ($activeProjects as $project) {
             $slots = max(1, $project->positions);
@@ -211,6 +212,14 @@ class ProjectSeeder extends Seeder
                 ->get();
 
             foreach ($accepted as $application) {
+                if (isset($activeAssignmentUserIds[$application->user_id])) {
+                    // One active, role-assigned project at a time is enforced
+                    // by project_participants_one_active_assignment_per_user.
+                    $application->update(['status' => ProjectApplication::STATUS_UNDER_REVIEW]);
+
+                    continue;
+                }
+
                 ProjectParticipant::firstOrCreate(
                     ['project_id' => $project->id, 'user_id' => $application->user_id],
                     [
@@ -222,6 +231,7 @@ class ProjectSeeder extends Seeder
                             : Carbon::today(),
                     ],
                 );
+                $activeAssignmentUserIds[$application->user_id] = true;
             }
         }
 

@@ -1,5 +1,11 @@
 import { Form, Head } from '@inertiajs/react';
-import { ArrowRight, LockKeyhole, Mail, ShieldCheck, UserRound } from 'lucide-react';
+import {
+    ArrowRight,
+    LockKeyhole,
+    Mail,
+    ShieldCheck,
+    UserRound,
+} from 'lucide-react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -12,12 +18,13 @@ import { store } from '@/routes/register';
 
 type Props = {
     passwordRules: string;
+    invitationToken?: string | null;
 };
 
 const inputStyles =
     'h-12 rounded-xl border-harbor/15 bg-white pr-4 pl-11 text-[15px] text-ember shadow-sm transition-all placeholder:text-ember-400/70 focus-visible:border-sienna/60 focus-visible:ring-sienna/25 focus-visible:ring-[3px]';
 
-export default function Register({ passwordRules }: Props) {
+export default function Register({ passwordRules, invitationToken }: Props) {
     return (
         <>
             <Head title="Register" />
@@ -29,16 +36,23 @@ export default function Register({ passwordRules }: Props) {
             >
                 {({ processing, errors }) => (
                     <>
+                        {invitationToken && (
+                            <input
+                                type="hidden"
+                                name="invitation_token"
+                                value={invitationToken}
+                            />
+                        )}
                         <div className="grid gap-5">
                             <div className="grid gap-2">
                                 <Label
                                     htmlFor="name"
-                                    className="text-sm font-bold text-harbor"
+                                    className="text-harbor text-sm font-bold"
                                 >
                                     Full name
                                 </Label>
                                 <div className="relative">
-                                    <UserRound className="pointer-events-none absolute top-1/2 left-4 size-4.5 -translate-y-1/2 text-clay-600" />
+                                    <UserRound className="text-clay-600 pointer-events-none absolute top-1/2 left-4 size-4.5 -translate-y-1/2" />
                                     <Input
                                         id="name"
                                         type="text"
@@ -60,12 +74,12 @@ export default function Register({ passwordRules }: Props) {
                             <div className="grid gap-2">
                                 <Label
                                     htmlFor="email"
-                                    className="text-sm font-bold text-harbor"
+                                    className="text-harbor text-sm font-bold"
                                 >
                                     Email address
                                 </Label>
                                 <div className="relative">
-                                    <Mail className="pointer-events-none absolute top-1/2 left-4 size-4.5 -translate-y-1/2 text-clay-600" />
+                                    <Mail className="text-clay-600 pointer-events-none absolute top-1/2 left-4 size-4.5 -translate-y-1/2" />
                                     <Input
                                         id="email"
                                         type="email"
@@ -83,12 +97,12 @@ export default function Register({ passwordRules }: Props) {
                             <div className="grid gap-2">
                                 <Label
                                     htmlFor="password"
-                                    className="text-sm font-bold text-harbor"
+                                    className="text-harbor text-sm font-bold"
                                 >
                                     Password
                                 </Label>
                                 <div className="relative">
-                                    <LockKeyhole className="pointer-events-none absolute top-1/2 left-4 z-10 size-4.5 -translate-y-1/2 text-clay-600" />
+                                    <LockKeyhole className="text-clay-600 pointer-events-none absolute top-1/2 left-4 z-10 size-4.5 -translate-y-1/2" />
                                     <PasswordInput
                                         id="password"
                                         required
@@ -106,12 +120,12 @@ export default function Register({ passwordRules }: Props) {
                             <div className="grid gap-2">
                                 <Label
                                     htmlFor="password_confirmation"
-                                    className="text-sm font-bold text-harbor"
+                                    className="text-harbor text-sm font-bold"
                                 >
                                     Confirm password
                                 </Label>
                                 <div className="relative">
-                                    <LockKeyhole className="pointer-events-none absolute top-1/2 left-4 z-10 size-4.5 -translate-y-1/2 text-clay-600" />
+                                    <LockKeyhole className="text-clay-600 pointer-events-none absolute top-1/2 left-4 z-10 size-4.5 -translate-y-1/2" />
                                     <PasswordInput
                                         id="password_confirmation"
                                         required
@@ -130,7 +144,7 @@ export default function Register({ passwordRules }: Props) {
 
                             <Button
                                 type="submit"
-                                className="h-12 w-full rounded-full bg-sienna text-[15px] font-bold text-white shadow-lg shadow-sienna/30 transition-all hover:-translate-y-px hover:bg-sienna-600"
+                                className="bg-sienna shadow-sienna/30 hover:bg-sienna-600 h-12 w-full rounded-full text-[15px] font-bold text-white shadow-lg transition-all hover:-translate-y-px"
                                 tabIndex={5}
                                 data-test="register-user-button"
                             >
@@ -139,19 +153,19 @@ export default function Register({ passwordRules }: Props) {
                                 <ArrowRight className="size-4.5" />
                             </Button>
 
-                            <p className="flex items-start justify-center gap-1.5 text-center text-[13px] leading-relaxed text-ember-500">
-                                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-moss-600" />
+                            <p className="text-ember-500 flex items-start justify-center gap-1.5 text-center text-[13px] leading-relaxed">
+                                <ShieldCheck className="text-moss-600 mt-0.5 size-4 shrink-0" />
                                 By creating an account you agree to our Terms
                                 &amp; Privacy Policy.
                             </p>
                         </div>
 
-                        <div className="text-center text-sm font-medium text-ember-500">
+                        <div className="text-ember-500 text-center text-sm font-medium">
                             Already have an account?{' '}
                             <TextLink
                                 href={login()}
                                 tabIndex={6}
-                                className="font-bold text-sienna decoration-sienna/40 hover:text-sienna-600"
+                                className="text-sienna decoration-sienna/40 hover:text-sienna-600 font-bold"
                             >
                                 Log in
                             </TextLink>

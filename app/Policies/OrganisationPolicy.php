@@ -36,4 +36,10 @@ class OrganisationPolicy
     {
         return $this->view($user, $organisation);
     }
+
+    public function inviteMembers(User $user, Organisation $organisation): bool
+    {
+        return $user->belongsToOrganisation($organisation)
+            && $user->isOrganisationAdmin($organisation);
+    }
 }

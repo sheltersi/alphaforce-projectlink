@@ -25,6 +25,10 @@ class AuthenticatedUserResource extends JsonResource
             'email' => $this->email,
             'email_verified_at' => $this->email_verified_at?->toISOString(),
             'created_at' => $this->created_at?->toISOString(),
+            'must_change_password' => (bool) $this->must_change_password,
+            'participant_profile_complete' => $this->participantProfile()
+                ->with('skills')
+                ->first()?->isComplete() ?? false,
 
             'roles' => $this->whenLoaded('roles', fn () => $this->roles->pluck('name')->values()),
 
