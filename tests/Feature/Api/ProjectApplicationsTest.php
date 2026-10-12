@@ -159,7 +159,7 @@ it('lets technical admins review applications on any organisation project', func
         ->assertJsonPath('meta.total', 1);
 });
 
-it('forbids participants and outsiders but lets every manager view', function () {
+it('lets organisation members read application queues but keeps outsiders denied', function () {
     ['orgA' => $orgA, 'managerA' => $managerA, 'managerA2' => $managerA2, 'participantA' => $participantA, 'outsider' => $outsider] = makeReviewSetup();
     $project = Project::factory()->create([
         'organisation_id' => $orgA->id,
@@ -172,12 +172,12 @@ it('forbids participants and outsiders but lets every manager view', function ()
 
     // Any organisation manager (not just the creator) may view the queue.
     $this->getJson($uri, reviewHeaders($managerA2))->assertOk();
-    $this->getJson($uri, reviewHeaders($participantA))->assertForbidden();
+    $this->getJson($uri, reviewHeaders($participantA))->assertOk();
     $this->getJson($uri, reviewHeaders($outsider))->assertForbidden();
 });
 
 it('lets every manager view but only the creator or admin decide', function () {
-    ['orgA' => $orgA, 'adminA' => $adminA, 'managerA' => $managerA, 'managerA2' => $managerA2] = makeReviewSetup();
+    ['orgA' => $orgA, 'adminA' => $adminA, 'managerA' => $managerA, 'managerA2' => $managerA2, 'participantA' => $participantA] = makeReviewSetup();
     $project = Project::factory()->create([
         'organisation_id' => $orgA->id,
         'created_by' => $managerA->id,
@@ -189,6 +189,9 @@ it('lets every manager view but only the creator or admin decide', function () {
 
     // Read: another manager may view the detail…
     $this->getJson($uri, reviewHeaders($managerA2))->assertOk();
+    // …and an organisation member can read it without gaining decision rights.
+    $this->getJson($uri, reviewHeaders($participantA))->assertOk();
+    $this->patchJson($uri, ['status' => 'accepted'], reviewHeaders($participantA))->assertForbidden();
     // …but deciding stays creator-or-admin-only.
     $this->patchJson($uri, ['status' => 'accepted'], reviewHeaders($managerA2))->assertForbidden();
 
@@ -342,7 +345,7 @@ it('filters participants by status and search', function () {
         ->assertStatus(422)->assertJsonValidationErrors('status');
 });
 
-it('forbids participants access for outsiders and returns 404 cross-org', function () {
+it('lets organisation members read project participants but denies outsiders and cross-org access', function () {
     ['orgA' => $orgA, 'orgB' => $orgB, 'managerA' => $managerA, 'managerA2' => $managerA2, 'participantA' => $participantA, 'outsider' => $outsider, 'adminA' => $adminA, 'adminB' => $adminB] = makeReviewSetup();
     $project = Project::factory()->create([
         'organisation_id' => $orgA->id,
@@ -355,7 +358,7 @@ it('forbids participants access for outsiders and returns 404 cross-org', functi
 
     // Any organisation manager (not just the creator) may view participants.
     $this->getJson($uri, reviewHeaders($managerA2))->assertOk();
-    $this->getJson($uri, reviewHeaders($participantA))->assertForbidden();
+    $this->getJson($uri, reviewHeaders($participantA))->assertOk();
     $this->getJson($uri, reviewHeaders($outsider))->assertForbidden();
 
     $theirs = Project::factory()->create([
@@ -430,7 +433,7 @@ it('shows a single participant with full loads', function () {
         ->assertJsonPath('data.participant.id', $member->id)
         ->assertJsonStructure(['data' => ['role', 'team', 'start_date', 'end_date', 'work_location', 'working_hours', 'notes', 'status', 'participant', 'application', 'project']]);
 
-    $this->getJson("/api/projects/{$project->id}/participants/{$participant->id}", reviewHeaders($participantA))->assertForbidden();
+    $this->getJson("/api/projects/{$project->id}/participants/{$participant->id}", reviewHeaders($participantA))->assertOk();
 
     $theirs = Project::factory()->create([
         'organisation_id' => $orgB->id,
@@ -661,13 +664,11 @@ it('authorises participant user routes and restricts details to participant role
     $this->getJson("/api/participants/{$unaffiliated->id}", $headers)
         ->assertNotFound();
     $this->getJson("/api/participants/{$managerA->id}", $headers)->assertNotFound();
-    foreach ([$participantA, $outsider] as $user) {
-        $this->getJson('/api/participants', reviewHeaders($user))->assertForbidden();
-        $this->getJson($uri, reviewHeaders($user))->assertForbidden();
-    }
+    $this->getJson($uri, reviewHeaders($participantA))->assertOk();
+    $this->getJson($uri, reviewHeaders($outsider))->assertForbidden();
 });
 
-it('scopes participants visible to a member project manager to their assigned projects', function () {
+it('lets an invited organisation member view directory participants across their organisation', function () {
     ['orgA' => $orgA, 'managerA' => $managerA, 'participantA' => $participantA] = makeReviewSetup();
     $managedProject = Project::factory()->create([
         'organisation_id' => $orgA->id,
@@ -689,9 +690,8 @@ it('scopes participants visible to a member project manager to their assigned pr
     $headers = reviewHeaders($participantA);
     $this->getJson('/api/participants', $headers)
         ->assertOk()
-        ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.id', $managedParticipant->id);
+        ->assertJsonCount(2, 'data');
     $this->getJson("/api/participants/{$managedParticipant->id}", $headers)
         ->assertOk()->assertJsonPath('data.id', $managedParticipant->id);
-    $this->getJson("/api/participants/{$otherParticipant->id}", $headers)->assertNotFound();
+    $this->getJson("/api/participants/{$otherParticipant->id}", $headers)->assertOk();
 });

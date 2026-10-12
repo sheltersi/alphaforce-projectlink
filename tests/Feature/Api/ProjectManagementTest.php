@@ -140,11 +140,19 @@ it('returns 404 for another organisation project by ID', function () {
     $this->postJson("/api/projects/{$theirs->id}/publish", [], $headers)->assertNotFound();
 });
 
-it('denies participants and outsiders project access', function () {
-    ['participantA' => $participantA, 'outsider' => $outsider] = makeProjectSetup();
+it('allows organisation members to browse projects but not create them', function () {
+    ['orgA' => $orgA, 'orgB' => $orgB, 'managerA' => $managerA, 'adminB' => $adminB, 'participantA' => $participantA, 'outsider' => $outsider] = makeProjectSetup();
+    $project = makeOrgProject($orgA, $managerA, Project::STATUS_OPEN);
+    $foreignProject = makeOrgProject($orgB, $adminB, Project::STATUS_COMPLETED);
+    $headers = projectHeaders($participantA);
 
-    $this->getJson('/api/projects', projectHeaders($participantA))->assertForbidden();
-    $this->postJson('/api/projects', validProjectPayload(), projectHeaders($participantA))->assertForbidden();
+    $this->getJson('/api/projects', $headers)
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $project->id);
+    $this->getJson("/api/projects/{$project->id}", $headers)->assertOk();
+    $this->getJson("/api/projects/{$foreignProject->id}", $headers)->assertNotFound();
+    $this->postJson('/api/projects', validProjectPayload(), $headers)->assertForbidden();
     $this->getJson('/api/projects', projectHeaders($outsider))->assertForbidden();
 });
 
@@ -162,14 +170,15 @@ it('lets an admin assign a member to manage only a specific project', function (
     $memberHeaders = projectHeaders($participantA);
     $this->getJson('/api/projects', $memberHeaders)
         ->assertOk()
-        ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.id', $assignedProject->id);
+        ->assertJsonCount(2, 'data');
     $this->getJson("/api/projects/{$assignedProject->id}", $memberHeaders)->assertOk();
     $this->getJson("/api/projects/{$assignedProject->id}/applications", $memberHeaders)->assertOk();
-    $this->getJson("/api/projects/{$otherProject->id}", $memberHeaders)->assertForbidden();
+    $this->getJson("/api/projects/{$otherProject->id}", $memberHeaders)->assertOk();
     $this->putJson("/api/projects/{$assignedProject->id}", ['title' => 'Member managed project'], $memberHeaders)
         ->assertOk()
         ->assertJsonPath('data.title', 'Member managed project');
+    $this->putJson("/api/projects/{$otherProject->id}", ['title' => 'Not managed by member'], $memberHeaders)
+        ->assertForbidden();
 
     Auth::forgetGuards();
     $this->getJson('/api/auth/me', $memberHeaders)
@@ -178,7 +187,7 @@ it('lets an admin assign a member to manage only a specific project', function (
         ->assertJsonPath('data.managed_projects_count', 1);
 });
 
-it('scopes the participant directory to projects assigned to a member project manager', function () {
+it('lets an invited organisation member browse the participant directory without project assignment', function () {
     ['orgA' => $orgA, 'managerA' => $managerA, 'participantA' => $participantA] = makeProjectSetup();
     $managedProject = makeOrgProject($orgA, $participantA);
     $otherProject = makeOrgProject($orgA, $managerA);
@@ -203,12 +212,13 @@ it('scopes the participant directory to projects assigned to a member project ma
     ]);
 
     $headers = projectHeaders($participantA);
-    $this->getJson('/api/participants', $headers)
+    $directory = $this->getJson('/api/participants', $headers)
         ->assertOk()
-        ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.id', $managedParticipant->id);
+        ->assertJsonCount(3, 'data');
+    expect(collect($directory->json('data'))->pluck('id'))
+        ->toContain($managedParticipant->id, $otherParticipant->id);
     $this->getJson("/api/participants/{$managedParticipant->id}", $headers)->assertOk();
-    $this->getJson("/api/participants/{$otherParticipant->id}", $headers)->assertNotFound();
+    $this->getJson("/api/participants/{$otherParticipant->id}", $headers)->assertOk();
 });
 
 it('filters projects by status, search, manager and dates', function () {

@@ -60,7 +60,7 @@ class OrganisationReportController extends Controller
     {
         $organisation = $this->currentOrganisation($request);
 
-        Gate::authorize('viewAny', Project::class);
+        Gate::authorize('viewReports', Project::class);
 
         return $organisation;
     }

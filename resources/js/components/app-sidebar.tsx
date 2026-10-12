@@ -92,11 +92,11 @@ const navGroups: NavGroup[] = [
             //     badge: "4",
             //     badgeTone: "success",
             // },
-            {
-                title: "Calendar",
-                href: `${dashboard()}#timesheets`,
-                icon: CalendarDays,
-            },
+            // {
+            //     title: "Calendar",
+            //     href: `${dashboard()}#timesheets`,
+            //     icon: CalendarDays,
+            // },
             {
                 title: "Timesheets",
                 href: timesheetsIndex({}).url,

@@ -26,22 +26,21 @@ class OrganisationInvitationNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $invitationUrl = rtrim((string) config('app.organisation_app_url', config('app.url')), '/').'/invitations/accept?invitation_token='.urlencode($this->token);
-        $mail = (new MailMessage)
-            ->subject('Invitation to join '.$this->organisation->name)
-            ->greeting('Hello,')
-            ->line('You have been invited to join '.$this->organisation->name.' as a member.');
+        $organisationName = $this->organisation->name;
+        $recipientEmail = $notifiable->routes['mail'] ?? null;
+        $viewData = [
+            'organisationName' => $organisationName,
+            'invitationUrl' => $invitationUrl,
+            'recipientEmail' => $recipientEmail,
+            'temporaryPassword' => $this->temporaryPassword,
+        ];
 
-        if ($this->temporaryPassword !== null) {
-            $mail
-                ->line('Your login email is '.$notifiable->routes['mail'].'.')
-                ->line('Your temporary password is: '.$this->temporaryPassword)
-                ->line('Use this temporary password to sign in. You will be prompted to choose a new password before accessing the workspace.');
-        } else {
-            $mail->line('Sign in with your existing account password to accept this invitation.');
-        }
+        $mail = (new MailMessage)
+            ->from(config('mail.from.address'), 'OrangePie')
+            ->subject('You’re invited to join '.$organisationName.' on OrangePie');
 
         return $mail
-            ->action('Accept invitation', $invitationUrl)
-            ->line('This invitation expires in 7 days.');
+            ->view('emails.organisation-invitation', $viewData)
+            ->text('emails.organisation-invitation-text', $viewData);
     }
 }

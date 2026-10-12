@@ -9,12 +9,14 @@ use App\Models\User;
 /**
  * Authorisation for Organisation App project management.
  *
- * - Viewing all/listing/creating requires membership plus an
- *   organisation-management role (Technical Admin or Project Manager).
- * - A member assigned as a project's creator/project manager can view and
- *   manage that project without gaining organisation-wide access.
- * - Viewing review queues (applications, participants) is open to every
- *   organisation manager and the member assigned to that project.
+ * - Listing and viewing projects requires membership in their organisation.
+ *   Creating and viewing reports requires an organisation-management role
+ *   (Technical Admin or Project Manager).
+ * - A member assigned as a project's creator/project manager can manage that
+ *   project without gaining organisation-wide management access.
+ * - Read-only browsing of organisation application/participant data is open
+ *   to all organisation members. Decisions and assignment edits remain
+ *   restricted to project managers / admins.
  * - Updating, lifecycle transitions, deletion and application decisions
  *   additionally require the user to be the project creator or a Technical
  *   Admin, following the existing creator-or-admin precedent
@@ -27,17 +29,27 @@ class ProjectPolicy
     {
         $organisation = $user->currentOrganisation();
 
+        return $organisation !== null && $user->belongsToOrganisation($organisation);
+    }
+
+    public function viewReports(User $user): bool
+    {
+        $organisation = $user->currentOrganisation();
+
         return $organisation !== null && $user->isOrganisationManager($organisation);
     }
 
     public function view(User $user, Project $project): bool
     {
-        return $this->inManagedOrganisation($user, $project);
+        return $project->organisation_id !== null
+            && $user->belongsToOrganisation($project->organisation_id);
     }
 
     public function create(User $user): bool
     {
-        return $this->viewAny($user);
+        $organisation = $user->currentOrganisation();
+
+        return $organisation !== null && $user->isOrganisationManager($organisation);
     }
 
     public function update(User $user, Project $project): bool
@@ -72,7 +84,8 @@ class ProjectPolicy
 
     public function viewApplications(User $user, Project $project): bool
     {
-        return $this->inManagedOrganisation($user, $project);
+        return $project->organisation_id !== null
+            && $user->belongsToOrganisation($project->organisation_id);
     }
 
     public function reviewApplications(User $user, Project $project): bool

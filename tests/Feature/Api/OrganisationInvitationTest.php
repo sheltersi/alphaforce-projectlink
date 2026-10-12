@@ -65,7 +65,8 @@ it('lets organisation admins invite an email and lists only their pending invita
         return $notification->organisation->is($setup['organisation'])
             && $notifiable->routes['mail'] === $email
             && $notification->temporaryPassword !== null
-            && collect($mail->introLines)->contains(fn ($line) => str_contains($line, $notification->temporaryPassword));
+            && ($mail->viewData['temporaryPassword'] ?? null) === $notification->temporaryPassword
+            && ($mail->viewData['recipientEmail'] ?? null) === $email;
     });
 
     expect($invitation->temporary_password_hash)->not->toBeNull();
@@ -298,14 +299,45 @@ it('repairs an older pending invitation when the admin resends it', function () 
     });
 });
 
-it('links invitation email to the Organisation App acceptance route', function () {
+it('sends a professionally branded OrangePie invitation with the Organisation App acceptance route', function () {
     config(['app.organisation_app_url' => 'http://localhost:3000/']);
     $organisation = Organisation::factory()->create(['name' => 'Acme Foundation']);
     $token = str_repeat('a', 64);
 
     $mail = (new OrganisationInvitationNotification($organisation, $token))->toMail(new stdClass);
+    $invitationUrl = 'http://localhost:3000/invitations/accept?invitation_token='.$token;
 
-    expect($mail->actionUrl)->toBe(
-        'http://localhost:3000/invitations/accept?invitation_token='.$token
-    );
+    expect($mail->subject)->toBe('You’re invited to join Acme Foundation on OrangePie')
+        ->and($mail->from[1])->toBe('OrangePie')
+        ->and($mail->view['html'])->toBe('emails.organisation-invitation')
+        ->and($mail->view['text'])->toBe('emails.organisation-invitation-text')
+        ->and($mail->viewData['invitationUrl'])->toBe($invitationUrl);
+
+    $html = view($mail->view['html'], $mail->viewData)->render();
+    $text = view($mail->view['text'], $mail->viewData)->render();
+
+    expect($html)->toContain('OrangePie')
+        ->toContain('Acme Foundation')
+        ->toContain('Accept invitation')
+        ->toContain(e($invitationUrl))
+        ->and($text)->toContain('OrangePie')
+        ->toContain('Acme Foundation')
+        ->toContain($invitationUrl);
+});
+
+it('keeps the temporary password selectable and explains how to copy it', function () {
+    $organisation = Organisation::factory()->create(['name' => 'Acme Foundation']);
+    $password = 'Temp-Pass-123!';
+    $notifiable = (object) ['routes' => ['mail' => 'invitee@example.test']];
+    $mail = (new OrganisationInvitationNotification($organisation, str_repeat('b', 64), $password))
+        ->toMail($notifiable);
+
+    $html = view($mail->view['html'], $mail->viewData)->render();
+    $text = view($mail->view['text'], $mail->viewData)->render();
+
+    expect($html)->toContain('<code')
+        ->toContain($password)
+        ->toContain('select the password and use your device’s Copy command')
+        ->and($text)->toContain($password)
+        ->toContain('select the password and use your device’s Copy command');
 });
