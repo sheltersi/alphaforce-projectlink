@@ -7,8 +7,10 @@ use App\Models\ProjectApplication;
 use App\Models\ProjectParticipant;
 use App\Models\Skill;
 use App\Models\User;
+use App\Notifications\ProjectManagerAssigned;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
     $this->seed(RoleSeeder::class);
@@ -87,6 +89,26 @@ function validProjectPayload(array $overrides = []): array
     ], $overrides);
 }
 
+it('emails a member when an admin assigns them during project creation', function () {
+    Notification::fake();
+
+    ['adminA' => $adminA, 'participantA' => $participantA] = makeProjectSetup();
+
+    $this->postJson('/api/projects', validProjectPayload([
+        'project_manager_id' => $participantA->id,
+    ]), projectHeaders($adminA))
+        ->assertCreated()
+        ->assertJsonPath('data.creator.id', $participantA->id);
+
+    Notification::assertSentTo($participantA, ProjectManagerAssigned::class, function (ProjectManagerAssigned $notification) use ($participantA): bool {
+        $mail = $notification->toMail($participantA);
+
+        return $notification->project->title === 'Community Garden Revival'
+            && $mail->subject === 'You’ve been assigned as project manager for Community Garden Revival'
+            && $mail->actionText === 'View your projects';
+    });
+});
+
 function makeOrgProject(Organisation $org, User $creator, string $status = Project::STATUS_DRAFT): Project
 {
     return Project::factory()->create([
@@ -157,6 +179,8 @@ it('allows organisation members to browse projects but not create them', functio
 });
 
 it('lets an admin assign a member to manage only a specific project', function () {
+    Notification::fake();
+
     ['orgA' => $orgA, 'adminA' => $adminA, 'managerA' => $managerA, 'managerA2' => $managerA2, 'participantA' => $participantA] = makeProjectSetup();
     $assignedProject = makeOrgProject($orgA, $managerA);
     $otherProject = makeOrgProject($orgA, $managerA2);
@@ -166,6 +190,16 @@ it('lets an admin assign a member to manage only a specific project', function (
     ], projectHeaders($adminA))
         ->assertOk()
         ->assertJsonPath('data.creator.id', $participantA->id);
+
+    Notification::assertSentTo($participantA, ProjectManagerAssigned::class, function (ProjectManagerAssigned $notification, array $channels) use ($assignedProject, $participantA): bool {
+        $mail = $notification->toMail($participantA);
+
+        return $notification->project->is($assignedProject)
+            && $mail->subject === 'You’ve been assigned as project manager for '.$assignedProject->title
+            && collect($mail->introLines)->contains(fn (string $line): bool => str_contains($line, 'Project Manager'))
+            && $channels === ['database', 'mail'];
+    });
+    Notification::assertNotSentTo($managerA, ProjectManagerAssigned::class);
 
     $memberHeaders = projectHeaders($participantA);
     $this->getJson('/api/projects', $memberHeaders)

@@ -21,6 +21,7 @@ use App\Models\ProjectApplication;
 use App\Models\ProjectParticipant;
 use App\Notifications\ProjectApplicationAccepted;
 use App\Notifications\ProjectApplicationRejected;
+use App\Notifications\ProjectManagerAssigned;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -102,6 +103,12 @@ class ProjectController extends Controller
             $project->skills()->sync($validated['skill_ids']);
         }
 
+        $assignedManagerId = $validated['project_manager_id'] ?? null;
+        if ($assignedManagerId !== null && (int) $assignedManagerId !== (int) $request->user()->id) {
+            $project->load(['creator', 'organisation']);
+            $project->creator?->notify(new ProjectManagerAssigned($project));
+        }
+
         return $this->projectResponse($project, 'Project created.', 201);
     }
 
@@ -131,6 +138,9 @@ class ProjectController extends Controller
         }
 
         $validated = $request->validated();
+        $newProjectManagerId = $validated['project_manager_id'] ?? null;
+        $projectManagerWasAssigned = $newProjectManagerId !== null
+            && (int) $newProjectManagerId !== (int) $project->created_by;
 
         $project->fill([
             'title' => $validated['title'] ?? $project->title,
@@ -144,6 +154,11 @@ class ProjectController extends Controller
 
         if (array_key_exists('skill_ids', $validated)) {
             $project->skills()->sync($validated['skill_ids']);
+        }
+
+        if ($projectManagerWasAssigned) {
+            $project->load(['creator', 'organisation']);
+            $project->creator?->notify(new ProjectManagerAssigned($project));
         }
 
         return (new ProjectResource($this->loaded($project->fresh())))

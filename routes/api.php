@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\OrganisationController;
 use App\Http\Controllers\Api\OrganisationInvitationController;
@@ -48,6 +49,15 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])->group(function () {
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount'])
+        ->name('api.notifications.unread-count');
+    Route::get('notifications', [NotificationController::class, 'index'])
+        ->name('api.notifications.index');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllRead'])
+        ->name('api.notifications.read-all');
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markRead'])
+        ->name('api.notifications.read');
+
     Route::get('organisation', [OrganisationController::class, 'show'])
         ->name('api.organisation.show');
     Route::put('organisation', [OrganisationController::class, 'update'])
