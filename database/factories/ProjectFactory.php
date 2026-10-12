@@ -23,7 +23,16 @@ class ProjectFactory extends Factory
             'organisation_id' => null,
             'title' => fake()->sentence(3),
             'description' => fake()->paragraph(),
-            'location' => fake()->city(),
+            'location' => fake()->randomElement([
+                'Cape Town, South Africa',
+                'Johannesburg, South Africa',
+                'Durban, South Africa',
+                'Pretoria, South Africa',
+                'Gqeberha, South Africa',
+                'Bloemfontein, South Africa',
+                'Polokwane, South Africa',
+                'Stellenbosch, South Africa',
+            ]),
             'status' => fake()->randomElement([
                 Project::STATUS_DRAFT,
                 Project::STATUS_OPEN,

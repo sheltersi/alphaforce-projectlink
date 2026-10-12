@@ -56,7 +56,7 @@ class ProjectSeeder extends Seeder
 
         foreach (Organisation::SEED as $name => $details) {
             $seeded->push(
-                Organisation::firstOrCreate(
+                Organisation::updateOrCreate(
                     ['name' => $name],
                     array_merge($details, ['created_by' => $admin->id]),
                 ),
@@ -137,8 +137,8 @@ class ProjectSeeder extends Seeder
                 'last_name' => $lastName,
                 'email' => $participant->email,
                 'phone' => fake()->optional()->phoneNumber(),
-                'city' => fake()->randomElement(['Amsterdam', 'Rotterdam', 'Utrecht', 'The Hague']),
-                'country' => 'Netherlands',
+                'city' => fake()->randomElement(['Johannesburg', 'Cape Town', 'Durban', 'Pretoria']),
+                'country' => 'South Africa',
                 'summary' => fake()->optional(0.8)->paragraph(2),
             ]);
 

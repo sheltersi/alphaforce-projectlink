@@ -60,10 +60,17 @@ class ProjectController extends Controller
         Gate::authorize('viewAny', Project::class);
 
         $filters = $request->validated();
+        $user = $request->user();
 
-        $projects = $organisation->projects()
+        $query = $organisation->projects()
             ->with(['skills', 'creator'])
-            ->withCount(['applications', 'participants'])
+            ->withCount(['applications', 'participants']);
+
+        if ($user->shouldRestrictProjectVisibilityToManagedProjects($organisation)) {
+            $query->where('created_by', $user->id);
+        }
+
+        $projects = $query
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(
                 fn ($query) => $query->where('title', 'like', "%{$search}%")

@@ -21,8 +21,17 @@ class OrganisationFactory extends Factory
             'email' => fake()->safeEmail(),
             'phone' => fake()->phoneNumber(),
             'website' => fake()->url(),
-            'city' => fake()->city(),
-            'country' => fake()->country(),
+            'city' => fake()->randomElement([
+                'Cape Town',
+                'Johannesburg',
+                'Durban',
+                'Pretoria',
+                'Gqeberha',
+                'Bloemfontein',
+                'Polokwane',
+                'Stellenbosch',
+            ]),
+            'country' => 'South Africa',
             'created_by' => User::factory(),
         ];
     }

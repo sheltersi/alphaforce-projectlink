@@ -149,6 +149,23 @@ class User extends Authenticatable
         return in_array(strtolower((string) $this->organisationRole($organisation)), ['admin', 'technical_admin'], true);
     }
 
+    /**
+     * Project managers and members assigned to manage projects only browse
+     * the projects they manage. Organisation admins and unassigned members
+     * retain organisation-wide project visibility.
+     */
+    public function shouldRestrictProjectVisibilityToManagedProjects(Organisation|int $organisation): bool
+    {
+        if ($this->isOrganisationAdmin($organisation)) {
+            return false;
+        }
+
+        $organisationId = $organisation instanceof Organisation ? $organisation->id : $organisation;
+
+        return $this->isOrganisationManager($organisation)
+            || $this->projects()->where('organisation_id', $organisationId)->exists();
+    }
+
     /** @return HasMany<Project, $this> */
     public function projects(): HasMany
     {

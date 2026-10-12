@@ -151,6 +151,25 @@ it('lists only projects belonging to the authenticated organisation', function (
     expect($response->json('meta.total'))->toBe(2);
 });
 
+it('limits project managers to projects they manage while admins can see every project', function () {
+    ['orgA' => $orgA, 'adminA' => $adminA, 'managerA' => $managerA, 'managerA2' => $managerA2] = makeProjectSetup();
+    $managedProject = makeOrgProject($orgA, $managerA);
+    $anotherManagerProject = makeOrgProject($orgA, $managerA2);
+    $adminProject = makeOrgProject($orgA, $adminA);
+
+    $this->getJson('/api/projects', projectHeaders($managerA))
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $managedProject->id);
+    $this->getJson("/api/projects/{$managedProject->id}", projectHeaders($managerA))->assertOk();
+    $this->getJson("/api/projects/{$anotherManagerProject->id}", projectHeaders($managerA))->assertForbidden();
+    $this->getJson("/api/projects/{$anotherManagerProject->id}/applications", projectHeaders($managerA))->assertForbidden();
+
+    $this->getJson('/api/projects', projectHeaders($adminA))
+        ->assertOk()
+        ->assertJsonCount(3, 'data');
+});
+
 it('returns 404 for another organisation project by ID', function () {
     ['orgB' => $orgB, 'adminA' => $adminA, 'adminB' => $adminB] = makeProjectSetup();
     $theirs = makeOrgProject($orgB, $adminB);
@@ -204,10 +223,12 @@ it('lets an admin assign a member to manage only a specific project', function (
     $memberHeaders = projectHeaders($participantA);
     $this->getJson('/api/projects', $memberHeaders)
         ->assertOk()
-        ->assertJsonCount(2, 'data');
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $assignedProject->id);
     $this->getJson("/api/projects/{$assignedProject->id}", $memberHeaders)->assertOk();
     $this->getJson("/api/projects/{$assignedProject->id}/applications", $memberHeaders)->assertOk();
-    $this->getJson("/api/projects/{$otherProject->id}", $memberHeaders)->assertOk();
+    $this->getJson("/api/projects/{$otherProject->id}", $memberHeaders)->assertForbidden();
+    $this->getJson("/api/projects/{$otherProject->id}/applications", $memberHeaders)->assertForbidden();
     $this->putJson("/api/projects/{$assignedProject->id}", ['title' => 'Member managed project'], $memberHeaders)
         ->assertOk()
         ->assertJsonPath('data.title', 'Member managed project');

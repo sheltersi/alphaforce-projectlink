@@ -159,7 +159,7 @@ it('lets technical admins review applications on any organisation project', func
         ->assertJsonPath('meta.total', 1);
 });
 
-it('lets organisation members read application queues but keeps outsiders denied', function () {
+it('lets project owners and unassigned members read application queues only within their visibility', function () {
     ['orgA' => $orgA, 'managerA' => $managerA, 'managerA2' => $managerA2, 'participantA' => $participantA, 'outsider' => $outsider] = makeReviewSetup();
     $project = Project::factory()->create([
         'organisation_id' => $orgA->id,
@@ -170,13 +170,13 @@ it('lets organisation members read application queues but keeps outsiders denied
 
     $uri = "/api/projects/{$project->id}/applications";
 
-    // Any organisation manager (not just the creator) may view the queue.
-    $this->getJson($uri, reviewHeaders($managerA2))->assertOk();
+    // Other project managers cannot inspect a project they do not manage.
+    $this->getJson($uri, reviewHeaders($managerA2))->assertForbidden();
     $this->getJson($uri, reviewHeaders($participantA))->assertOk();
     $this->getJson($uri, reviewHeaders($outsider))->assertForbidden();
 });
 
-it('lets every manager view but only the creator or admin decide', function () {
+it('limits project detail to owners while unassigned members may read but not decide', function () {
     ['orgA' => $orgA, 'adminA' => $adminA, 'managerA' => $managerA, 'managerA2' => $managerA2, 'participantA' => $participantA] = makeReviewSetup();
     $project = Project::factory()->create([
         'organisation_id' => $orgA->id,
@@ -187,9 +187,9 @@ it('lets every manager view but only the creator or admin decide', function () {
 
     $uri = "/api/projects/{$project->id}/applications/{$application->id}";
 
-    // Read: another manager may view the detail…
-    $this->getJson($uri, reviewHeaders($managerA2))->assertOk();
-    // …and an organisation member can read it without gaining decision rights.
+    // Another project manager cannot view this project's application detail.
+    $this->getJson($uri, reviewHeaders($managerA2))->assertForbidden();
+    // An unassigned organisation member can read it without gaining decision rights.
     $this->getJson($uri, reviewHeaders($participantA))->assertOk();
     $this->patchJson($uri, ['status' => 'accepted'], reviewHeaders($participantA))->assertForbidden();
     // …but deciding stays creator-or-admin-only.
@@ -356,8 +356,8 @@ it('lets organisation members read project participants but denies outsiders and
 
     $uri = "/api/projects/{$project->id}/participants";
 
-    // Any organisation manager (not just the creator) may view participants.
-    $this->getJson($uri, reviewHeaders($managerA2))->assertOk();
+    // Other project managers cannot inspect a project's participants.
+    $this->getJson($uri, reviewHeaders($managerA2))->assertForbidden();
     $this->getJson($uri, reviewHeaders($participantA))->assertOk();
     $this->getJson($uri, reviewHeaders($outsider))->assertForbidden();
 

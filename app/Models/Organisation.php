@@ -30,18 +30,18 @@ class Organisation extends Model
         'Alpha Force Foundation' => [
             'description' => 'A community foundation focused on neighbourhood support and local impact.',
             'email' => 'hello@alphaforce.example',
-            'phone' => '+1-555-0101',
+            'phone' => '+27 21 555 0101',
             'website' => 'https://alphaforce.example',
-            'city' => 'Amsterdam',
-            'country' => 'Netherlands',
+            'city' => 'Cape Town',
+            'country' => 'South Africa',
         ],
         'Greenbridge Collective' => [
             'description' => 'Environmental volunteers restoring urban green spaces across the city.',
             'email' => 'team@greenbridge.example',
-            'phone' => '+1-555-0102',
+            'phone' => '+27 11 555 0102',
             'website' => 'https://greenbridge.example',
-            'city' => 'Rotterdam',
-            'country' => 'Netherlands',
+            'city' => 'Johannesburg',
+            'country' => 'South Africa',
         ],
     ];
 

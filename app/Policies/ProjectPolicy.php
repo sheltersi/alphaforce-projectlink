@@ -9,14 +9,17 @@ use App\Models\User;
 /**
  * Authorisation for Organisation App project management.
  *
- * - Listing and viewing projects requires membership in their organisation.
+ * - Listing projects requires membership in their organisation. Organisation
+ *   admins and unassigned members can browse all; project managers and members
+ *   assigned as project managers can only view projects they manage.
  *   Creating and viewing reports requires an organisation-management role
  *   (Technical Admin or Project Manager).
  * - A member assigned as a project's creator/project manager can manage that
  *   project without gaining organisation-wide management access.
- * - Read-only browsing of organisation application/participant data is open
- *   to all organisation members. Decisions and assignment edits remain
- *   restricted to project managers / admins.
+ * - Read-only application and participant data follows project visibility:
+ *   unassigned members can browse across the organisation, while project
+ *   managers can only see data for projects they manage. Decisions and
+ *   assignment edits remain restricted to project managers / admins.
  * - Updating, lifecycle transitions, deletion and application decisions
  *   additionally require the user to be the project creator or a Technical
  *   Admin, following the existing creator-or-admin precedent
@@ -41,8 +44,7 @@ class ProjectPolicy
 
     public function view(User $user, Project $project): bool
     {
-        return $project->organisation_id !== null
-            && $user->belongsToOrganisation($project->organisation_id);
+        return $this->canViewProject($user, $project);
     }
 
     public function create(User $user): bool
@@ -84,8 +86,7 @@ class ProjectPolicy
 
     public function viewApplications(User $user, Project $project): bool
     {
-        return $project->organisation_id !== null
-            && $user->belongsToOrganisation($project->organisation_id);
+        return $this->canViewProject($user, $project);
     }
 
     public function reviewApplications(User $user, Project $project): bool
@@ -102,6 +103,16 @@ class ProjectPolicy
         return $user->belongsToOrganisation($project->organisation_id)
             && ($user->isOrganisationManager($project->organisation_id)
                 || $project->created_by === $user->id);
+    }
+
+    private function canViewProject(User $user, Project $project): bool
+    {
+        if ($project->organisation_id === null || ! $user->belongsToOrganisation($project->organisation_id)) {
+            return false;
+        }
+
+        return ! $user->shouldRestrictProjectVisibilityToManagedProjects($project->organisation_id)
+            || $project->created_by === $user->id;
     }
 
     protected function canManage(User $user, Project $project): bool
