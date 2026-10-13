@@ -38,7 +38,10 @@ class ProjectApplicationSubmitted extends Notification
                 'Please review the application when you have a moment.',
             ])),
             'action_label' => 'Review application',
-            'action_url' => '/projects/applications/'.$project->id.'/'.$this->application->id,
+            'action_url' => route('projects.applications.show', [
+                'project' => $project,
+                'application' => $this->application,
+            ], false),
         ];
     }
 

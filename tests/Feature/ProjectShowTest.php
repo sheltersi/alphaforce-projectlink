@@ -83,6 +83,49 @@ it('renders the my applications page for the current user', function () {
     });
 });
 
+it('lets a project manager open their applications page from project discovery', function () {
+    $manager = User::factory()->create();
+    $manager->markEmailAsVerified();
+    $applicant = User::factory()->create();
+    $organisation = Organisation::factory()->create(['created_by' => $manager->id]);
+    $organisation->users()->attach($manager->id, ['role' => 'manager']);
+    $project = Project::factory()->create([
+        'organisation_id' => $organisation->id,
+        'created_by' => $manager->id,
+        'status' => Project::STATUS_OPEN,
+    ]);
+    $application = ProjectApplication::create([
+        'project_id' => $project->id,
+        'user_id' => $applicant->id,
+        'status' => 'submitted',
+        'cover_letter' => 'I would like to help.',
+        'submitted_at' => now(),
+    ]);
+
+    $this->actingAs($manager)
+        ->get(route('projects.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('projects/discover')
+            ->where('projects.0.can_review_applications', true));
+
+    $this->actingAs($manager)
+        ->get(route('projects.applications.index', $project))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('projects/applications')
+            ->where('project.id', $project->id)
+            ->has('applications', 1)
+            ->where('applications.0.id', $application->id)
+            ->where('applications.0.applicant_name', $applicant->name));
+
+    $outsider = User::factory()->create();
+    $outsider->markEmailAsVerified();
+    $this->actingAs($outsider)
+        ->get(route('projects.applications.index', $project))
+        ->assertForbidden();
+});
+
 it('shows the authenticated user current and past projects on the dedicated my projects page', function () {
     $participant = User::factory()->create();
     $participant->markEmailAsVerified();

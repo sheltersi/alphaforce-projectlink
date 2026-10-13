@@ -11,6 +11,7 @@ use App\Notifications\ProjectApplicationSubmitted;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -74,6 +75,7 @@ class ProjectController extends Controller
                 'likes_count' => $project->likes_count,
                 'liked_by_me' => $likedIds->contains($project->id),
                 'application_status' => $applicationStatuses[$project->id] ?? null,
+                'can_review_applications' => Gate::allows('reviewApplications', $project),
             ];
         });
 
@@ -149,6 +151,48 @@ class ProjectController extends Controller
             'start_date' => ($membership->start_date ?? $project->start_date)?->format('M j, Y'),
             'end_date' => ($membership->end_date ?? $project->end_date)?->format('M j, Y'),
         ];
+    }
+
+    /**
+     * Display the review queue for a project managed by the current user.
+     */
+    public function projectApplications(Project $project): InertiaResponse
+    {
+        Gate::authorize('reviewApplications', $project);
+
+        $project->load('organisation');
+        $applications = $project->applications()
+            ->with('user.participantProfile')
+            ->latest('submitted_at')
+            ->latest('id')
+            ->get()
+            ->map(function (ProjectApplication $application): array {
+                $applicant = $application->user;
+                $profile = $applicant?->participantProfile;
+                $name = trim(($profile?->first_name ?? '').' '.($profile?->last_name ?? ''));
+
+                return [
+                    'id' => $application->id,
+                    'applicant_name' => $name !== '' ? $name : ($applicant?->name ?? 'Unknown applicant'),
+                    'status' => $application->status,
+                    'submitted_at' => $application->submitted_at?->format('M j, Y'),
+                    'cover_letter' => $application->cover_letter,
+                    'url' => route('projects.applications.show', [
+                        'project' => $application->project_id,
+                        'application' => $application->id,
+                    ], false),
+                ];
+            })
+            ->values();
+
+        return Inertia::render('projects/applications', [
+            'project' => [
+                'id' => $project->id,
+                'title' => $project->title,
+                'organisation' => $project->organisation?->name,
+            ],
+            'applications' => $applications,
+        ]);
     }
 
     /**
@@ -375,7 +419,7 @@ class ProjectController extends Controller
     {
         $user = $request->user();
 
-        if ($project->created_by !== $user->id && ! $user->hasRole('technical_admin')) {
+        if ($project->created_by !== $user->id && Gate::denies('reviewApplications', $project)) {
             abort(403, 'Only the project manager can view this application.');
         }
 

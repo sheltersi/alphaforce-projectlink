@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Project;
+use App\Models\ProjectApplication;
 use App\Models\User;
 use App\Notifications\ProjectApplicationSubmitted;
 use Illuminate\Support\Facades\Notification;
@@ -22,10 +23,24 @@ it('emails the project manager when a participant applies', function () {
     $response->assertRedirect();
     Notification::assertSentTo($manager, ProjectApplicationSubmitted::class, function (ProjectApplicationSubmitted $notification) use ($participant, $project): bool {
         $mail = $notification->toMail($project->creator);
+        $databaseNotification = $notification->toArray($project->creator);
 
         return $notification->application->user_id === $participant->id
             && $notification->application->project_id === $project->id
             && $mail->subject === 'New application for '.$project->title
-            && collect($mail->introLines)->contains(fn (string $line): bool => str_contains($line, $participant->name));
+            && collect($mail->introLines)->contains(fn (string $line): bool => str_contains($line, $participant->name))
+            && $databaseNotification['action_url'] === route('projects.applications.show', [
+                'project' => $project,
+                'application' => $notification->application,
+            ], false);
     });
+
+    $application = ProjectApplication::query()
+        ->where('project_id', $project->id)
+        ->where('user_id', $participant->id)
+        ->firstOrFail();
+
+    $this->actingAs($manager)
+        ->get(route('projects.applications.show', ['project' => $project, 'application' => $application]))
+        ->assertOk();
 });

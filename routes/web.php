@@ -39,8 +39,6 @@ Route::middleware(['auth', 'verified', 'ensure.participant.profile'])->group(fun
     Route::get('applications', [ProjectController::class, 'applications'])->name('applications.index');
     Route::post('projects/{project}/like', [ProjectController::class, 'toggleLike'])->name('projects.like');
     Route::post('projects/{project}/apply', [ProjectController::class, 'apply'])->name('projects.apply');
-    Route::get('projects/{project}/applications/{application}', [ProjectController::class, 'showApplication'])
-        ->name('projects.applications.show');
     Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('dashboard/resume', [ParticipantProfileController::class, 'resume'])
         ->name('dashboard.resume');
@@ -50,6 +48,15 @@ Route::middleware(['auth', 'verified', 'ensure.participant.profile'])->group(fun
         ->name('dashboard.resume.share.generate');
     Route::delete('dashboard/resume/share', [ParticipantProfileController::class, 'revokeShareLink'])
         ->name('dashboard.resume.share.revoke');
+});
+
+// Project application review pages are available to managers without requiring
+// the participant-profile onboarding middleware.
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('projects/{project}/applications', [ProjectController::class, 'projectApplications'])
+        ->name('projects.applications.index');
+    Route::get('projects/{project}/applications/{application}', [ProjectController::class, 'showApplication'])
+        ->name('projects.applications.show');
 });
 
 // Public, unauthenticated resume view by share token.
