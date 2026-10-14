@@ -22,6 +22,7 @@ class UpdateProjectRequest extends BaseProjectRequest
             'end_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:start_date'],
             'positions' => ['sometimes', 'integer', 'min:1', 'max:10000'],
             'project_manager_id' => $this->projectManagerRules(),
+            'role' => ['sometimes', 'in:project_manager'],
             'skill_ids' => $this->skillIdsRules(),
             'skill_ids.*' => $this->skillIdItemRules(),
             'status' => ['prohibited'],

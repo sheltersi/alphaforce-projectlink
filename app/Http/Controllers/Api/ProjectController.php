@@ -16,6 +16,7 @@ use App\Http\Resources\Organisation\ApplicationResource;
 use App\Http\Resources\Organisation\ProjectListResource;
 use App\Http\Resources\Organisation\ProjectParticipantResource;
 use App\Http\Resources\Organisation\ProjectResource;
+use App\Models\Organisation;
 use App\Models\Project;
 use App\Models\ProjectApplication;
 use App\Models\ProjectParticipant;
@@ -95,22 +96,30 @@ class ProjectController extends Controller
 
         $validated = $request->validated();
 
-        $project = $organisation->projects()->create([
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'location' => $validated['location'] ?? null,
-            'start_date' => $validated['start_date'] ?? null,
-            'end_date' => $validated['end_date'] ?? null,
-            'positions' => $validated['positions'] ?? 1,
-            'created_by' => $validated['project_manager_id'] ?? $request->user()->id,
-            'status' => Project::STATUS_DRAFT,
-        ]);
-
-        if (array_key_exists('skill_ids', $validated)) {
-            $project->skills()->sync($validated['skill_ids']);
-        }
-
         $assignedManagerId = $validated['project_manager_id'] ?? null;
+        $project = DB::transaction(function () use ($organisation, $request, $validated, $assignedManagerId): Project {
+            $project = $organisation->projects()->create([
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'location' => $validated['location'] ?? null,
+                'start_date' => $validated['start_date'] ?? null,
+                'end_date' => $validated['end_date'] ?? null,
+                'positions' => $validated['positions'] ?? 1,
+                'created_by' => $assignedManagerId ?? $request->user()->id,
+                'status' => Project::STATUS_DRAFT,
+            ]);
+
+            if ($assignedManagerId !== null) {
+                $this->promoteProjectManager($organisation, (int) $assignedManagerId);
+            }
+
+            if (array_key_exists('skill_ids', $validated)) {
+                $project->skills()->sync($validated['skill_ids']);
+            }
+
+            return $project;
+        });
+
         if ($assignedManagerId !== null && (int) $assignedManagerId !== (int) $request->user()->id) {
             $project->load(['creator', 'organisation']);
             $project->creator?->notify(new ProjectManagerAssigned($project));
@@ -149,19 +158,25 @@ class ProjectController extends Controller
         $projectManagerWasAssigned = $newProjectManagerId !== null
             && (int) $newProjectManagerId !== (int) $project->created_by;
 
-        $project->fill([
-            'title' => $validated['title'] ?? $project->title,
-            'description' => array_key_exists('description', $validated) ? $validated['description'] : $project->description,
-            'location' => array_key_exists('location', $validated) ? $validated['location'] : $project->location,
-            'start_date' => array_key_exists('start_date', $validated) ? $validated['start_date'] : $project->start_date,
-            'end_date' => array_key_exists('end_date', $validated) ? $validated['end_date'] : $project->end_date,
-            'positions' => $validated['positions'] ?? $project->positions,
-            'created_by' => $validated['project_manager_id'] ?? $project->created_by,
-        ])->save();
+        DB::transaction(function () use ($project, $organisation, $validated, $newProjectManagerId): void {
+            $project->fill([
+                'title' => $validated['title'] ?? $project->title,
+                'description' => array_key_exists('description', $validated) ? $validated['description'] : $project->description,
+                'location' => array_key_exists('location', $validated) ? $validated['location'] : $project->location,
+                'start_date' => array_key_exists('start_date', $validated) ? $validated['start_date'] : $project->start_date,
+                'end_date' => array_key_exists('end_date', $validated) ? $validated['end_date'] : $project->end_date,
+                'positions' => $validated['positions'] ?? $project->positions,
+                'created_by' => $newProjectManagerId ?? $project->created_by,
+            ])->save();
 
-        if (array_key_exists('skill_ids', $validated)) {
-            $project->skills()->sync($validated['skill_ids']);
-        }
+            if ($newProjectManagerId !== null) {
+                $this->promoteProjectManager($organisation, (int) $newProjectManagerId);
+            }
+
+            if (array_key_exists('skill_ids', $validated)) {
+                $project->skills()->sync($validated['skill_ids']);
+            }
+        });
 
         if ($projectManagerWasAssigned) {
             $project->load(['creator', 'organisation']);
@@ -170,6 +185,22 @@ class ProjectController extends Controller
 
         return (new ProjectResource($this->loaded($project->fresh())))
             ->additional(['message' => 'Project updated.']);
+    }
+
+    /**
+     * Promote an assigned organisation member to the project_manager
+     * membership role. Organisation admins remain admins.
+     */
+    private function promoteProjectManager(Organisation $organisation, int $userId): void
+    {
+        $membership = $organisation->organisationUsers()
+            ->where('user_id', $userId)
+            ->firstOrFail();
+
+        if (! in_array($membership->role, ['admin', 'technical_admin'], true)
+            && $membership->role !== 'project_manager') {
+            $membership->update(['role' => 'project_manager']);
+        }
     }
 
     /**

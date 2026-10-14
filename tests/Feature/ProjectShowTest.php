@@ -123,7 +123,7 @@ it('lets a project manager open their applications page from project discovery',
     $outsider->markEmailAsVerified();
     $this->actingAs($outsider)
         ->get(route('projects.applications.index', $project))
-        ->assertForbidden();
+        ->assertRedirect(route('dashboard'));
 });
 
 it('shows the authenticated user current and past projects on the dedicated my projects page', function () {

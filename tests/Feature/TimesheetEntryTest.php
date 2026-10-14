@@ -135,10 +135,10 @@ it('lets participants edit and delete drafts but not submitted entries', functio
 
     $this->actingAs($user)
         ->patch(route('timesheets.entries.update', $entry), ['description' => 'Changed'])
-        ->assertForbidden();
+        ->assertRedirect(route('dashboard'));
     $this->actingAs($user)
         ->delete(route('timesheets.entries.destroy', $entry))
-        ->assertForbidden();
+        ->assertRedirect(route('dashboard'));
 
     Carbon::setTestNow();
 });
@@ -193,7 +193,7 @@ it('lets a project manager approve but never the owner', function () {
     // Owner cannot approve their own entry.
     $this->actingAs($owner)
         ->post(route('timesheets.entries.approve', $entry))
-        ->assertForbidden();
+        ->assertRedirect(route('dashboard'));
 
     // Manager approves.
     $this->actingAs($manager)

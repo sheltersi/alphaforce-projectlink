@@ -42,6 +42,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'canManageProjects' => $request->user()?->hasRole('project_manager') ?? false,
             'projectsCount' => $this->openProjectsCount(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

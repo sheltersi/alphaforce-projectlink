@@ -96,9 +96,16 @@ it('emails a member when an admin assigns them during project creation', functio
 
     $this->postJson('/api/projects', validProjectPayload([
         'project_manager_id' => $participantA->id,
+        'role' => 'project_manager',
     ]), projectHeaders($adminA))
         ->assertCreated()
         ->assertJsonPath('data.creator.id', $participantA->id);
+
+    $this->assertDatabaseHas('organisation_users', [
+        'organisation_id' => $adminA->currentOrganisation()->id,
+        'user_id' => $participantA->id,
+        'role' => 'project_manager',
+    ]);
 
     Notification::assertSentTo($participantA, ProjectManagerAssigned::class, function (ProjectManagerAssigned $notification) use ($participantA): bool {
         $mail = $notification->toMail($participantA);
@@ -206,6 +213,7 @@ it('lets an admin assign a member to manage only a specific project', function (
 
     $this->patchJson("/api/projects/{$assignedProject->id}", [
         'project_manager_id' => $participantA->id,
+        'role' => 'project_manager',
     ], projectHeaders($adminA))
         ->assertOk()
         ->assertJsonPath('data.creator.id', $participantA->id);
@@ -229,6 +237,7 @@ it('lets an admin assign a member to manage only a specific project', function (
     $this->getJson("/api/projects/{$assignedProject->id}/applications", $memberHeaders)->assertOk();
     $this->getJson("/api/projects/{$otherProject->id}", $memberHeaders)->assertForbidden();
     $this->getJson("/api/projects/{$otherProject->id}/applications", $memberHeaders)->assertForbidden();
+    $this->getJson('/api/organisation/invitations', $memberHeaders)->assertForbidden();
     $this->putJson("/api/projects/{$assignedProject->id}", ['title' => 'Member managed project'], $memberHeaders)
         ->assertOk()
         ->assertJsonPath('data.title', 'Member managed project');
@@ -238,7 +247,7 @@ it('lets an admin assign a member to manage only a specific project', function (
     Auth::forgetGuards();
     $this->getJson('/api/auth/me', $memberHeaders)
         ->assertOk()
-        ->assertJsonPath('data.current_organisation.role', 'member')
+        ->assertJsonPath('data.current_organisation.role', 'project_manager')
         ->assertJsonPath('data.managed_projects_count', 1);
 });
 
@@ -398,6 +407,32 @@ it('lets the creator and technical admins update a project', function () {
     ], projectHeaders($adminA))->assertOk();
 
     expect($project->fresh()->title)->toBe('Renamed by admin');
+});
+
+it('updates the organisation membership role when an admin assigns a project manager', function () {
+    ['orgA' => $orgA, 'adminA' => $adminA, 'managerA' => $managerA, 'participantA' => $participantA] = makeProjectSetup();
+    $project = makeOrgProject($orgA, $managerA);
+
+    $this->patchJson("/api/projects/{$project->id}", [
+        'project_manager_id' => $participantA->id,
+        'role' => 'project_manager',
+    ], projectHeaders($adminA))
+        ->assertOk()
+        ->assertJsonPath('data.creator.id', $participantA->id);
+
+    $this->assertDatabaseHas('projects', [
+        'id' => $project->id,
+        'created_by' => $participantA->id,
+    ]);
+    $this->assertDatabaseHas('organisation_users', [
+        'organisation_id' => $orgA->id,
+        'user_id' => $participantA->id,
+        'role' => 'project_manager',
+    ]);
+
+    $this->getJson('/api/organisation/users', projectHeaders($participantA))
+        ->assertOk()
+        ->assertJsonFragment(['id' => $participantA->id, 'role' => 'project_manager']);
 });
 
 it('forbids other project managers from updating a project', function () {

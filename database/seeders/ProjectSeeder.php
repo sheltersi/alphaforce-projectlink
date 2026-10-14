@@ -25,21 +25,20 @@ class ProjectSeeder extends Seeder
     public function run(): void
     {
         $this->resetProjectTables();
+        $this->removeLegacyGeneratedParticipants();
 
         $admin = $this->user('admin@example.com', 'Admin User', 'technical_admin');
         $manager = $this->user('manager@example.com', 'Manager User', 'project_manager');
+        $alice = $this->user('alice.williams@example.com', 'Alice Williams', 'project_manager');
 
-        $participants = collect([]);
-        foreach (range(1, 8) as $i) {
-            $participants->push($this->user("participant{$i}@example.com", $this->participantName($i), 'participant'));
-        }
+        $participants = User::query()->whereIn('name', User::SEED_NAMES)->get();
 
         $this->seedParticipantProfiles($participants);
 
         $organisations = $this->seedOrganisations($admin);
-        $this->seedOrganisationUsers($organisations, $admin, $manager, $participants);
+        $this->seedOrganisationUsers($organisations, $admin, $manager, $alice, $participants);
 
-        $this->seedProjects($manager);
+        $this->seedProjects($manager, $alice);
 
         $this->seedApplications($participants);
         $this->seedParticipants($admin, $participants);
@@ -70,12 +69,14 @@ class ProjectSeeder extends Seeder
         Collection $organisations,
         User $admin,
         User $manager,
+        User $alice,
         Collection $participants,
     ): void {
         foreach ($organisations as $organisation) {
             $organisation->users()->syncWithoutDetaching([
                 $admin->id => ['role' => 'admin'],
                 $manager->id => ['role' => 'manager'],
+                $alice->id => ['role' => 'manager'],
             ]);
 
             foreach ($participants->shuffle()->take(random_int(2, 4)) as $member) {
@@ -104,6 +105,13 @@ class ProjectSeeder extends Seeder
         Schema::enableForeignKeyConstraints();
     }
 
+    private function removeLegacyGeneratedParticipants(): void
+    {
+        $emails = array_map(fn (int $index) => "participant{$index}@example.com", range(1, 8));
+
+        User::query()->whereIn('email', $emails)->delete();
+    }
+
     private function user(string $email, string $name, string $role): User
     {
         $user = User::firstOrCreate(
@@ -114,12 +122,6 @@ class ProjectSeeder extends Seeder
         $user->assignRole($role);
 
         return $user;
-    }
-
-    private function participantName(int $index): string
-    {
-        return User::SEED_NAMES[($index - 1) % count(User::SEED_NAMES)]
-            ?? fake()->name();
     }
 
     private function seedParticipantProfiles(iterable $participants): void
@@ -150,12 +152,14 @@ class ProjectSeeder extends Seeder
         }
     }
 
-    private function seedProjects(User $manager): void
+    private function seedProjects(User $manager, User $alice): void
     {
         foreach (Project::SEED as $data) {
+            $projectManager = $data['title'] === 'Community Garden Revitalisation' ? $alice : $manager;
+
             $project = Project::create([
                 'organisation_id' => Organisation::inRandomOrder()->value('id'),
-                'created_by' => $manager->id,
+                'created_by' => $projectManager->id,
                 'title' => $data['title'],
                 'description' => $data['description'],
                 'location' => $data['location'],

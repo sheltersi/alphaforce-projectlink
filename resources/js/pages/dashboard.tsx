@@ -569,8 +569,9 @@ function HelpCard() {
 }
 
 export default function Dashboard() {
-    const { auth } = usePage().props as unknown as {
+    const { auth, canManageProjects } = usePage().props as unknown as {
         auth: { user: { name?: string } | null };
+        canManageProjects: boolean;
     };
     const [saved, setSaved] = useState<string | null>(null);
     const firstName = useMemo(
@@ -766,10 +767,15 @@ export default function Dashboard() {
                                             </span>
                                         </div>
                                     </div>
-                                    <button className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-bold text-foreground transition-all duration-300 hover:border-foreground/20 hover:bg-accent hover:-translate-y-0.5">
-                                        Open workspace
-                                        <ArrowRight className="size-4" />
-                                    </button>
+                                    {canManageProjects && (
+                                        <Link
+                                            href={projectsIndex({}).url}
+                                            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-bold text-foreground transition-all duration-300 hover:border-foreground/20 hover:bg-accent hover:-translate-y-0.5"
+                                        >
+                                            View project details
+                                            <ArrowRight className="size-4" />
+                                        </Link>
+                                    )}
                                 </div>
                             </section>
 
