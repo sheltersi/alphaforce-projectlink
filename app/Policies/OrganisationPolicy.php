@@ -8,33 +8,34 @@ use App\Models\User;
 /**
  * Authorisation for the Organisation App foundation.
  *
- * - Viewing the organisation and its users requires membership plus an
- *   organisation-management role (Technical Admin or Project Manager).
- * - Updating the organisation additionally requires Technical Admin level
- *   access. Participants and outsiders are denied.
+ * - Every organisation member may view the organisation profile.
+ * - Viewing the member roster requires an organisation-management role.
+ * - Updating the profile is limited to organisation admins and its creator.
+ *   Outsiders are denied.
  */
 class OrganisationPolicy
 {
     public function view(User $user, Organisation $organisation): bool
     {
-        return $user->belongsToOrganisation($organisation)
-            && $user->isOrganisationManager($organisation);
+        return $user->belongsToOrganisation($organisation);
     }
 
     public function update(User $user, Organisation $organisation): bool
     {
         return $user->belongsToOrganisation($organisation)
-            && $user->isOrganisationAdmin($organisation);
+            && ($user->isOrganisationAdmin($organisation)
+                || (int) $organisation->created_by === (int) $user->id);
     }
 
     public function viewMembers(User $user, Organisation $organisation): bool
     {
-        return $this->view($user, $organisation);
+        return $user->belongsToOrganisation($organisation)
+            && $user->isOrganisationManager($organisation);
     }
 
     public function viewMember(User $user, Organisation $organisation): bool
     {
-        return $this->view($user, $organisation);
+        return $this->viewMembers($user, $organisation);
     }
 
     public function inviteMembers(User $user, Organisation $organisation): bool

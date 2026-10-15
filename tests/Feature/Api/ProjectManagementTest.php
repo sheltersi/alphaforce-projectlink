@@ -4,10 +4,14 @@ use App\Models\Organisation;
 use App\Models\ParticipantProfile;
 use App\Models\Project;
 use App\Models\ProjectApplication;
+use App\Models\ProjectInvitation;
 use App\Models\ProjectParticipant;
 use App\Models\Skill;
 use App\Models\User;
 use App\Notifications\ProjectManagerAssigned;
+use App\Notifications\ProjectMemberInvitation;
+use App\Notifications\ProjectMemberJoined;
+use App\Services\ProjectInvitationService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
@@ -249,6 +253,140 @@ it('lets an admin assign a member to manage only a specific project', function (
         ->assertOk()
         ->assertJsonPath('data.current_organisation.role', 'project_manager')
         ->assertJsonPath('data.managed_projects_count', 1);
+});
+
+it('lets a project manager invite an organisation member to a managed project by email', function () {
+    Notification::fake();
+
+    ['orgA' => $orgA, 'managerA' => $managerA, 'participantA' => $participantA] = makeProjectSetup();
+    $project = makeOrgProject($orgA, $managerA, Project::STATUS_OPEN);
+
+    $response = $this->postJson("/api/projects/{$project->id}/invitations", [
+        'user_id' => $participantA->id,
+    ], projectHeaders($managerA))
+        ->assertCreated()
+        ->assertJsonPath('data.project_id', $project->id)
+        ->assertJsonPath('data.user_id', $participantA->id)
+        ->assertJsonPath('message', 'Project invitation sent.');
+
+    $invitation = ProjectInvitation::query()->findOrFail($response->json('data.id'));
+    expect($invitation->token_hash)->not->toBeEmpty()
+        ->and($invitation->accepted_at)->toBeNull();
+
+    $this->assertDatabaseMissing('project_participants', [
+        'project_id' => $project->id,
+        'user_id' => $participantA->id,
+    ]);
+
+    Notification::assertSentTo($participantA, ProjectMemberInvitation::class, function (ProjectMemberInvitation $notification): bool {
+        $mail = $notification->toMail($notification->project->creator);
+
+        return $mail->subject === 'You’re invited to join '.$notification->project->title
+            && ($mail->view['html'] ?? null) === 'emails.project-member-invitation'
+            && ($mail->view['text'] ?? null) === 'emails.project-member-invitation-text'
+            && $mail->viewData['projectTitle'] === $notification->project->title;
+    });
+});
+
+it('reports invited and joined states to a project manager for their own projects only', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA, 'managerA2' => $managerA2, 'participantA' => $participantA] = makeProjectSetup();
+    $project = makeOrgProject($orgA, $managerA, Project::STATUS_OPEN);
+    $otherProject = makeOrgProject($orgA, $managerA2, Project::STATUS_OPEN);
+    $invitation = app(ProjectInvitationService::class)->invite($project, $managerA, $participantA);
+
+    $this->getJson('/api/organisation/project-member-statuses', projectHeaders($managerA))
+        ->assertOk()
+        ->assertJsonFragment(['user_id' => $participantA->id, 'status' => 'invited']);
+
+    $this->getJson('/api/organisation/project-member-statuses', projectHeaders($managerA2))
+        ->assertOk()
+        ->assertJsonMissing(['user_id' => $participantA->id, 'status' => 'invited']);
+
+    $this->postJson('/api/projects/invitations/accept', [
+        'token' => $invitation['token'],
+    ], projectHeaders($participantA))->assertCreated();
+
+    $this->getJson('/api/organisation/project-member-statuses', projectHeaders($managerA))
+        ->assertOk()
+        ->assertJsonFragment(['user_id' => $participantA->id, 'status' => 'joined']);
+
+    expect($otherProject->created_by)->toBe($managerA2->id);
+});
+
+it('adds an invited organisation member to the project only after accepting the invitation', function () {
+    Notification::fake();
+
+    ['orgA' => $orgA, 'managerA' => $managerA, 'participantA' => $participantA] = makeProjectSetup();
+    $project = makeOrgProject($orgA, $managerA, Project::STATUS_OPEN);
+    $invitation = app(ProjectInvitationService::class)->invite($project, $managerA, $participantA);
+
+    $this->postJson('/api/projects/invitations/accept', [
+        'token' => $invitation['token'],
+    ], projectHeaders($participantA))
+        ->assertCreated()
+        ->assertJsonPath('data.project_id', $project->id)
+        ->assertJsonPath('data.user_id', $participantA->id)
+        ->assertJsonPath('data.status', ProjectParticipant::STATUS_ACTIVE)
+        ->assertJsonPath('data.project.title', $project->title)
+        ->assertJsonPath('message', 'You joined '.$project->title.'.');
+
+    $this->assertDatabaseHas('project_participants', [
+        'project_id' => $project->id,
+        'user_id' => $participantA->id,
+        'application_id' => null,
+        'role' => null,
+        'status' => ProjectParticipant::STATUS_ACTIVE,
+    ]);
+    $this->assertNotNull($invitation['invitation']->fresh()->accepted_at);
+
+    Notification::assertSentTo($managerA, ProjectMemberJoined::class, function (ProjectMemberJoined $notification, array $channels) use ($managerA, $participantA, $project): bool {
+        $mail = $notification->toMail($managerA);
+
+        return $notification->member->is($participantA)
+            && $notification->project->is($project)
+            && $mail->subject === $participantA->name.' joined '.$project->title
+            && ($mail->view['html'] ?? null) === 'emails.project-member-joined'
+            && in_array('mail', $channels, true);
+    });
+
+    $this->postJson('/api/projects/invitations/accept', [
+        'token' => $invitation['token'],
+    ], projectHeaders($participantA))->assertOk();
+
+    Notification::assertSentToTimes($managerA, ProjectMemberJoined::class, 1);
+});
+
+it('does not allow inviting organisation administrators to a project', function () {
+    Notification::fake();
+
+    ['orgA' => $orgA, 'adminA' => $adminA, 'managerA' => $managerA] = makeProjectSetup();
+    $project = makeOrgProject($orgA, $managerA, Project::STATUS_OPEN);
+
+    $this->postJson("/api/projects/{$project->id}/invitations", [
+        'user_id' => $adminA->id,
+    ], projectHeaders($managerA))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('user_id');
+
+    expect(ProjectInvitation::query()->where('project_id', $project->id)->count())->toBe(0);
+    Notification::assertNothingSent();
+});
+
+it('rejects a project invitation accepted by a different account', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA, 'participantA' => $participantA, 'managerA2' => $managerA2] = makeProjectSetup();
+    $project = makeOrgProject($orgA, $managerA, Project::STATUS_OPEN);
+    $invitation = app(ProjectInvitationService::class)->invite($project, $managerA, $participantA);
+
+    $this->postJson('/api/projects/invitations/accept', [
+        'token' => $invitation['token'],
+    ], projectHeaders($managerA2))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('token');
+
+    $this->assertDatabaseMissing('project_participants', [
+        'project_id' => $project->id,
+        'user_id' => $participantA->id,
+    ]);
 });
 
 it('lets an invited organisation member browse the participant directory without project assignment', function () {

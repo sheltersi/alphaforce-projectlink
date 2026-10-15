@@ -45,6 +45,7 @@ class AuthenticatedUserResource extends JsonResource
                     'name' => $organisation->name,
                     'slug' => $organisation->slug,
                     'role' => $organisation->pivot->role ?? null,
+                    'is_creator' => (int) $organisation->created_by === (int) $this->id,
                 ])
                 ->values()),
 
@@ -56,6 +57,7 @@ class AuthenticatedUserResource extends JsonResource
                     'name' => $current->name,
                     'slug' => $current->slug,
                     'role' => $current->pivot->role ?? null,
+                    'is_creator' => (int) $current->created_by === (int) $this->id,
                 ];
             }),
 

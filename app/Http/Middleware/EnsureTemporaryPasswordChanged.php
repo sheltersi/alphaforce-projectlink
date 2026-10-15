@@ -13,6 +13,7 @@ class EnsureTemporaryPasswordChanged
         'api.auth.logout',
         'api.auth.password.change',
         'api.organisation.invitations.accept',
+        'api.projects.invitations.accept',
     ];
 
     public function handle(Request $request, Closure $next): Response

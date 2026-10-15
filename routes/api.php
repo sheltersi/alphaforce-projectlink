@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\OrganisationReportController;
 use App\Http\Controllers\Api\OrganisationTimesheetController;
 use App\Http\Controllers\Api\OrganisationUserController;
 use App\Http\Controllers\Api\ProjectController;
+use App\Http\Controllers\Api\ProjectInvitationController;
 use App\Http\Controllers\Api\TimesheetController;
 use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\ParticipantProfileController;
@@ -149,6 +150,13 @@ Route::middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])->grou
     Route::name('api.')->group(function () {
         Route::apiResource('projects', ProjectController::class);
     });
+
+    Route::post('projects/{project}/invitations', [ProjectInvitationController::class, 'store'])
+        ->name('api.projects.invitations.store');
+    Route::get('organisation/project-member-statuses', [ProjectInvitationController::class, 'memberStatuses'])
+        ->name('api.organisation.project-member-statuses');
+    Route::post('projects/invitations/accept', [ProjectInvitationController::class, 'accept'])
+        ->name('api.projects.invitations.accept');
 
     Route::get('projects/{project}/applications', [ProjectController::class, 'applications'])
         ->name('api.projects.applications.index');

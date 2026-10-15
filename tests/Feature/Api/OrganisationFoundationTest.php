@@ -149,11 +149,12 @@ it('shows the authenticated organisation with the viewer role', function () {
     $response->assertOk()
         ->assertJsonPath('data.id', $org->id)
         ->assertJsonPath('data.name', $org->name)
-        ->assertJsonPath('data.my_role', 'admin');
+        ->assertJsonPath('data.my_role', 'admin')
+        ->assertJsonPath('data.is_creator', false);
 
     expect($response->json('data'))->toHaveKeys([
         'id', 'name', 'slug', 'description', 'email', 'phone',
-        'website', 'logo_url', 'city', 'country', 'my_role',
+        'website', 'logo_url', 'city', 'country', 'my_role', 'is_creator',
     ]);
 
     $response->assertJsonMissing(['created_by' => $org->created_by]);
@@ -206,13 +207,35 @@ it('allows project managers to view but not update the organisation', function (
     expect($org->fresh()->name)->not->toBe('Hijacked');
 });
 
-it('denies participants organisation access', function () {
-    ['participant' => $participant] = makeOrganisationSetup();
+it('lets every organisation member view the profile but not the roster or edit it', function () {
+    ['org' => $org, 'participant' => $participant] = makeOrganisationSetup();
     [, $headers] = asBearer($participant);
 
-    $this->getJson('/api/organisation', $headers)->assertForbidden();
+    $this->getJson('/api/organisation', $headers)
+        ->assertOk()
+        ->assertJsonPath('data.id', $org->id)
+        ->assertJsonPath('data.my_role', 'member')
+        ->assertJsonPath('data.is_creator', false);
     $this->getJson('/api/organisation/users', $headers)->assertForbidden();
     $this->putJson('/api/organisation', ['name' => 'Hijacked'], $headers)->assertForbidden();
+});
+
+it('allows the organisation creator to edit the profile even when their membership role is member', function () {
+    $creator = User::factory()->create();
+    $creator->assignRole('participant');
+    $org = Organisation::factory()->create(['created_by' => $creator->id]);
+    $org->users()->attach($creator->id, ['role' => 'member']);
+    [, $headers] = asBearer($creator);
+
+    $this->getJson('/api/organisation', $headers)
+        ->assertOk()
+        ->assertJsonPath('data.is_creator', true)
+        ->assertJsonPath('data.my_role', 'member');
+
+    $this->putJson('/api/organisation', ['name' => 'Creator-owned workspace'], $headers)
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Creator-owned workspace')
+        ->assertJsonPath('data.is_creator', true);
 });
 
 it('denies users without an organisation', function () {

@@ -23,7 +23,10 @@ class OrganisationDetailResource extends JsonResource
     {
         return array_merge(
             (new OrganisationResource($this->resource))->toArray($request),
-            ['my_role' => $this->userRole],
+            [
+                'my_role' => $this->userRole,
+                'is_creator' => (int) $this->resource->created_by === (int) $request->user()?->id,
+            ],
         );
     }
 }
