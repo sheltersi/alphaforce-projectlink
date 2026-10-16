@@ -11,7 +11,7 @@ use App\Models\User;
  *
  * - Listing projects requires membership in their organisation. Organisation
  *   admins and unassigned members can browse all; project managers and members
- *   assigned as project managers can only view projects they manage.
+ *   assigned as project managers can view projects they manage or created.
  *   Creating and viewing reports requires an organisation-management role
  *   (Technical Admin or Project Manager).
  * - A member assigned as a project's creator/project manager can manage that
@@ -112,7 +112,8 @@ class ProjectPolicy
         }
 
         return ! $user->shouldRestrictProjectVisibilityToManagedProjects($project->organisation_id)
-            || $project->created_by === $user->id;
+            || $project->created_by === $user->id
+            || $project->originator_id === $user->id;
     }
 
     protected function canManage(User $user, Project $project): bool

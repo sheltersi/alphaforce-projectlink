@@ -21,8 +21,9 @@ abstract class BaseProjectRequest extends FormRequest
 
     /**
      * Rules for the project manager assignment. A project manager must be
-     * a member of the authenticated user's own organisation; the project
-     * creator field scopes their management access to this project.
+     * a member of the authenticated user's own organisation, or an existing
+     * participant on a project in that organisation. The project creator
+     * field scopes their management access to this project.
      *
      * @return array<int, mixed>
      */
@@ -34,10 +35,14 @@ abstract class BaseProjectRequest extends FormRequest
             function (string $attribute, mixed $value, Closure $fail): void {
                 $organisation = $this->user()->currentOrganisation();
                 $manager = User::find($value);
+                $participatesInOrganisationProject = $organisation !== null && $manager !== null
+                    && $manager->projectParticipants()
+                        ->whereHas('project', fn ($query) => $query->where('organisation_id', $organisation->id))
+                        ->exists();
 
                 if ($organisation === null || $manager === null
-                    || ! $manager->belongsToOrganisation($organisation)) {
-                    $fail('The selected project manager must belong to your organisation.');
+                    || (! $manager->belongsToOrganisation($organisation) && ! $participatesInOrganisationProject)) {
+                    $fail('The selected project manager must belong to your organisation or participate in one of its projects.');
                 }
             },
         ];

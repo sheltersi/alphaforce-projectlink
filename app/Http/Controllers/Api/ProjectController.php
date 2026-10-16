@@ -68,7 +68,9 @@ class ProjectController extends Controller
             ->withCount(['applications', 'participants']);
 
         if ($user->shouldRestrictProjectVisibilityToManagedProjects($organisation)) {
-            $query->where('created_by', $user->id);
+            $query->where(fn ($query) => $query
+                ->where('created_by', $user->id)
+                ->orWhere('originator_id', $user->id));
         }
 
         $projects = $query
@@ -106,7 +108,8 @@ class ProjectController extends Controller
                 'end_date' => $validated['end_date'] ?? null,
                 'positions' => $validated['positions'] ?? 1,
                 'created_by' => $assignedManagerId ?? $request->user()->id,
-                'status' => Project::STATUS_DRAFT,
+                'originator_id' => $request->user()->id,
+                'status' => Project::STATUS_OPEN,
             ]);
 
             if ($assignedManagerId !== null) {
@@ -188,14 +191,23 @@ class ProjectController extends Controller
     }
 
     /**
-     * Promote an assigned organisation member to the project_manager
-     * membership role. Organisation admins remain admins.
+     * Promote an assigned organisation member or project participant to the
+     * project_manager membership role. Organisation admins remain admins.
      */
     private function promoteProjectManager(Organisation $organisation, int $userId): void
     {
         $membership = $organisation->organisationUsers()
             ->where('user_id', $userId)
-            ->firstOrFail();
+            ->first();
+
+        if ($membership === null) {
+            $organisation->organisationUsers()->create([
+                'user_id' => $userId,
+                'role' => 'project_manager',
+            ]);
+
+            return;
+        }
 
         if (! in_array($membership->role, ['admin', 'technical_admin'], true)
             && $membership->role !== 'project_manager') {

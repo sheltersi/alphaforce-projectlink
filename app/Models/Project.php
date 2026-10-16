@@ -98,6 +98,7 @@ class Project extends Model
     protected $fillable = [
         'organisation_id',
         'created_by',
+        'originator_id',
         'title',
         'slug',
         'description',
@@ -136,6 +137,12 @@ class Project extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function originator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'originator_id');
     }
 
     /** @return BelongsToMany<Skill, $this> */

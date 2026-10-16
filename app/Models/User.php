@@ -150,9 +150,9 @@ class User extends Authenticatable
     }
 
     /**
-     * Project managers and members assigned to manage projects only browse
-     * the projects they manage. Organisation admins and unassigned members
-     * retain organisation-wide project visibility.
+     * Project managers and members assigned to manage projects are restricted
+     * to projects they manage or originally created. Organisation admins and
+     * unassigned members retain organisation-wide project visibility.
      */
     public function shouldRestrictProjectVisibilityToManagedProjects(Organisation|int $organisation): bool
     {

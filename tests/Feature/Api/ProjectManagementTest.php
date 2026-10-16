@@ -125,6 +125,7 @@ function makeOrgProject(Organisation $org, User $creator, string $status = Proje
     return Project::factory()->create([
         'organisation_id' => $org->id,
         'created_by' => $creator->id,
+        'originator_id' => $creator->id,
         'status' => $status,
     ]);
 }
@@ -166,19 +167,23 @@ it('limits project managers to projects they manage while admins can see every p
     ['orgA' => $orgA, 'adminA' => $adminA, 'managerA' => $managerA, 'managerA2' => $managerA2] = makeProjectSetup();
     $managedProject = makeOrgProject($orgA, $managerA);
     $anotherManagerProject = makeOrgProject($orgA, $managerA2);
+    $createdByManagerProject = makeOrgProject($orgA, $managerA2);
+    $createdByManagerProject->update(['originator_id' => $managerA->id]);
     $adminProject = makeOrgProject($orgA, $adminA);
 
     $this->getJson('/api/projects', projectHeaders($managerA))
         ->assertOk()
-        ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.id', $managedProject->id);
+        ->assertJsonCount(2, 'data')
+        ->assertJsonFragment(['id' => $managedProject->id])
+        ->assertJsonFragment(['id' => $createdByManagerProject->id]);
     $this->getJson("/api/projects/{$managedProject->id}", projectHeaders($managerA))->assertOk();
     $this->getJson("/api/projects/{$anotherManagerProject->id}", projectHeaders($managerA))->assertForbidden();
+    $this->getJson("/api/projects/{$createdByManagerProject->id}", projectHeaders($managerA))->assertOk();
     $this->getJson("/api/projects/{$anotherManagerProject->id}/applications", projectHeaders($managerA))->assertForbidden();
 
     $this->getJson('/api/projects', projectHeaders($adminA))
         ->assertOk()
-        ->assertJsonCount(3, 'data');
+        ->assertJsonCount(4, 'data');
 });
 
 it('returns 404 for another organisation project by ID', function () {
@@ -208,20 +213,28 @@ it('allows organisation members to browse projects but not create them', functio
     $this->getJson('/api/projects', projectHeaders($outsider))->assertForbidden();
 });
 
-it('lets a project manager create a project in their organisation without becoming an organisation admin', function () {
-    ['orgA' => $orgA, 'managerA' => $managerA] = makeProjectSetup();
+it('lets a project manager create an open project in their organisation without becoming an organisation admin', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA, 'managerA2' => $managerA2] = makeProjectSetup();
 
-    $response = $this->postJson('/api/projects', validProjectPayload(), projectHeaders($managerA))
+    $response = $this->postJson('/api/projects', validProjectPayload([
+        'project_manager_id' => $managerA2->id,
+        'role' => 'project_manager',
+    ]), projectHeaders($managerA))
         ->assertCreated()
         ->assertJsonPath('data.organisation_id', $orgA->id)
-        ->assertJsonPath('data.creator.id', $managerA->id)
-        ->assertJsonPath('data.status', Project::STATUS_DRAFT);
+        ->assertJsonPath('data.creator.id', $managerA2->id)
+        ->assertJsonPath('data.originator_id', $managerA->id)
+        ->assertJsonPath('data.status', Project::STATUS_OPEN);
 
     $this->assertDatabaseHas('projects', [
         'id' => $response->json('data.id'),
         'organisation_id' => $orgA->id,
-        'created_by' => $managerA->id,
+        'created_by' => $managerA2->id,
+        'originator_id' => $managerA->id,
     ]);
+    $this->getJson('/api/projects', projectHeaders($managerA))
+        ->assertOk()
+        ->assertJsonFragment(['id' => $response->json('data.id')]);
     $this->assertDatabaseHas('organisation_users', [
         'organisation_id' => $orgA->id,
         'user_id' => $managerA->id,
@@ -275,6 +288,34 @@ it('lets an admin assign a member to manage only a specific project', function (
         ->assertOk()
         ->assertJsonPath('data.current_organisation.role', 'project_manager')
         ->assertJsonPath('data.managed_projects_count', 1);
+});
+
+it('promotes an accepted project participant to project manager without granting organisation admin access', function () {
+    Notification::fake();
+
+    ['orgA' => $orgA, 'managerA' => $managerA] = makeProjectSetup();
+    $project = makeOrgProject($orgA, $managerA, Project::STATUS_OPEN);
+    $acceptedParticipant = User::factory()->create();
+    $acceptedParticipant->assignRole('participant');
+    ProjectParticipant::factory()->create([
+        'project_id' => $project->id,
+        'user_id' => $acceptedParticipant->id,
+        'role' => null,
+    ]);
+
+    $this->patchJson("/api/projects/{$project->id}", [
+        'project_manager_id' => $acceptedParticipant->id,
+        'role' => 'project_manager',
+    ], projectHeaders($managerA))
+        ->assertOk()
+        ->assertJsonPath('data.creator.id', $acceptedParticipant->id);
+
+    $this->assertDatabaseHas('organisation_users', [
+        'organisation_id' => $orgA->id,
+        'user_id' => $acceptedParticipant->id,
+        'role' => 'project_manager',
+    ]);
+    expect($acceptedParticipant->fresh()->isOrganisationAdmin($orgA))->toBeFalse();
 });
 
 it('lets a project manager invite an organisation member to a managed project by email', function () {
@@ -480,7 +521,7 @@ it('filters projects by status, search, manager and dates', function () {
 // Creation
 // ---------------------------------------------------------------------------
 
-it('creates a draft project for the authenticated organisation', function () {
+it('creates an open project for the authenticated organisation', function () {
     ['orgA' => $orgA, 'managerA' => $managerA] = makeProjectSetup();
     $skill = makeCatalogueSkill();
 
@@ -490,7 +531,7 @@ it('creates a draft project for the authenticated organisation', function () {
 
     $response->assertCreated()
         ->assertJsonPath('data.title', 'Community Garden Revival')
-        ->assertJsonPath('data.status', Project::STATUS_DRAFT)
+        ->assertJsonPath('data.status', Project::STATUS_OPEN)
         ->assertJsonPath('data.organisation_id', $orgA->id)
         ->assertJsonPath('data.positions', 5)
         ->assertJsonPath('data.creator.id', $managerA->id)
@@ -503,7 +544,7 @@ it('creates a draft project for the authenticated organisation', function () {
         'title' => 'Community Garden Revival',
         'organisation_id' => $orgA->id,
         'created_by' => $managerA->id,
-        'status' => Project::STATUS_DRAFT,
+        'status' => Project::STATUS_OPEN,
     ]);
 });
 

@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Api;
 
 /**
- * Validation for creating a project. New projects always start as drafts;
- * publishing happens through the lifecycle actions.
+ * Validation for creating a project. New projects always start open;
+ * status transitions happen through the lifecycle actions.
  */
 class StoreProjectRequest extends BaseProjectRequest
 {
@@ -35,7 +35,7 @@ class StoreProjectRequest extends BaseProjectRequest
     public function messages(): array
     {
         return [
-            'status.prohibited' => 'Projects always start as drafts. Use the publish action instead.',
+            'status.prohibited' => 'Projects are created open automatically. Status cannot be set during creation.',
             'organisation_id.prohibited' => 'Projects are always created for your own organisation.',
         ];
     }
