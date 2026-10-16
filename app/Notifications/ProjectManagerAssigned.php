@@ -30,7 +30,7 @@ class ProjectManagerAssigned extends Notification
             'title' => 'Project manager assignment',
             'message' => 'You were assigned as project manager for '.$this->project->title.' at '.$this->project->organisation->name.'.',
             'body' => [
-                'An organisation administrator assigned you the Project Manager role for '.$this->project->title.'.',
+                'You have been assigned the Project Manager role for '.$this->project->title.'.',
                 'Organisation: '.$this->project->organisation->name,
                 'You can now manage this project in OrangePie.',
             ],
@@ -48,7 +48,7 @@ class ProjectManagerAssigned extends Notification
             ->from(config('mail.from.address'), 'OrangePie')
             ->subject('You’ve been assigned as project manager for '.$this->project->title)
             ->greeting('Hello '.$recipientName.',')
-            ->line('An organisation administrator assigned you the Project Manager role for '.$this->project->title.'.')
+            ->line('You have been assigned the Project Manager role for '.$this->project->title.'.')
             ->line('Organisation: '.$this->project->organisation->name)
             ->action('View your projects', $projectsUrl)
             ->line('You can now manage this project in OrangePie.');

@@ -93,20 +93,20 @@ function validProjectPayload(array $overrides = []): array
     ], $overrides);
 }
 
-it('emails a member when an admin assigns them during project creation', function () {
+it('emails the selected project manager when a project manager assigns them during project creation', function () {
     Notification::fake();
 
-    ['adminA' => $adminA, 'participantA' => $participantA] = makeProjectSetup();
+    ['orgA' => $orgA, 'managerA' => $managerA, 'participantA' => $participantA] = makeProjectSetup();
 
     $this->postJson('/api/projects', validProjectPayload([
         'project_manager_id' => $participantA->id,
         'role' => 'project_manager',
-    ]), projectHeaders($adminA))
+    ]), projectHeaders($managerA))
         ->assertCreated()
         ->assertJsonPath('data.creator.id', $participantA->id);
 
     $this->assertDatabaseHas('organisation_users', [
-        'organisation_id' => $adminA->currentOrganisation()->id,
+        'organisation_id' => $orgA->id,
         'user_id' => $participantA->id,
         'role' => 'project_manager',
     ]);
@@ -118,6 +118,7 @@ it('emails a member when an admin assigns them during project creation', functio
             && $mail->subject === 'You’ve been assigned as project manager for Community Garden Revival'
             && $mail->actionText === 'View your projects';
     });
+    Notification::assertNotSentTo($managerA, ProjectManagerAssigned::class);
 });
 
 function makeOrgProject(Organisation $org, User $creator, string $status = Project::STATUS_DRAFT): Project
@@ -521,7 +522,7 @@ it('filters projects by status, search, manager and dates', function () {
 // Creation
 // ---------------------------------------------------------------------------
 
-it('creates an open project for the authenticated organisation', function () {
+it('creates an open project without assigning a manager when none is selected', function () {
     ['orgA' => $orgA, 'managerA' => $managerA] = makeProjectSetup();
     $skill = makeCatalogueSkill();
 
@@ -534,8 +535,7 @@ it('creates an open project for the authenticated organisation', function () {
         ->assertJsonPath('data.status', Project::STATUS_OPEN)
         ->assertJsonPath('data.organisation_id', $orgA->id)
         ->assertJsonPath('data.positions', 5)
-        ->assertJsonPath('data.creator.id', $managerA->id)
-        ->assertJsonPath('data.creator.name', $managerA->name)
+        ->assertJsonPath('data.originator_id', $managerA->id)
         ->assertJsonPath('message', 'Project created.');
 
     expect($response->json('data.skills'))->toContain('First Aid');
@@ -543,9 +543,15 @@ it('creates an open project for the authenticated organisation', function () {
     $this->assertDatabaseHas('projects', [
         'title' => 'Community Garden Revival',
         'organisation_id' => $orgA->id,
-        'created_by' => $managerA->id,
+        'created_by' => null,
+        'originator_id' => $managerA->id,
         'status' => Project::STATUS_OPEN,
     ]);
+
+    $projectId = $response->json('data.id');
+    $this->putJson("/api/projects/{$projectId}", ['title' => 'Unassigned Garden'], projectHeaders($managerA))
+        ->assertOk()
+        ->assertJsonPath('data.title', 'Unassigned Garden');
 });
 
 it('lets a technical admin assign another manager on creation', function () {
@@ -711,6 +717,16 @@ it('publishes a complete draft project', function () {
         ->assertJsonPath('message', 'Project published.');
 
     expect($project->fresh()->status)->toBe(Project::STATUS_OPEN);
+});
+
+it('allows a project manager to publish a project they created after assigning its manager', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA, 'managerA2' => $managerA2] = makeProjectSetup();
+    $project = makeOrgProject($orgA, $managerA2, Project::STATUS_DRAFT);
+    $project->update(['originator_id' => $managerA->id]);
+
+    $this->postJson("/api/projects/{$project->id}/publish", [], projectHeaders($managerA))
+        ->assertOk()
+        ->assertJsonPath('data.status', Project::STATUS_OPEN);
 });
 
 it('refuses to publish incomplete or non-draft projects', function () {

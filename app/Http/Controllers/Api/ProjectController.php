@@ -107,7 +107,7 @@ class ProjectController extends Controller
                 'start_date' => $validated['start_date'] ?? null,
                 'end_date' => $validated['end_date'] ?? null,
                 'positions' => $validated['positions'] ?? 1,
-                'created_by' => $assignedManagerId ?? $request->user()->id,
+                'created_by' => $assignedManagerId,
                 'originator_id' => $request->user()->id,
                 'status' => Project::STATUS_OPEN,
             ]);

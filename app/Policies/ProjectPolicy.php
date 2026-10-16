@@ -20,9 +20,9 @@ use App\Models\User;
  *   unassigned members can browse across the organisation, while project
  *   managers can only see data for projects they manage. Decisions and
  *   assignment edits remain restricted to project managers / admins.
- * - Updating, lifecycle transitions, deletion and application decisions
- *   additionally require the user to be the project creator or a Technical
- *   Admin, following the existing creator-or-admin precedent
+ * - Updating, deletion and application decisions additionally require the
+ *   assigned project manager, the originator of an unassigned project, or an
+ *   organisation admin. Project originators may publish their own projects.
  *   (ProjectController@showApplication).
  * - Participants and outsiders are denied; cross-org access is denied.
  */
@@ -66,7 +66,11 @@ class ProjectPolicy
 
     public function publish(User $user, Project $project): bool
     {
-        return $this->canManage($user, $project);
+        return $this->canManage($user, $project)
+            || ($project->originator_id === $user->id
+                && $project->organisation_id !== null
+                && $user->belongsToOrganisation($project->organisation_id)
+                && $user->isOrganisationManager($project->organisation_id));
     }
 
     public function unpublish(User $user, Project $project): bool
@@ -123,6 +127,7 @@ class ProjectPolicy
         }
 
         return $project->created_by === $user->id
+            || ($project->created_by === null && $project->originator_id === $user->id)
             || $user->isOrganisationAdmin($project->organisation_id);
     }
 }
