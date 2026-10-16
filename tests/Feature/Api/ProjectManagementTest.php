@@ -208,6 +208,28 @@ it('allows organisation members to browse projects but not create them', functio
     $this->getJson('/api/projects', projectHeaders($outsider))->assertForbidden();
 });
 
+it('lets a project manager create a project in their organisation without becoming an organisation admin', function () {
+    ['orgA' => $orgA, 'managerA' => $managerA] = makeProjectSetup();
+
+    $response = $this->postJson('/api/projects', validProjectPayload(), projectHeaders($managerA))
+        ->assertCreated()
+        ->assertJsonPath('data.organisation_id', $orgA->id)
+        ->assertJsonPath('data.creator.id', $managerA->id)
+        ->assertJsonPath('data.status', Project::STATUS_DRAFT);
+
+    $this->assertDatabaseHas('projects', [
+        'id' => $response->json('data.id'),
+        'organisation_id' => $orgA->id,
+        'created_by' => $managerA->id,
+    ]);
+    $this->assertDatabaseHas('organisation_users', [
+        'organisation_id' => $orgA->id,
+        'user_id' => $managerA->id,
+        'role' => 'manager',
+    ]);
+    expect($managerA->fresh()->isOrganisationAdmin($orgA))->toBeFalse();
+});
+
 it('lets an admin assign a member to manage only a specific project', function () {
     Notification::fake();
 
