@@ -38,14 +38,9 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     public const SEED_NAMES = [
-        'Liam van der Berg',
-        'Zara Almeida',
-        'Noah Okonkwo',
-        'Aisha Rahman',
-        'Lucas Moreau',
-        'Priya Sharma',
-        'Mateo Rossi',
-        'Elena Petrova',
+        'Thandi Nkosi',
+        'Johan van Wyk',
+        'Naledi Dlamini',
     ];
 
     /**
@@ -134,7 +129,7 @@ class User extends Authenticatable
             return true;
         }
 
-        return in_array(strtolower((string) $this->organisationRole($organisation)), ['admin', 'manager', 'technical_admin', 'project_manager'], true);
+        return in_array(strtolower((string) $this->organisationRole($organisation)), ['admin', 'org_admin', 'manager', 'technical_admin', 'project_manager'], true);
     }
 
     /**
@@ -146,7 +141,7 @@ class User extends Authenticatable
             return true;
         }
 
-        return in_array(strtolower((string) $this->organisationRole($organisation)), ['admin', 'technical_admin'], true);
+        return in_array(strtolower((string) $this->organisationRole($organisation)), ['admin', 'org_admin', 'technical_admin'], true);
     }
 
     /**

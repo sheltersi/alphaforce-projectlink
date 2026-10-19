@@ -27,7 +27,10 @@ class ProjectSeeder extends Seeder
         $this->resetProjectTables();
         $this->removeLegacyGeneratedParticipants();
 
-        $admin = $this->user('admin@example.com', 'Admin User', 'technical_admin');
+        $technicalAdmin = $this->user('admin@example.com', 'Admin User', 'technical_admin');
+        $orgAdmin = $this->user('orgadmin@example.com', 'Melissa Bridges', 'org_admin');
+        $orgAdmin->update(['name' => 'Melissa Bridges']);
+        $orgAdmin->removeRole('technical_admin');
         $manager = $this->user('manager@example.com', 'Manager User', 'project_manager');
         $alice = $this->user('alice.williams@example.com', 'Alice Williams', 'project_manager');
 
@@ -35,21 +38,21 @@ class ProjectSeeder extends Seeder
 
         $this->seedParticipantProfiles($participants);
 
-        $organisations = $this->seedOrganisations($admin);
-        $this->seedOrganisationUsers($organisations, $admin, $manager, $alice, $participants);
+        $organisations = $this->seedOrganisations($orgAdmin);
+        $this->seedOrganisationUsers($organisations, $orgAdmin, $technicalAdmin, $manager, $alice, $participants);
 
         $this->seedProjects($manager, $alice);
 
         $this->seedApplications($participants);
-        $this->seedParticipants($admin, $participants);
+        $this->seedParticipants($technicalAdmin, $participants);
         foreach ($participants as $participant) {
             $participant->syncProjectParticipationRole();
         }
-        $admin->syncProjectParticipationRole();
+        $technicalAdmin->syncProjectParticipationRole();
         $this->seedTimesheets($manager);
     }
 
-    private function seedOrganisations(User $admin): Collection
+    private function seedOrganisations(User $orgAdmin): Collection
     {
         $seeded = collect([]);
 
@@ -57,7 +60,7 @@ class ProjectSeeder extends Seeder
             $seeded->push(
                 Organisation::updateOrCreate(
                     ['name' => $name],
-                    array_merge($details, ['created_by' => $admin->id]),
+                    array_merge($details, ['created_by' => $orgAdmin->id]),
                 ),
             );
         }
@@ -67,14 +70,16 @@ class ProjectSeeder extends Seeder
 
     private function seedOrganisationUsers(
         Collection $organisations,
-        User $admin,
+        User $orgAdmin,
+        User $technicalAdmin,
         User $manager,
         User $alice,
         Collection $participants,
     ): void {
         foreach ($organisations as $organisation) {
+            $organisation->users()->detach($technicalAdmin->id);
             $organisation->users()->syncWithoutDetaching([
-                $admin->id => ['role' => 'admin'],
+                $orgAdmin->id => ['role' => 'org_admin'],
                 $manager->id => ['role' => 'manager'],
                 $alice->id => ['role' => 'manager'],
             ]);

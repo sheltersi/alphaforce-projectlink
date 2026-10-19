@@ -210,7 +210,7 @@ it('requires an organisation name before completing onboarding', function () {
         ->assertStatus(422)->assertJsonValidationErrors('name');
 });
 
-it('completes onboarding and makes the user technical admin', function () {
+it('completes onboarding and makes the user an organisation admin', function () {
     $response = $this->postJson('/api/auth/register', registrationPayload());
     $headers = ['Authorization' => 'Bearer '.$response->json('token')];
     $user = User::where('email', 'jordan@example.com')->firstOrFail();
@@ -232,9 +232,15 @@ it('completes onboarding and makes the user technical admin', function () {
     $organisationId = $completed->json('data.organisation.id');
 
     $user = $user->fresh();
-    expect($user->hasRole('technical_admin'))->toBeTrue();
+    expect($user->hasRole('org_admin'))->toBeTrue();
+    expect($user->hasRole('technical_admin'))->toBeFalse();
     expect($user->belongsToOrganisation($organisationId))->toBeTrue();
-    expect($user->organisationRole($organisationId))->toBe('admin');
+    expect($user->organisationRole($organisationId))->toBe('org_admin');
+    expect($user->isOrganisationAdmin($organisationId))->toBeTrue();
+
+    $otherOrganisation = Organisation::factory()->create();
+    $otherOrganisation->users()->attach($user->id, ['role' => 'member']);
+    expect($user->isOrganisationAdmin($otherOrganisation))->toBeFalse();
 
     $this->assertDatabaseHas('organisations', [
         'id' => $organisationId,
@@ -244,7 +250,7 @@ it('completes onboarding and makes the user technical admin', function () {
     $this->assertDatabaseHas('organisation_users', [
         'organisation_id' => $organisationId,
         'user_id' => $user->id,
-        'role' => 'admin',
+        'role' => 'org_admin',
     ]);
 
     // Frontend routing state reflects completion everywhere.
@@ -258,7 +264,7 @@ it('completes onboarding and makes the user technical admin', function () {
         ->assertOk()
         ->assertJsonPath('data.onboarding.completed', true)
         ->assertJsonPath('data.current_organisation.id', $organisationId)
-        ->assertJsonPath('data.current_organisation.role', 'admin');
+        ->assertJsonPath('data.current_organisation.role', 'org_admin');
 
     // Phase 1 endpoints are now accessible.
     $this->getJson('/api/organisation', $headers)
