@@ -8,11 +8,13 @@ use App\Models\ParticipantProfile;
 use App\Models\ResumeShareLink;
 use App\Models\User;
 use App\Services\ParticipantProfileService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -170,6 +172,111 @@ class ParticipantProfileController extends Controller
         ]);
     }
 
+    public function documents(Request $request): InertiaResponse
+    {
+        $profile = $this->profiles->findForUser($request->user());
+        $documents = $profile?->documents->map(fn (ParticipantDocument $document) => [
+            'id' => $document->id,
+            'name' => $document->original_name,
+            'category' => $document->category,
+            'size' => $document->file_size,
+            'mimeType' => $document->mime_type,
+            'uploadedAt' => $document->created_at?->toISOString(),
+            'downloadUrl' => route('onboarding.profile.document.download', ['document' => $document->id]),
+        ])->values() ?? collect();
+        $requiredCategories = ['ID', 'Proof of residence', 'SARS document'];
+
+        return Inertia::render('documents/index', [
+            'documents' => $documents,
+            'requiredDocuments' => collect($requiredCategories)->map(fn (string $category) => [
+                'category' => $category,
+                'uploaded' => $documents->contains('category', $category),
+            ])->values(),
+        ]);
+    }
+
+    public function updateDocument(Request $request, int $documentId): RedirectResponse|JsonResponse
+    {
+        $profile = $request->user()->participantProfile()->firstOrFail();
+        $document = $profile->documents()->findOrFail($documentId);
+
+        if (is_string($request->input('original_name'))) {
+            $request->merge(['original_name' => trim($request->input('original_name'))]);
+        }
+
+        $validated = $request->validate([
+            'original_name' => ['sometimes', 'required', 'string', 'max:255'],
+            'replacement_file' => ['sometimes', 'required', 'file', 'max:10240', 'mimes:pdf,doc,docx,png,jpg,jpeg'],
+        ]);
+
+        $replacement = $request->file('replacement_file');
+        if (! array_key_exists('original_name', $validated) && $replacement === null) {
+            throw ValidationException::withMessages([
+                'document' => ['Provide a new document name or choose a replacement file.'],
+            ]);
+        }
+
+        $attributes = [];
+        if (array_key_exists('original_name', $validated)) {
+            $attributes['original_name'] = $validated['original_name'];
+        }
+
+        $newPath = null;
+        if ($replacement !== null) {
+            $newPath = $replacement->store("participant-documents/{$profile->id}", 'local');
+            if (! is_string($newPath)) {
+                throw new \RuntimeException('The replacement document could not be stored.');
+            }
+
+            $attributes += [
+                'file_path' => $newPath,
+                'disk' => 'local',
+                'file_size' => $replacement->getSize(),
+                'mime_type' => $replacement->getMimeType() ?? 'application/octet-stream',
+            ];
+        }
+
+        $oldPath = $document->file_path;
+        $oldDisk = $document->disk;
+
+        try {
+            DB::transaction(fn () => $document->update($attributes));
+        } catch (\Throwable $exception) {
+            if ($newPath !== null) {
+                Storage::disk('local')->delete($newPath);
+            }
+
+            throw $exception;
+        }
+
+        if ($newPath !== null && $oldPath !== $newPath) {
+            Storage::disk($oldDisk)->delete($oldPath);
+        }
+
+        if ($this->wantsJson($request)) {
+            return response()->json(['message' => 'Document updated successfully.']);
+        }
+
+        return back()->with('success', 'Document updated successfully.');
+    }
+
+    public function viewDocument(Request $request, int $documentId)
+    {
+        $profile = $request->user()->participantProfile()->firstOrFail();
+        $document = $profile->documents()->findOrFail($documentId);
+
+        if (! Storage::disk($document->disk)->exists($document->file_path)) {
+            abort(404, 'File not found.');
+        }
+
+        return Storage::disk($document->disk)->response(
+            $document->file_path,
+            $document->original_name,
+            ['Content-Type' => $document->mime_type ?? 'application/octet-stream'],
+            'inline',
+        );
+    }
+
     /**
      * Generate and download the participant's resume as a PDF.
      */
@@ -249,7 +356,7 @@ class ParticipantProfileController extends Controller
             ->map(fn ($w) => strtoupper($w[0]))
             ->implode('');
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('resume.pdf', compact('resume', 'location', 'tagline', 'initials'));
+        $pdf = Pdf::loadView('resume.pdf', compact('resume', 'location', 'tagline', 'initials'));
         $pdf->setPaper('a4', 'portrait');
 
         return $pdf->download(str_replace(' ', '_', $resume['full_name']).'_resume.pdf');

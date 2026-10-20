@@ -3,9 +3,26 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StoreParticipantProfileRequest extends FormRequest
 {
+    private const DOCUMENT_CATEGORIES = [
+        'CV',
+        'Certificate',
+        'Supporting document',
+        'ID',
+        'Proof of residence',
+        'SARS document',
+        'Bank letter',
+    ];
+
+    private const REQUIRED_DOCUMENT_CATEGORIES = [
+        'ID',
+        'Proof of residence',
+        'SARS document',
+    ];
+
     public function authorize(): bool
     {
         return (bool) $this->user();
@@ -68,15 +85,80 @@ class StoreParticipantProfileRequest extends FormRequest
             'documents.*.original_name' => ['required_with:documents', 'string', 'max:255'],
             'documents.*.file_size' => ['nullable', 'integer', 'min:1', 'max:10485760'], // 10 MB
             'documents.*.mime_type' => ['nullable', 'string', 'max:255'],
-            'documents.*.category' => ['nullable', 'string', 'in:CV,Certificate,Supporting document'],
+            'documents.*.category' => ['nullable', 'string', 'in:'.implode(',', self::DOCUMENT_CATEGORIES)],
             'documents.*.data_url' => ['nullable', 'string', 'max:15000000'], // base64 for ~10MB
             'documents.*.file_path' => ['nullable', 'string', 'max:255'], // existing documents round-tripped from the UI
             // For multipart file uploads, the frontend may send files as `document_files` array
             'document_files' => ['nullable', 'array'],
             'document_files.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,png,jpg,jpeg'],
             'document_categories' => ['nullable', 'array'],
-            'document_categories.*' => ['nullable', 'string', 'in:CV,Certificate,Supporting document'],
+            'document_categories.*' => ['nullable', 'string', 'in:'.implode(',', self::DOCUMENT_CATEGORIES)],
         ];
+    }
+
+    /**
+     * Require identity documents only when the candidate completes onboarding.
+     * Draft saves can still be made while the candidate gathers documents.
+     *
+     * @return array<int, \Closure(Validator): void>
+     */
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            if ($this->input('redirect_to') !== 'dashboard') {
+                return;
+            }
+
+            $profile = $this->user()?->participantProfile;
+            $existingDocuments = $profile?->documents()->get()->keyBy('file_path') ?? collect();
+            $availableCategories = [];
+            $documents = $this->input('documents');
+
+            if (is_array($documents)) {
+                foreach ($documents as $document) {
+                    if (! is_array($document)) {
+                        continue;
+                    }
+
+                    $category = $document['category'] ?? null;
+                    $dataUrl = $document['data_url'] ?? null;
+                    $encodedContent = is_string($dataUrl)
+                        ? (explode(';base64,', $dataUrl, 2)[1] ?? null)
+                        : null;
+                    $hasNewUpload = is_string($document['data_url'] ?? null)
+                        && str_starts_with($document['data_url'], 'data:')
+                        && is_string($encodedContent)
+                        && $encodedContent !== ''
+                        && base64_decode($encodedContent, true) !== false;
+                    $hasExistingUpload = isset($document['file_path'])
+                        && $existingDocuments->has($document['file_path']);
+
+                    if (($hasNewUpload || $hasExistingUpload) && in_array($category, self::DOCUMENT_CATEGORIES, true)) {
+                        $availableCategories[] = $category;
+                    }
+                }
+            } else {
+                $availableCategories = $existingDocuments->pluck('category')->all();
+            }
+
+            $uploadedFiles = $this->file('document_files', []);
+            if (! is_array($uploadedFiles)) {
+                $uploadedFiles = $uploadedFiles === null ? [] : [$uploadedFiles];
+            }
+            $fileCategories = $this->input('document_categories', []);
+            foreach ($uploadedFiles as $index => $file) {
+                $category = $fileCategories[$index] ?? null;
+                if ($file?->isValid() && in_array($category, self::DOCUMENT_CATEGORIES, true)) {
+                    $availableCategories[] = $category;
+                }
+            }
+
+            foreach (self::REQUIRED_DOCUMENT_CATEGORIES as $category) {
+                if (! in_array($category, $availableCategories, true)) {
+                    $validator->errors()->add('documents', "Upload the required {$category}.");
+                }
+            }
+        }];
     }
 
     /**

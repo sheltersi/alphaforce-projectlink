@@ -441,6 +441,10 @@ function TeamCard() {
 }
 
 function NotificationsCard() {
+    const { unreadNotificationsCount = 0 } = usePage().props as unknown as {
+        unreadNotificationsCount?: number;
+    };
+
     return (
         <section
             id="notifications"
@@ -458,12 +462,22 @@ function NotificationsCard() {
                     <Bell className="size-6 text-muted-foreground/50" />
                 </div>
                 <p className="text-sm font-semibold text-foreground">
-                    All caught up
+                    {unreadNotificationsCount > 0
+                        ? `${unreadNotificationsCount} unread ${unreadNotificationsCount === 1 ? "notification" : "notifications"}`
+                        : "All caught up"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                    No new notifications. We'll let you know when something
-                    needs your attention.
+                    {unreadNotificationsCount > 0
+                        ? "You have updates waiting in your notification inbox."
+                        : "We’ll let you know when something needs your attention."}
                 </p>
+                <Link
+                    href="/notifications"
+                    className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-sienna transition hover:text-sienna-700"
+                >
+                    View notifications
+                    <ChevronRight className="size-3.5" />
+                </Link>
             </div>
         </section>
     );
@@ -1033,6 +1047,10 @@ export default function Dashboard() {
                                 </div>
                             </section>
                         </aside>
+                    </div>
+
+                    <div className="mt-6">
+                        <NotificationsCard />
                     </div>
 
                     {/* Analytics */}

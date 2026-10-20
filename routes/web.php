@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\NotificationPageController;
 use App\Http\Controllers\ParticipantProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TimesheetController;
@@ -42,6 +43,18 @@ Route::middleware(['auth', 'verified', 'ensure.participant.profile'])->group(fun
     Route::get('projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('dashboard/resume', [ParticipantProfileController::class, 'resume'])
         ->name('dashboard.resume');
+    Route::get('documents', [ParticipantProfileController::class, 'documents'])
+        ->name('documents.index');
+    Route::get('documents/{document}/view', [ParticipantProfileController::class, 'viewDocument'])
+        ->name('documents.view');
+    Route::patch('documents/{document}', [ParticipantProfileController::class, 'updateDocument'])
+        ->name('documents.update');
+    Route::get('notifications', [NotificationPageController::class, 'index'])
+        ->name('notifications.index');
+    Route::post('notifications/read-all', [NotificationPageController::class, 'markAllRead'])
+        ->name('notifications.read-all');
+    Route::post('notifications/{notification}/read', [NotificationPageController::class, 'markRead'])
+        ->name('notifications.read');
     Route::get('dashboard/resume/download', [ParticipantProfileController::class, 'downloadPdf'])
         ->name('dashboard.resume.download');
     Route::post('dashboard/resume/share', [ParticipantProfileController::class, 'generateShareLink'])

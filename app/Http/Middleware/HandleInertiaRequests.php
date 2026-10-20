@@ -44,6 +44,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'canManageProjects' => $request->user()?->hasRole('project_manager') ?? false,
             'projectsCount' => $this->openProjectsCount(),
+            'unreadNotificationsCount' => $this->unreadNotificationsCount($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
@@ -59,6 +60,19 @@ class HandleInertiaRequests extends Middleware
                 ->count();
         } catch (\Throwable) {
             // Table may not exist yet (e.g. before migrations in a fresh checkout).
+            return 0;
+        }
+    }
+
+    private function unreadNotificationsCount(Request $request): int
+    {
+        if (! $request->user()) {
+            return 0;
+        }
+
+        try {
+            return $request->user()->unreadNotifications()->count();
+        } catch (\Throwable) {
             return 0;
         }
     }
