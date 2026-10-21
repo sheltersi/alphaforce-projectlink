@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ChangeTemporaryPasswordRequest;
 use App\Http\Requests\Api\LoginRequest;
 use App\Http\Requests\Api\RegisterRequest;
+use App\Http\Requests\Settings\ProfileUpdateRequest;
 use App\Http\Resources\Organisation\AuthenticatedUserResource;
 use App\Models\User;
 use App\Services\OrganisationInvitationService;
@@ -141,5 +142,21 @@ class AuthController extends Controller
         $user = $request->user()->load(['roles', 'organisations']);
 
         return new AuthenticatedUserResource($user);
+    }
+
+    public function updateProfile(ProfileUpdateRequest $request): AuthenticatedUserResource
+    {
+        $user = $request->user();
+        $user->fill($request->validated());
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+        $user->load(['roles', 'organisations']);
+
+        return (new AuthenticatedUserResource($user))
+            ->additional(['message' => 'Account details updated.']);
     }
 }

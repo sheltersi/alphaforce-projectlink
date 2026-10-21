@@ -26,6 +26,7 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'verified', 'ensure.participant.profile'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::inertia('help', 'help/index')->name('help.index');
 
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('my-projects', [ProjectController::class, 'myProjects'])->name('my-projects.index');

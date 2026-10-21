@@ -147,7 +147,7 @@ const navGroups: NavGroup[] = [
             },
             {
                 title: "Help center",
-                href: `${dashboard()}#help`,
+                href: "/help",
                 icon: LifeBuoy,
             },
         ],
