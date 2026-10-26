@@ -34,11 +34,11 @@ function makeProjectSetup(): array
 
     $managerA = User::factory()->create();
     $managerA->assignRole('project_manager');
-    $orgA->users()->attach($managerA->id, ['role' => 'project_manager']);
+    $orgA->users()->attach($managerA->id, ['role' => 'manager']);
 
     $managerA2 = User::factory()->create();
     $managerA2->assignRole('project_manager');
-    $orgA->users()->attach($managerA2->id, ['role' => 'project_manager']);
+    $orgA->users()->attach($managerA2->id, ['role' => 'manager']);
 
     $participantA = User::factory()->create();
     $participantA->assignRole('participant');
@@ -239,7 +239,7 @@ it('lets a project manager create an open project in their organisation without 
     $this->assertDatabaseHas('organisation_users', [
         'organisation_id' => $orgA->id,
         'user_id' => $managerA->id,
-        'role' => 'project_manager',
+        'role' => 'manager',
     ]);
     expect($managerA->fresh()->isOrganisationAdmin($orgA))->toBeFalse();
 });

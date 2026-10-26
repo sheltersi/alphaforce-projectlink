@@ -16,9 +16,9 @@ function reportSetup(): array
     $manager = User::factory()->create();
     $member = User::factory()->create();
     $otherManager = User::factory()->create();
-    $organisation->users()->attach($manager->id, ['role' => 'project_manager']);
+    $organisation->users()->attach($manager->id, ['role' => 'manager']);
     $organisation->users()->attach($member->id, ['role' => 'member']);
-    $otherOrganisation->users()->attach($otherManager->id, ['role' => 'project_manager']);
+    $otherOrganisation->users()->attach($otherManager->id, ['role' => 'manager']);
 
     return compact('organisation', 'manager', 'member', 'otherOrganisation', 'otherManager');
 }

@@ -184,7 +184,7 @@ it('lets a project manager approve but never the owner', function () {
 
     $manager = User::factory()->create();
     $manager->markEmailAsVerified();
-    OrganisationUser::create(['organisation_id' => $organisationId, 'user_id' => $manager->id, 'role' => 'project_manager']);
+    OrganisationUser::create(['organisation_id' => $organisationId, 'user_id' => $manager->id, 'role' => 'manager']);
 
     $this->actingAs($owner)->post(route('timesheets.entries.store'), entryPayload($assignment));
     $entry = TimesheetEntry::first();
@@ -213,7 +213,7 @@ it('requires a comment on reject and lets the participant correct and resubmit',
 
     $manager = User::factory()->create();
     $manager->markEmailAsVerified();
-    OrganisationUser::create(['organisation_id' => $organisationId, 'user_id' => $manager->id, 'role' => 'project_manager']);
+    OrganisationUser::create(['organisation_id' => $organisationId, 'user_id' => $manager->id, 'role' => 'manager']);
 
     $this->actingAs($owner)->post(route('timesheets.entries.store'), entryPayload($assignment));
     $entry = TimesheetEntry::first();

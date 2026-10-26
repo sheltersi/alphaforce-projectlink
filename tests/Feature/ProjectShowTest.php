@@ -88,7 +88,7 @@ it('lets a project manager open their applications page from project discovery',
     $manager->markEmailAsVerified();
     $applicant = User::factory()->create();
     $organisation = Organisation::factory()->create(['created_by' => $manager->id]);
-    $organisation->users()->attach($manager->id, ['role' => 'project_manager']);
+    $organisation->users()->attach($manager->id, ['role' => 'manager']);
     $project = Project::factory()->create([
         'organisation_id' => $organisation->id,
         'created_by' => $manager->id,

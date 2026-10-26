@@ -28,6 +28,7 @@ class ProjectSeeder extends Seeder
         $this->removeLegacyGeneratedParticipants();
 
         $admin = $this->user('admin@example.com', 'Admin User', 'technical_admin');
+        $manager = $this->user('manager@example.com', 'Manager User', 'project_manager');
         $alice = $this->user('alice.williams@example.com', 'Alice Williams', 'project_manager');
 
         $participants = User::query()->whereIn('name', User::SEED_NAMES)->get();
@@ -35,9 +36,9 @@ class ProjectSeeder extends Seeder
         $this->seedParticipantProfiles($participants);
 
         $organisations = $this->seedOrganisations($admin);
-        $this->seedOrganisationUsers($organisations, $admin, $alice, $participants);
+        $this->seedOrganisationUsers($organisations, $admin, $manager, $alice, $participants);
 
-        $this->seedProjects($alice);
+        $this->seedProjects($manager, $alice);
 
         $this->seedApplications($participants);
         $this->seedParticipants($admin, $participants);
@@ -45,7 +46,7 @@ class ProjectSeeder extends Seeder
             $participant->syncProjectParticipationRole();
         }
         $admin->syncProjectParticipationRole();
-        $this->seedTimesheets($alice);
+        $this->seedTimesheets($manager);
     }
 
     private function seedOrganisations(User $admin): Collection
@@ -67,19 +68,15 @@ class ProjectSeeder extends Seeder
     private function seedOrganisationUsers(
         Collection $organisations,
         User $admin,
+        User $manager,
         User $alice,
         Collection $participants,
     ): void {
-        $legacyManager = User::query()->where('email', 'manager@example.com')->first();
-
         foreach ($organisations as $organisation) {
-            if ($legacyManager !== null) {
-                $organisation->users()->detach($legacyManager->id);
-            }
-
             $organisation->users()->syncWithoutDetaching([
                 $admin->id => ['role' => 'admin'],
-                $alice->id => ['role' => 'project_manager'],
+                $manager->id => ['role' => 'manager'],
+                $alice->id => ['role' => 'manager'],
             ]);
 
             foreach ($participants->shuffle()->take(random_int(2, 4)) as $member) {
@@ -155,9 +152,11 @@ class ProjectSeeder extends Seeder
         }
     }
 
-    private function seedProjects(User $projectManager): void
+    private function seedProjects(User $manager, User $alice): void
     {
         foreach (Project::SEED as $data) {
+            $projectManager = $data['title'] === 'Community Garden Revitalisation' ? $alice : $manager;
+
             $project = Project::create([
                 'organisation_id' => Organisation::inRandomOrder()->value('id'),
                 'created_by' => $projectManager->id,
@@ -272,7 +271,7 @@ class ProjectSeeder extends Seeder
 
     }
 
-    private function seedTimesheets(User $projectManager): void
+    private function seedTimesheets(User $manager): void
     {
         $members = ProjectParticipant::where('status', ProjectParticipant::STATUS_ACTIVE)
             ->whereHas('project', fn ($query) => $query->where('status', Project::STATUS_IN_PROGRESS))
@@ -287,7 +286,7 @@ class ProjectSeeder extends Seeder
                 $lastWeekStart,
                 $lastWeekStart->copy()->addDays(6),
                 Timesheet::STATUS_APPROVED,
-                $projectManager,
+                $manager,
             );
 
             $this->makeTimesheet(

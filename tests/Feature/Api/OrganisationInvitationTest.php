@@ -28,7 +28,7 @@ function invitationSetup(): array
     $otherAdmin->assignRole('technical_admin');
 
     $organisation->users()->attach($admin->id, ['role' => 'admin']);
-    $organisation->users()->attach($manager->id, ['role' => 'project_manager']);
+    $organisation->users()->attach($manager->id, ['role' => 'manager']);
     $organisation->users()->attach($member->id, ['role' => 'member']);
     $otherOrganisation->users()->attach($otherAdmin->id, ['role' => 'admin']);
 

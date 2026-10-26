@@ -16,7 +16,7 @@ function reviewQueueSetup(?Organisation $org = null): array
     $org ??= Organisation::factory()->create();
 
     $manager = User::factory()->create();
-    $org->users()->attach($manager->id, ['role' => 'project_manager']);
+    $org->users()->attach($manager->id, ['role' => 'manager']);
 
     $member = User::factory()->create();
     $org->users()->attach($member->id, ['role' => 'member']);
