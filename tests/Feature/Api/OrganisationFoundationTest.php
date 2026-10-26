@@ -23,7 +23,7 @@ function makeOrganisationSetup(): array
 
     $manager = User::factory()->create();
     $manager->assignRole('project_manager');
-    $org->users()->attach($manager->id, ['role' => 'manager']);
+    $org->users()->attach($manager->id, ['role' => 'project_manager']);
 
     $participant = User::factory()->create();
     $participant->assignRole('participant');
@@ -199,7 +199,7 @@ it('allows project managers to view but not update the organisation', function (
     $this->getJson('/api/organisation', $headers)
         ->assertOk()
         ->assertJsonPath('data.id', $org->id)
-        ->assertJsonPath('data.my_role', 'manager');
+        ->assertJsonPath('data.my_role', 'project_manager');
 
     $this->putJson('/api/organisation', ['name' => 'Hijacked'], $headers)
         ->assertForbidden();
@@ -218,6 +218,19 @@ it('lets every organisation member view the profile but not the roster or edit i
         ->assertJsonPath('data.is_creator', false);
     $this->getJson('/api/organisation/users', $headers)->assertForbidden();
     $this->putJson('/api/organisation', ['name' => 'Hijacked'], $headers)->assertForbidden();
+});
+
+it('does not treat the legacy organisation manager role as a management role', function () {
+    $org = Organisation::factory()->create();
+    $legacyManager = User::factory()->create();
+    $legacyManager->assignRole('candidate');
+    $org->users()->attach($legacyManager->id, ['role' => 'manager']);
+    [, $headers] = asBearer($legacyManager);
+
+    $this->getJson('/api/organisation', $headers)->assertOk();
+    $this->getJson('/api/organisation/users', $headers)->assertForbidden();
+    $this->getJson('/api/organisation/reports/summary', $headers)->assertForbidden();
+    $this->putJson('/api/organisation', ['name' => 'Not allowed'], $headers)->assertForbidden();
 });
 
 it('allows the organisation creator to edit the profile even when their membership role is member', function () {
@@ -288,7 +301,7 @@ it('marks unverified accounts accordingly', function () {
 
     $unverified = User::factory()->unverified()->create();
     $unverified->assignRole('project_manager');
-    $org->users()->attach($unverified->id, ['role' => 'manager']);
+    $org->users()->attach($unverified->id, ['role' => 'project_manager']);
 
     $this->getJson("/api/organisation/users/{$unverified->id}", $headers)
         ->assertOk()

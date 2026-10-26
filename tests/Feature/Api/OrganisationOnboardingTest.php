@@ -282,7 +282,7 @@ it('treats users with an existing membership as onboarded', function () {
     $org = Organisation::factory()->create();
     $manager = User::factory()->create();
     $manager->assignRole('project_manager');
-    $org->users()->attach($manager->id, ['role' => 'manager']);
+    $org->users()->attach($manager->id, ['role' => 'project_manager']);
 
     $headers = onboardingHeaders($manager);
 

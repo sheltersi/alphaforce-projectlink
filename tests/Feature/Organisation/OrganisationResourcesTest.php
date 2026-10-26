@@ -60,7 +60,7 @@ function makeParticipant(User $user): ParticipantProfile
 it('serializes an organisation with optional members and counts', function () {
     $org = Organisation::factory()->create();
     $member = User::factory()->create();
-    OrganisationUser::create(['organisation_id' => $org->id, 'user_id' => $member->id, 'role' => 'manager']);
+    OrganisationUser::create(['organisation_id' => $org->id, 'user_id' => $member->id, 'role' => 'project_manager']);
 
     // Without loaded relations: no nested data, no counts.
     $bare = resolveJson(new OrganisationResource($org));
@@ -76,7 +76,7 @@ it('serializes an organisation with optional members and counts', function () {
     expect($array['members_count'])->toBe(1);
     expect($array['projects_count'])->toBe(0);
     expect($array['members'])->toHaveCount(1);
-    expect($array['members'][0]['role'])->toBe('manager');
+    expect($array['members'][0]['role'])->toBe('project_manager');
     expect($array['members'][0]['user']['email'])->toBe($member->email);
     expect($array['members'][0]['user'])->not->toHaveKey('password');
 });

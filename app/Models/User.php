@@ -134,7 +134,7 @@ class User extends Authenticatable
             return true;
         }
 
-        return in_array(strtolower((string) $this->organisationRole($organisation)), ['admin', 'manager', 'technical_admin', 'project_manager'], true);
+        return in_array(strtolower((string) $this->organisationRole($organisation)), ['admin', 'technical_admin', 'project_manager'], true);
     }
 
     /**

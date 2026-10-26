@@ -29,11 +29,11 @@ function makeReviewSetup(): array
 
     $managerA = User::factory()->create();
     $managerA->assignRole('project_manager');
-    $orgA->users()->attach($managerA->id, ['role' => 'manager']);
+    $orgA->users()->attach($managerA->id, ['role' => 'project_manager']);
 
     $managerA2 = User::factory()->create();
     $managerA2->assignRole('project_manager');
-    $orgA->users()->attach($managerA2->id, ['role' => 'manager']);
+    $orgA->users()->attach($managerA2->id, ['role' => 'project_manager']);
 
     $participantA = User::factory()->create();
     $participantA->assignRole('candidate');
