@@ -39,6 +39,7 @@ import {
     fileTypeLabel,
     formatFileSize,
     newId,
+    REQUIRED_DOCUMENT_CATEGORIES,
     requiredBlockingErrors,
     sectionStatuses,
     type CertificationEntry,
@@ -203,7 +204,7 @@ export default function BuildProfile() {
     );
     const [skillInput, setSkillInput] = useState("");
     const [docCategory, setDocCategory] =
-        useState<ProfileDocument["category"]>("CV");
+        useState<ProfileDocument["category"]>("ID");
     const [isSaving, setIsSaving] = useState(false);
 
     const photoRef = useRef<HTMLInputElement>(null);
@@ -913,6 +914,7 @@ export default function BuildProfile() {
                                                                 "personal",
                                                                 "summary",
                                                                 "skills",
+                                                                "documents",
                                                             ];
                                                         const allErrors =
                                                             requiredSteps.flatMap(
@@ -1860,8 +1862,11 @@ export default function BuildProfile() {
                                 Upload professional documents
                             </p>
                             <p className="mt-1 text-[13px] text-ember-500">
-                                CV, certificates, or supporting documents. PDF,
-                                DOC, or images up to 10 MB each.
+                                Upload your ID, proof of residence, and SARS
+                                document. A bank letter is optional. CVs,
+                                certificates, and other supporting documents are
+                                also welcome. PDF, DOC, or images up to 10 MB
+                                each.
                             </p>
                             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                                 <label
@@ -1886,6 +1891,16 @@ export default function BuildProfile() {
                                         </option>
                                         <option value="Supporting document">
                                             Supporting document
+                                        </option>
+                                        <option value="ID">ID (required)</option>
+                                        <option value="Proof of residence">
+                                            Proof of residence (required)
+                                        </option>
+                                        <option value="SARS document">
+                                            SARS document (required)
+                                        </option>
+                                        <option value="Bank letter">
+                                            Bank letter (optional)
                                         </option>
                                     </select>
                                 </label>
@@ -1913,8 +1928,9 @@ export default function BuildProfile() {
 
                         {profile.documents.length === 0 ? (
                             <p className="rounded-2xl border border-dashed border-harbor/20 bg-white p-5 text-center text-[13.5px] font-medium text-ember-400">
-                                No documents uploaded yet — this section is
-                                optional and can be completed later.
+                                Required uploads: {REQUIRED_DOCUMENT_CATEGORIES.join(
+                                    ", ",
+                                )}. A bank letter is optional.
                             </p>
                         ) : (
                             <ul

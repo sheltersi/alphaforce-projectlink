@@ -4,6 +4,7 @@ use App\Models\ParticipantProfile;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -155,6 +156,65 @@ test('documents via base64 are stored', function () {
     Storage::disk('local')->assertExists($doc->file_path);
 });
 
+test('candidate onboarding cannot complete without all required documents', function () {
+    $user = User::factory()->create();
+    $user->assignRole('participant');
+    $document = fn (string $category): array => [
+        'name' => str_replace(' ', '-', strtolower($category)).'.pdf',
+        'size' => 20,
+        'type' => 'application/pdf',
+        'category' => $category,
+        'dataUrl' => 'data:application/pdf;base64,'.base64_encode('document'),
+    ];
+
+    $response = $this->actingAs($user)->postJson(route('onboarding.profile.store'), [
+        'firstName' => 'Jane',
+        'lastName' => 'Doe',
+        'email' => 'jane@example.com',
+        'summary' => str_repeat('Candidate onboarding document test. ', 2),
+        'skills' => ['Research'],
+        'redirect_to' => 'dashboard',
+        'documents' => [
+            $document('ID'),
+            $document('Proof of residence'),
+        ],
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors('documents')
+        ->assertJsonPath('errors.documents.0', 'Upload the required SARS document.');
+});
+
+test('candidate can complete onboarding with required documents and no bank letter', function () {
+    $user = User::factory()->create();
+    $user->assignRole('participant');
+    $document = fn (string $category): array => [
+        'name' => str_replace(' ', '-', strtolower($category)).'.pdf',
+        'size' => 20,
+        'type' => 'application/pdf',
+        'category' => $category,
+        'dataUrl' => 'data:application/pdf;base64,'.base64_encode('document'),
+    ];
+
+    $this->actingAs($user)->postJson(route('onboarding.profile.store'), [
+        'firstName' => 'Jane',
+        'lastName' => 'Doe',
+        'email' => 'jane@example.com',
+        'summary' => str_repeat('Candidate onboarding document test. ', 2),
+        'skills' => ['Research'],
+        'redirect_to' => 'dashboard',
+        'documents' => [
+            $document('ID'),
+            $document('Proof of residence'),
+            $document('SARS document'),
+        ],
+    ])->assertOk();
+
+    expect(ParticipantProfile::where('user_id', $user->id)->firstOrFail()->documents->pluck('category')->all())
+        ->toContain('ID', 'Proof of residence', 'SARS document')
+        ->toHaveCount(3);
+});
+
 test('participant can load saved profile via GET', function () {
     $user = User::factory()->create();
     $user->assignRole('participant');
@@ -171,6 +231,141 @@ test('participant can load saved profile via GET', function () {
     $response = $this->actingAs($user)->getJson(route('onboarding.profile.show'));
     $response->assertOk()->assertJsonPath('profile.firstName', 'Load');
     expect($response->json('profile.skills'))->toContain('Research');
+});
+
+test('candidate documents page lists only their own uploaded files', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $user->assignRole('candidate');
+    $profile = ParticipantProfile::create([
+        'user_id' => $user->id,
+        'first_name' => 'Jane',
+        'last_name' => 'Doe',
+        'email' => $user->email,
+        'id_number' => 'ID-123',
+        'phone' => '555-0100',
+        'city' => 'Cape Town',
+        'country' => 'South Africa',
+        'nationality' => 'South African',
+        'summary' => str_repeat('Candidate profile summary. ', 3),
+    ]);
+    $profile->skills()->create(['name' => 'Research']);
+    $filePath = "participant-documents/{$profile->id}/id.pdf";
+    Storage::disk('local')->put($filePath, 'id document');
+    $document = $profile->documents()->create([
+        'original_name' => 'id.pdf',
+        'file_path' => $filePath,
+        'disk' => 'local',
+        'file_size' => 12,
+        'mime_type' => 'application/pdf',
+        'category' => 'ID',
+    ]);
+
+    $otherUser = User::factory()->create();
+    $otherProfile = ParticipantProfile::create([
+        'user_id' => $otherUser->id,
+        'first_name' => 'Other',
+        'last_name' => 'Candidate',
+        'email' => $otherUser->email,
+    ]);
+    $otherProfile->documents()->create([
+        'original_name' => 'private.pdf',
+        'file_path' => 'participant-documents/2/private.pdf',
+        'disk' => 'local',
+        'file_size' => 20,
+        'mime_type' => 'application/pdf',
+        'category' => 'SARS document',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('documents.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('documents/index')
+            ->has('documents', 1)
+            ->where('documents.0.name', 'id.pdf')
+            ->where('requiredDocuments.0.category', 'ID')
+            ->where('requiredDocuments.0.uploaded', true)
+            ->where('requiredDocuments.2.uploaded', false),
+        );
+
+    $viewResponse = $this->actingAs($user)->get(route('documents.view', $document));
+    $viewResponse->assertOk();
+    expect($viewResponse->headers->get('content-disposition'))->toContain('inline');
+});
+
+test('candidate can rename and replace an uploaded document', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $user->assignRole('candidate');
+    $profile = ParticipantProfile::create([
+        'user_id' => $user->id,
+        'first_name' => 'Jane',
+        'last_name' => 'Doe',
+        'email' => $user->email,
+        'id_number' => 'ID-123',
+        'phone' => '555-0100',
+        'city' => 'Cape Town',
+        'country' => 'South Africa',
+        'nationality' => 'South African',
+        'summary' => str_repeat('Candidate profile summary. ', 3),
+    ]);
+    $profile->skills()->create(['name' => 'Research']);
+    $oldPath = "participant-documents/{$profile->id}/id.pdf";
+    Storage::disk('local')->put($oldPath, 'original document');
+    $document = $profile->documents()->create([
+        'original_name' => 'id.pdf',
+        'file_path' => $oldPath,
+        'disk' => 'local',
+        'file_size' => 17,
+        'mime_type' => 'application/pdf',
+        'category' => 'ID',
+    ]);
+
+    $this->actingAs($user)
+        ->patch(route('documents.update', $document), ['original_name' => 'My ID.pdf'])
+        ->assertRedirect();
+    expect($document->fresh()->original_name)->toBe('My ID.pdf');
+
+    $this->actingAs($user)
+        ->post(route('documents.update', $document), [
+            '_method' => 'PATCH',
+            'replacement_file' => UploadedFile::fake()->create('replacement.pdf', 220, 'application/pdf'),
+        ])
+        ->assertRedirect();
+
+    $document->refresh();
+    expect($document->original_name)->toBe('My ID.pdf')
+        ->and($document->category)->toBe('ID')
+        ->and($document->file_path)->not->toBe($oldPath);
+    Storage::disk('local')->assertMissing($oldPath);
+    Storage::disk('local')->assertExists($document->file_path);
+});
+
+test('candidate cannot rename another users document', function () {
+    $owner = User::factory()->create();
+    $profile = ParticipantProfile::create([
+        'user_id' => $owner->id,
+        'first_name' => 'Document',
+        'last_name' => 'Owner',
+        'email' => $owner->email,
+    ]);
+    $document = $profile->documents()->create([
+        'original_name' => 'private.pdf',
+        'file_path' => 'participant-documents/private.pdf',
+        'disk' => 'local',
+        'file_size' => 17,
+        'mime_type' => 'application/pdf',
+        'category' => 'ID',
+    ]);
+    $otherUser = User::factory()->create(['email_verified_at' => now()]);
+
+    $this->actingAs($otherUser)
+        ->patch(route('documents.update', $document), ['original_name' => 'stolen.pdf'])
+        ->assertNotFound();
+    $this->actingAs($otherUser)
+        ->get(route('documents.view', $document))
+        ->assertNotFound();
+
+    expect($document->fresh()->original_name)->toBe('private.pdf');
 });
 
 test('profile update replaces previous skills and educations', function () {
@@ -265,6 +460,15 @@ test('saving from the preview redirects to the dashboard', function () {
             'summary' => str_repeat('Experienced project participant. ', 5),
             'skills' => ['Research'],
             'redirect_to' => 'dashboard',
+            'documents' => collect(['ID', 'Proof of residence', 'SARS document'])
+                ->map(fn (string $category) => [
+                    'name' => str_replace(' ', '-', strtolower($category)).'.pdf',
+                    'size' => 20,
+                    'type' => 'application/pdf',
+                    'category' => $category,
+                    'dataUrl' => 'data:application/pdf;base64,'.base64_encode('document'),
+                ])
+                ->all(),
         ]);
 
     $response->assertRedirect(route('dashboard'));

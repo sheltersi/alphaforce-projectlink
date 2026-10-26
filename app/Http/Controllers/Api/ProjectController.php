@@ -209,7 +209,7 @@ class ProjectController extends Controller
             return;
         }
 
-        if (! in_array($membership->role, ['admin', 'technical_admin'], true)
+        if (! in_array($membership->role, ['admin', 'org_admin', 'technical_admin'], true)
             && $membership->role !== 'project_manager') {
             $membership->update(['role' => 'project_manager']);
         }

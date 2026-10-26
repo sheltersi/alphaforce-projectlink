@@ -11,6 +11,7 @@ class RoleSeeder extends Seeder
 {
     public const ROLES = [
         'technical_admin',
+        'org_admin',
         'project_manager',
         'candidate',
         'participant',

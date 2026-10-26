@@ -40,6 +40,10 @@ Route::prefix('auth')->group(function () {
         ->middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])
         ->name('api.auth.password.change');
 
+    Route::put('profile', [AuthController::class, 'updateProfile'])
+        ->middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])
+        ->name('api.auth.profile.update');
+
     Route::post('logout', [AuthController::class, 'logout'])
         ->middleware(['auth:sanctum', EnsureTemporaryPasswordChanged::class])
         ->name('api.auth.logout');

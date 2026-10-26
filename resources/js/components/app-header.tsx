@@ -75,6 +75,9 @@ const activeItemStyles =
 export function AppHeader({ breadcrumbs = [] }: Props) {
     const page = usePage();
     const { auth } = page.props;
+    const unreadNotificationsCount =
+        (page.props as unknown as { unreadNotificationsCount?: number })
+            .unreadNotificationsCount ?? 0;
     const getInitials = useInitials();
     const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 
@@ -206,13 +209,28 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 </span>
                             </Button>
                             <Button
+                                asChild
                                 variant="ghost"
                                 size="icon"
                                 className="group relative h-9 w-9 cursor-pointer"
-                                aria-label="Notifications"
                             >
-                                <Bell className="!size-5 opacity-80 group-hover:opacity-100" />
-                                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-sienna ring-2 ring-background" />
+                                <Link
+                                    href="/notifications"
+                                    aria-label={
+                                        unreadNotificationsCount > 0
+                                            ? `Notifications, ${unreadNotificationsCount} unread`
+                                            : 'Notifications'
+                                    }
+                                >
+                                    <Bell className="!size-5 opacity-80 group-hover:opacity-100" />
+                                    {unreadNotificationsCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sienna px-1 text-[9px] font-bold text-white ring-2 ring-background">
+                                            {unreadNotificationsCount > 99
+                                                ? '99+'
+                                                : unreadNotificationsCount}
+                                        </span>
+                                    )}
+                                </Link>
                             </Button>
                             <ThemeToggle />
                             <div className="ml-1 hidden gap-1 lg:flex">

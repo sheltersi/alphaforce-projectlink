@@ -7,6 +7,7 @@ import {
     Clock3,
     Compass,
     FileText,
+    FolderOpen,
     LayoutGrid,
     LifeBuoy,
     MessageSquare,
@@ -38,7 +39,7 @@ import { dashboard } from "@/routes";
 import { index as myProjectsIndex } from "@/routes/my-projects";
 import { index as projectsIndex } from "@/routes/projects";
 import { index as timesheetsIndex } from "@/routes/timesheets";
-import type { NavGroup } from "@/types";
+import type { NavGroup, NavItem } from "@/types";
 import { Link, usePage } from "@inertiajs/react";
 
 // Central navigation for the app shell. Route values are kept explicit so the
@@ -54,7 +55,7 @@ const navGroups: NavGroup[] = [
             },
             {
                 title: "Notifications",
-                href: `${dashboard()}#notifications`,
+                href: "/notifications",
                 icon: Bell,
             },
             // {
@@ -135,13 +136,18 @@ const navGroups: NavGroup[] = [
                 icon: FileText,
             },
             {
+                title: "Documents",
+                href: "/documents",
+                icon: FolderOpen,
+            },
+            {
                 title: "Settings",
                 href: "/settings/profile",
                 icon: Settings,
             },
             {
                 title: "Help center",
-                href: `${dashboard()}#help`,
+                href: "/help",
                 icon: LifeBuoy,
             },
         ],
@@ -152,17 +158,28 @@ export function AppSidebar() {
     const { state, toggleSidebar } = useSidebar();
     const isMobile = useIsMobile();
     const isCollapsed = !isMobile && state === "collapsed";
-    const { projectsCount } = usePage().props as unknown as {
+    const { projectsCount, unreadNotificationsCount } = usePage().props as unknown as {
         projectsCount?: number;
+        unreadNotificationsCount?: number;
     };
 
     const groups = navGroups.map((group) => ({
         ...group,
-        items: group.items.map((item) =>
-            item.title === "Discover projects" && projectsCount
-                ? { ...item, badge: String(projectsCount) }
-                : item,
-        ),
+        items: group.items.map((item): NavItem => {
+            if (item.title === "Discover projects" && projectsCount) {
+                return { ...item, badge: String(projectsCount) };
+            }
+
+            if (item.title === "Notifications" && unreadNotificationsCount) {
+                return {
+                    ...item,
+                    badge: String(unreadNotificationsCount),
+                    badgeTone: "accent",
+                };
+            }
+
+            return item;
+        }),
     }));
 
     return (

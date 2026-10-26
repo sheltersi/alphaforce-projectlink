@@ -83,10 +83,10 @@ class OnboardingController extends Controller
         }
 
         DB::transaction(function () use ($user, $draft): void {
-            $draft->users()->syncWithoutDetaching([$user->id => ['role' => 'admin']]);
+            $draft->users()->syncWithoutDetaching([$user->id => ['role' => 'org_admin']]);
             // Explicit web-guard role: under API authentication Spatie would
             // otherwise resolve the role against the sanctum guard.
-            $user->assignRole(Role::findByName('technical_admin', 'web'));
+            $user->assignRole(Role::findByName('org_admin', 'web'));
         });
 
         $organisation = $draft->fresh();

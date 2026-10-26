@@ -732,7 +732,7 @@ export default function ProfilePreview() {
                                                 ))}
                                             </ul>
                                         ) : (
-                                            <EmptyNote label="No documents uploaded — optional." />
+                                            <EmptyNote label="Required: ID, proof of residence, and SARS document. Bank letter is optional." />
                                         )}
                                     </section>
                                 </div>

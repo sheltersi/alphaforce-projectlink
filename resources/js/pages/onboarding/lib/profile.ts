@@ -33,7 +33,14 @@ export interface ProfileDocument {
     name: string;
     size: number;
     type: string;
-    category: 'CV' | 'Certificate' | 'Supporting document';
+    category:
+        | 'CV'
+        | 'Certificate'
+        | 'Supporting document'
+        | 'ID'
+        | 'Proof of residence'
+        | 'SARS document'
+        | 'Bank letter';
     uploadDate: string;
     /** data: URL so the file survives reloads and can be downloaded */
     dataUrl?: string;
@@ -42,6 +49,12 @@ export interface ProfileDocument {
     /** Authenticated download URL for documents persisted on the server */
     downloadUrl?: string;
 }
+
+export const REQUIRED_DOCUMENT_CATEGORIES = [
+    'ID',
+    'Proof of residence',
+    'SARS document',
+] as const;
 
 export interface ParticipantProfile {
     photoDataUrl: string | null;
@@ -202,8 +215,8 @@ export const STEPS: StepMeta[] = [
         id: 'documents',
         label: 'Documents',
         shortLabel: 'Documents',
-        required: false,
-        hint: 'Optional — CV, certificates, supporting files',
+        required: true,
+        hint: 'ID, proof of residence, and SARS document required; bank letter optional',
     },
 ];
 
@@ -286,12 +299,16 @@ export function sectionStatuses(profile: ParticipantProfile): SectionStatus[] {
                       100,
               );
 
-    const documentsPercent =
-        profile.documents.length === 0
-            ? 0
-            : profile.documents.length === 1
-              ? 70
-              : 100;
+    const documentCategories = new Set(
+        profile.documents.map((document) => document.category),
+    );
+    const requiredDocumentsComplete = REQUIRED_DOCUMENT_CATEGORIES.filter(
+        (category) => documentCategories.has(category),
+    ).length;
+    const documentsPercent = Math.round(
+        (requiredDocumentsComplete / REQUIRED_DOCUMENT_CATEGORIES.length) *
+            100,
+    );
 
     const raw: SectionStatus[] = [
         {
@@ -332,7 +349,9 @@ export function sectionStatuses(profile: ParticipantProfile): SectionStatus[] {
         },
         {
             id: 'documents',
-            complete: profile.documents.length > 0,
+            complete:
+                requiredDocumentsComplete ===
+                REQUIRED_DOCUMENT_CATEGORIES.length,
             percent: documentsPercent,
         },
     ];
@@ -387,6 +406,19 @@ export function requiredBlockingErrors(
     if (step === 'skills') {
         if (profile.skills.length === 0) {
             errors.push('Add at least one skill to continue.');
+        }
+    }
+    if (step === 'documents') {
+        const documentCategories = new Set(
+            profile.documents.map((document) => document.category),
+        );
+        const missing = REQUIRED_DOCUMENT_CATEGORIES.filter(
+            (category) => !documentCategories.has(category),
+        );
+        if (missing.length > 0) {
+            errors.push(
+                `Upload the required documents to continue: ${missing.join(', ')}.`,
+            );
         }
     }
     return errors;
