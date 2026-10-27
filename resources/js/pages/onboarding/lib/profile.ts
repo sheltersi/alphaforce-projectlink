@@ -258,9 +258,9 @@ function isExperienceComplete(e: ExperienceEntry): boolean {
 function isCertificationComplete(c: CertificationEntry): boolean {
     return Boolean(
         c.name.trim() &&
-            c.issuingOrganisation.trim() &&
-            c.issueDate.trim() &&
-            (c.doesNotExpire || c.expiryDate.trim()),
+        c.issuingOrganisation.trim() &&
+        c.issueDate.trim() &&
+        (c.doesNotExpire || c.expiryDate.trim()),
     );
 }
 
@@ -284,14 +284,16 @@ export function sectionStatuses(profile: ParticipantProfile): SectionStatus[] {
 
     const summaryLen = profile.summary.trim().length;
     const summaryPercent =
-        summaryLen === 0 ? 0 : summaryLen < 80 ? 60 : summaryLen < 200 ? 85 : 100;
+        summaryLen === 0
+            ? 0
+            : summaryLen < 80
+              ? 60
+              : summaryLen < 200
+                ? 85
+                : 100;
 
     const skillsPercent =
-        profile.skills.length === 0
-            ? 0
-            : profile.skills.length < 3
-              ? 70
-              : 100;
+        profile.skills.length === 0 ? 0 : profile.skills.length < 3 ? 70 : 100;
 
     const educationPercent =
         profile.education.length === 0
@@ -328,8 +330,7 @@ export function sectionStatuses(profile: ParticipantProfile): SectionStatus[] {
         (category) => documentCategories.has(category),
     ).length;
     const documentsPercent = Math.round(
-        (requiredDocumentsComplete / REQUIRED_DOCUMENT_CATEGORIES.length) *
-            100,
+        (requiredDocumentsComplete / REQUIRED_DOCUMENT_CATEGORIES.length) * 100,
     );
 
     const raw: SectionStatus[] = [
@@ -412,9 +413,11 @@ export function requiredBlockingErrors(
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email.trim())) {
             errors.push('Enter a valid email address.');
         }
-        if (!profile.idNumber.trim()) errors.push('ID number or passport is required.');
+        if (!profile.idNumber.trim())
+            errors.push('ID number or passport is required.');
         if (!profile.phone.trim()) errors.push('Phone number is required.');
-        if (!profile.nationality.trim()) errors.push('Nationality is required.');
+        if (!profile.nationality.trim())
+            errors.push('Nationality is required.');
         if (!profile.city.trim()) errors.push('City is required.');
         if (!profile.country.trim()) errors.push('Country is required.');
     }
@@ -434,14 +437,14 @@ export function requiredBlockingErrors(
         profile.certifications.forEach((certification, index) => {
             const started = Boolean(
                 certification.name.trim() ||
-                    certification.issuingOrganisation.trim() ||
-                    certification.issueDate.trim() ||
-                    certification.expiryDate.trim() ||
-                    certification.credentialNumber.trim() ||
-                    certification.credentialUrl.trim() ||
-                    certification.relatedSkills.length > 0 ||
-                    certification.doesNotExpire ||
-                    certification.certificateDocument,
+                certification.issuingOrganisation.trim() ||
+                certification.issueDate.trim() ||
+                certification.expiryDate.trim() ||
+                certification.credentialNumber.trim() ||
+                certification.credentialUrl.trim() ||
+                certification.relatedSkills.length > 0 ||
+                certification.doesNotExpire ||
+                certification.certificateDocument,
             );
 
             if (!started) return;
@@ -492,7 +495,8 @@ export function formatFileSize(bytes: number): string {
 export function fileTypeLabel(mime: string, name: string): string {
     const ext = name.split('.').pop()?.toUpperCase() ?? '';
     if (mime.includes('pdf')) return 'PDF';
-    if (mime.includes('word') || ['DOC', 'DOCX'].includes(ext)) return ext || 'DOC';
+    if (mime.includes('word') || ['DOC', 'DOCX'].includes(ext))
+        return ext || 'DOC';
     if (mime.startsWith('image/')) return ext || 'IMG';
     return ext || 'FILE';
 }

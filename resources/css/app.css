@@ -248,7 +248,9 @@
         -webkit-backdrop-filter: blur(16px) saturate(1.5);
         backdrop-filter: blur(16px) saturate(1.5);
         border: 1px solid rgba(255, 255, 255, 0.4);
-        box-shadow: 0 4px 24px rgba(30, 47, 68, 0.06), 0 1px 2px rgba(30, 47, 68, 0.04);
+        box-shadow:
+            0 4px 24px rgba(30, 47, 68, 0.06),
+            0 1px 2px rgba(30, 47, 68, 0.04);
     }
 
     .dark .glass-card {
@@ -256,7 +258,9 @@
         -webkit-backdrop-filter: blur(16px) saturate(1.5);
         backdrop-filter: blur(16px) saturate(1.5);
         border: 1px solid rgba(255, 255, 255, 0.06);
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+        box-shadow:
+            0 4px 24px rgba(0, 0, 0, 0.3),
+            0 1px 2px rgba(0, 0, 0, 0.2);
     }
 
     .premium-shadow {
@@ -276,7 +280,9 @@
     }
 
     .premium-shadow-hover {
-        transition: box-shadow 0.3s ease, transform 0.3s ease;
+        transition:
+            box-shadow 0.3s ease,
+            transform 0.3s ease;
     }
 
     .premium-shadow-hover:hover {
@@ -297,25 +303,45 @@
     }
 
     .text-gradient {
-        background: linear-gradient(135deg, #b4522a 0%, #d08a52 50%, #c56a2e 100%);
+        background: linear-gradient(
+            135deg,
+            #b4522a 0%,
+            #d08a52 50%,
+            #c56a2e 100%
+        );
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
 
     .dark .text-gradient {
-        background: linear-gradient(135deg, #e7b79e 0%, #eccfae 50%, #eec39e 100%);
+        background: linear-gradient(
+            135deg,
+            #e7b79e 0%,
+            #eccfae 50%,
+            #eec39e 100%
+        );
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
 
     .bg-gradient-premium {
-        background: linear-gradient(135deg, #1e2f44 0%, #3d6592 50%, #1e2f44 100%);
+        background: linear-gradient(
+            135deg,
+            #1e2f44 0%,
+            #3d6592 50%,
+            #1e2f44 100%
+        );
     }
 
     .dark .bg-gradient-premium {
-        background: linear-gradient(135deg, #0d1520 0%, #1e2f44 50%, #121d2a 100%);
+        background: linear-gradient(
+            135deg,
+            #0d1520 0%,
+            #1e2f44 50%,
+            #121d2a 100%
+        );
     }
 
     .bg-gradient-warm {
@@ -327,11 +353,15 @@
     }
 
     .glow-amber {
-        box-shadow: 0 0 20px rgba(197, 106, 46, 0.3), 0 0 60px rgba(197, 106, 46, 0.1);
+        box-shadow:
+            0 0 20px rgba(197, 106, 46, 0.3),
+            0 0 60px rgba(197, 106, 46, 0.1);
     }
 
     .dark .glow-amber {
-        box-shadow: 0 0 20px rgba(213, 127, 63, 0.2), 0 0 60px rgba(213, 127, 63, 0.05);
+        box-shadow:
+            0 0 20px rgba(213, 127, 63, 0.2),
+            0 0 60px rgba(213, 127, 63, 0.05);
     }
 }
 
@@ -477,11 +507,23 @@
     height: 10px;
     border-radius: 9999px;
 }
-.ts-legend-draft { background: #8aa3be; }
-.ts-legend-submitted { background: #d57f3f; }
-.ts-legend-approved { background: #6b6f3c; }
+.ts-legend-draft {
+    background: #8aa3be;
+}
+.ts-legend-submitted {
+    background: #d57f3f;
+}
+.ts-legend-approved {
+    background: #6b6f3c;
+}
 .ts-legend-rejected {
-    background: repeating-linear-gradient(45deg, #d43d2a, #d43d2a 2px, transparent 2px, transparent 4px);
+    background: repeating-linear-gradient(
+        45deg,
+        #d43d2a,
+        #d43d2a 2px,
+        transparent 2px,
+        transparent 4px
+    );
     border: 1px solid #d43d2a;
 }
 
@@ -626,12 +668,24 @@
 }
 
 /* Staggered animation delays */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
-.stagger-6 { animation-delay: 0.3s; }
+.stagger-1 {
+    animation-delay: 0.05s;
+}
+.stagger-2 {
+    animation-delay: 0.1s;
+}
+.stagger-3 {
+    animation-delay: 0.15s;
+}
+.stagger-4 {
+    animation-delay: 0.2s;
+}
+.stagger-5 {
+    animation-delay: 0.25s;
+}
+.stagger-6 {
+    animation-delay: 0.3s;
+}
 
 @media (prefers-reduced-motion: reduce) {
     .marquee-track {

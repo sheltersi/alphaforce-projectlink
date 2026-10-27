@@ -1,4 +1,4 @@
-import { Head, router, usePage } from "@inertiajs/react";
+import { Head, router, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     ArrowRight,
@@ -13,9 +13,7 @@ import {
     Eye,
     FileText,
     GraduationCap,
-    LayoutDashboard,
     LogOut,
-    MailCheck,
     Plus,
     Save,
     Sparkles,
@@ -23,12 +21,12 @@ import {
     Upload,
     UserRound,
     X,
-} from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { toast } from "sonner";
-import AppLogoIcon from "@/components/app-logo-icon";
-import { CountryCityFields } from "@/components/country-city-fields";
-import { FlatpickrInput } from "@/components/flatpickr-input";
+} from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { toast } from 'sonner';
+import AppLogoIcon from '@/components/app-logo-icon';
+import { CountryCityFields } from '@/components/country-city-fields';
+import { FlatpickrInput } from '@/components/flatpickr-input';
 import {
     SKILL_SUGGESTIONS,
     STEPS,
@@ -49,7 +47,7 @@ import {
     type ParticipantProfile,
     type ProfileDocument,
     type StepId,
-} from "./lib/profile";
+} from './lib/profile';
 
 /* ── Small presentational helpers ─────────────────────────────── */
 
@@ -74,10 +72,10 @@ function Field({
         <div>
             <label
                 htmlFor={htmlFor}
-                className="flex items-baseline justify-between gap-2 text-[13.5px] font-bold text-harbor"
+                className="text-harbor flex items-baseline justify-between gap-2 text-[13.5px] font-bold"
             >
                 <span>
-                    {label}{" "}
+                    {label}{' '}
                     {required && (
                         <span aria-hidden className="text-sienna">
                             *
@@ -85,7 +83,7 @@ function Field({
                     )}
                     {required && <span className="sr-only">(required)</span>}
                     {optional && (
-                        <span className="ml-1.5 rounded-full bg-sand-100 px-2 py-0.5 text-[11px] font-bold text-ember-400">
+                        <span className="bg-sand-100 text-ember-400 ml-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold">
                             Optional
                         </span>
                     )}
@@ -93,12 +91,12 @@ function Field({
             </label>
             <div className="mt-1.5">{children}</div>
             {hint && !error && (
-                <p className="mt-1.5 text-[12.5px] text-ember-400">{hint}</p>
+                <p className="text-ember-400 mt-1.5 text-[12.5px]">{hint}</p>
             )}
             {error && (
                 <p
                     role="alert"
-                    className="mt-1.5 text-[12.5px] font-semibold text-sienna-600"
+                    className="text-sienna-600 mt-1.5 text-[12.5px] font-semibold"
                 >
                     {error}
                 </p>
@@ -108,34 +106,34 @@ function Field({
 }
 
 const inputCls =
-    "h-12 w-full rounded-xl border border-harbor/15 bg-white px-4 text-[14.5px] font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25";
+    'h-12 w-full rounded-xl border border-harbor/15 bg-white px-4 text-[14.5px] font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25';
 const textareaCls =
-    "w-full rounded-xl border border-harbor/15 bg-white px-4 py-3.5 text-[14.5px] leading-relaxed font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25";
+    'w-full rounded-xl border border-harbor/15 bg-white px-4 py-3.5 text-[14.5px] leading-relaxed font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25';
 
 const CERTIFICATION_SUGGESTIONS = [
-    "Project Management Professional (PMP)",
-    "AWS Certified Cloud Practitioner",
-    "Google Data Analytics Professional Certificate",
-    "Microsoft Azure Fundamentals",
-    "CompTIA A+",
-    "First Aid Level 1",
-    "Occupational Health and Safety",
-    "TEFL Certificate",
+    'Project Management Professional (PMP)',
+    'AWS Certified Cloud Practitioner',
+    'Google Data Analytics Professional Certificate',
+    'Microsoft Azure Fundamentals',
+    'CompTIA A+',
+    'First Aid Level 1',
+    'Occupational Health and Safety',
+    'TEFL Certificate',
 ];
 
 const CERTIFICATION_ISSUER_SUGGESTIONS = [
-    "PMI",
-    "Google",
-    "Microsoft",
-    "Amazon Web Services",
-    "CompTIA",
-    "South African Red Cross Society",
-    "University of South Africa",
+    'PMI',
+    'Google',
+    'Microsoft',
+    'Amazon Web Services',
+    'CompTIA',
+    'South African Red Cross Society',
+    'University of South Africa',
 ];
 
 function splitLocation(location: string): { city: string; country: string } {
-    const separator = location.lastIndexOf(",");
-    if (separator < 0) return { city: "", country: location.trim() };
+    const separator = location.lastIndexOf(',');
+    if (separator < 0) return { city: '', country: location.trim() };
 
     return {
         city: location.slice(0, separator).trim(),
@@ -144,7 +142,7 @@ function splitLocation(location: string): { city: string; country: string } {
 }
 
 function joinLocation(city: string, country: string): string {
-    return [city.trim(), country.trim()].filter(Boolean).join(", ");
+    return [city.trim(), country.trim()].filter(Boolean).join(', ');
 }
 
 function SectionCard({
@@ -159,14 +157,14 @@ function SectionCard({
     children: ReactNode;
 }) {
     return (
-        <div className="rounded-2xl border border-harbor/10 bg-sand-50/60 p-5 sm:p-6">
+        <div className="border-harbor/10 bg-sand-50/60 rounded-2xl border p-5 sm:p-6">
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <h3 className="text-[15px] font-extrabold text-harbor">
+                    <h3 className="text-harbor text-[15px] font-extrabold">
                         {title}
                     </h3>
                     {description && (
-                        <p className="mt-1 text-[13px] text-ember-500">
+                        <p className="text-ember-500 mt-1 text-[13px]">
                             {description}
                         </p>
                     )}
@@ -189,19 +187,23 @@ function CertificationSkillsPicker({
     options: string[];
     onChange: (skills: string[]) => void;
 }) {
-    const [skillInput, setSkillInput] = useState("");
+    const [skillInput, setSkillInput] = useState('');
 
     function addSkill(raw: string) {
-        const skill = raw.trim().replace(/\s+/g, " ");
+        const skill = raw.trim().replace(/\s+/g, ' ');
         if (!skill) return;
 
-        if (value.some((selected) => selected.toLowerCase() === skill.toLowerCase())) {
-            toast.info("That related skill is already selected.");
+        if (
+            value.some(
+                (selected) => selected.toLowerCase() === skill.toLowerCase(),
+            )
+        ) {
+            toast.info('That related skill is already selected.');
             return;
         }
 
         onChange([...value, skill]);
-        setSkillInput("");
+        setSkillInput('');
     }
 
     return (
@@ -212,9 +214,11 @@ function CertificationSkillsPicker({
                     className={inputCls}
                     placeholder="e.g. Data Analysis"
                     value={skillInput}
-                    onChange={(event) => setSkillInput(event.currentTarget.value)}
+                    onChange={(event) =>
+                        setSkillInput(event.currentTarget.value)
+                    }
                     onKeyDown={(event) => {
-                        if (event.key === "Enter") {
+                        if (event.key === 'Enter') {
                             event.preventDefault();
                             addSkill(skillInput);
                         }
@@ -223,27 +227,32 @@ function CertificationSkillsPicker({
                 <button
                     type="button"
                     onClick={() => addSkill(skillInput)}
-                    className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-xl bg-harbor px-5 text-[14px] font-bold text-sand-50 transition hover:bg-harbor-700"
+                    className="bg-harbor text-sand-50 hover:bg-harbor-700 inline-flex h-12 shrink-0 items-center gap-1.5 rounded-xl px-5 text-[14px] font-bold transition"
                 >
                     <Plus className="size-4.5" />
                     Add
                 </button>
             </div>
             {value.length > 0 && (
-                <ul aria-label="Related certification skills" className="flex flex-wrap gap-2">
+                <ul
+                    aria-label="Related certification skills"
+                    className="flex flex-wrap gap-2"
+                >
                     {value.map((skill) => (
                         <li
                             key={skill}
-                            className="inline-flex items-center gap-1.5 rounded-full border border-harbor/12 bg-harbor py-1.5 pr-2 pl-4 text-[13.5px] font-bold text-sand-50 shadow-sm"
+                            className="border-harbor/12 bg-harbor text-sand-50 inline-flex items-center gap-1.5 rounded-full border py-1.5 pr-2 pl-4 text-[13.5px] font-bold shadow-sm"
                         >
                             {skill}
                             <button
                                 type="button"
                                 onClick={() =>
-                                    onChange(value.filter((item) => item !== skill))
+                                    onChange(
+                                        value.filter((item) => item !== skill),
+                                    )
                                 }
                                 aria-label={`Remove related skill ${skill}`}
-                                className="flex size-5.5 items-center justify-center rounded-full bg-white/15 transition hover:bg-sienna"
+                                className="hover:bg-sienna flex size-5.5 items-center justify-center rounded-full bg-white/15 transition"
                             >
                                 <X className="size-3.5" />
                             </button>
@@ -252,7 +261,7 @@ function CertificationSkillsPicker({
                 </ul>
             )}
             <div>
-                <p className="text-[13px] font-bold text-harbor">
+                <p className="text-harbor text-[13px] font-bold">
                     Suggestions — select to add:
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -270,7 +279,7 @@ function CertificationSkillsPicker({
                                 key={skill}
                                 type="button"
                                 onClick={() => addSkill(skill)}
-                                className="inline-flex items-center gap-1 rounded-full border border-clay-400/40 bg-white px-3.5 py-1.5 text-[13px] font-bold text-clay-600 transition hover:border-sienna hover:bg-sienna hover:text-white"
+                                className="border-clay-400/40 text-clay-600 hover:border-sienna hover:bg-sienna inline-flex items-center gap-1 rounded-full border bg-white px-3.5 py-1.5 text-[13px] font-bold transition hover:text-white"
                             >
                                 <Plus className="size-3.5" />
                                 {skill}
@@ -285,14 +294,14 @@ function CertificationSkillsPicker({
 /* ── Main page ────────────────────────────────────────────────── */
 
 const JOURNEY = [
-    { label: "Registration", state: "done" },
-    { label: "Email Verification", state: "done" },
-    { label: "Build Your Profile", state: "current" },
-    { label: "Profile Preview", state: "todo" },
-    { label: "Dashboard", state: "todo" },
+    { label: 'Registration', state: 'done' },
+    { label: 'Email Verification', state: 'done' },
+    { label: 'Build Your Profile', state: 'current' },
+    { label: 'Profile Preview', state: 'todo' },
+    { label: 'Dashboard', state: 'todo' },
 ] as const;
 
-const LEGACY_DRAFT_KEY_PREFIX = "af-projectlink-profile-draft-v1";
+const LEGACY_DRAFT_KEY_PREFIX = 'af-projectlink-profile-draft-v1';
 
 export default function BuildProfile() {
     const { auth, profile: serverProfile } = usePage().props as unknown as {
@@ -317,20 +326,20 @@ export default function BuildProfile() {
             draft.summary ||
             draft.skills.length > 0;
         if (!hasAnything && auth.user) {
-            const parts = (auth.user.name ?? "").trim().split(/\s+/);
+            const parts = (auth.user.name ?? '').trim().split(/\s+/);
             return {
                 ...draft,
-                firstName: draft.firstName || parts[0] || "",
-                lastName: draft.lastName || parts.slice(1).join(" ") || "",
-                email: draft.email || auth.user.email || "",
+                firstName: draft.firstName || parts[0] || '',
+                lastName: draft.lastName || parts.slice(1).join(' ') || '',
+                email: draft.email || auth.user.email || '',
             };
         }
         return draft;
     });
     const [stepIndex, setStepIndex] = useState(() => {
-        if (typeof window === "undefined") return 0;
+        if (typeof window === 'undefined') return 0;
         const fromQuery = Number(
-            new URLSearchParams(window.location.search).get("step"),
+            new URLSearchParams(window.location.search).get('step'),
         );
         return Number.isInteger(fromQuery) &&
             fromQuery >= 0 &&
@@ -342,9 +351,9 @@ export default function BuildProfile() {
     const [savedAt, setSavedAt] = useState<string | null>(
         profile.updatedAt ?? null,
     );
-    const [skillInput, setSkillInput] = useState("");
+    const [skillInput, setSkillInput] = useState('');
     const [docCategory, setDocCategory] =
-        useState<ProfileDocument["category"]>("ID");
+        useState<ProfileDocument['category']>('ID');
     const [isSaving, setIsSaving] = useState(false);
 
     const photoRef = useRef<HTMLInputElement>(null);
@@ -407,7 +416,7 @@ export default function BuildProfile() {
         setProfile((prev) => ({ ...prev, ...p }));
 
     function scrollTop() {
-        topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function goTo(index: number) {
@@ -422,15 +431,15 @@ export default function BuildProfile() {
         ) as HTMLMetaElement | null;
         if (meta?.content) return meta.content;
         const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : "";
+        return match ? decodeURIComponent(match[1]) : '';
     }
 
     function flattenBackendErrors(payload: unknown): string[] {
         if (
             payload &&
-            typeof payload === "object" &&
-            "errors" in payload &&
-            typeof (payload as { errors: unknown }).errors === "object"
+            typeof payload === 'object' &&
+            'errors' in payload &&
+            typeof (payload as { errors: unknown }).errors === 'object'
         ) {
             const errs = (payload as { errors: Record<string, string[]> })
                 .errors;
@@ -439,13 +448,13 @@ export default function BuildProfile() {
         }
         if (
             payload &&
-            typeof payload === "object" &&
-            "message" in payload &&
-            typeof (payload as { message: string }).message === "string"
+            typeof payload === 'object' &&
+            'message' in payload &&
+            typeof (payload as { message: string }).message === 'string'
         ) {
             return [(payload as { message: string }).message];
         }
-        return ["An unexpected error occurred. Please try again."];
+        return ['An unexpected error occurred. Please try again.'];
     }
 
     async function persistToServer(
@@ -456,18 +465,18 @@ export default function BuildProfile() {
         const token = getCsrfToken();
         setIsSaving(true);
         try {
-            const res = await fetch("/onboarding/profile", {
-                method: "POST",
+            const res = await fetch('/onboarding/profile', {
+                method: 'POST',
                 headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                    "X-Requested-With": "XMLHttpRequest",
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     ...(token
-                        ? { "X-XSRF-TOKEN": token, "X-CSRF-TOKEN": token }
+                        ? { 'X-XSRF-TOKEN': token, 'X-CSRF-TOKEN': token }
                         : {}),
                 },
                 signal,
-                credentials: "same-origin",
+                credentials: 'same-origin',
                 body: JSON.stringify(profileToSave),
             });
 
@@ -476,7 +485,9 @@ export default function BuildProfile() {
                     profile?: ParticipantProfile;
                 };
                 const savedCertifications = payload.profile?.certifications;
-                const findSavedCertification = (submittedCert: CertificationEntry) =>
+                const findSavedCertification = (
+                    submittedCert: CertificationEntry,
+                ) =>
                     savedCertifications?.find(
                         (certification) =>
                             certification.name === submittedCert.name &&
@@ -489,7 +500,9 @@ export default function BuildProfile() {
                     savedCertifications &&
                     profileToSave.certifications.some(
                         (certification) =>
-                            Boolean(certification.certificateDocument?.dataUrl) &&
+                            Boolean(
+                                certification.certificateDocument?.dataUrl,
+                            ) &&
                             Boolean(
                                 findSavedCertification(certification)
                                     ?.certificateDocument?.filePath,
@@ -499,30 +512,35 @@ export default function BuildProfile() {
                 if (hasUploadedCertificateDocument) {
                     setProfile((current) => ({
                         ...current,
-                        certifications: current.certifications.map((currentCert) => {
-                            const submittedCert = profileToSave.certifications.find(
-                                (certification) =>
-                                    certification.id === currentCert.id,
-                            );
-                            const savedCert = submittedCert
-                                ? findSavedCertification(submittedCert)
-                                : undefined;
+                        certifications: current.certifications.map(
+                            (currentCert) => {
+                                const submittedCert =
+                                    profileToSave.certifications.find(
+                                        (certification) =>
+                                            certification.id === currentCert.id,
+                                    );
+                                const savedCert = submittedCert
+                                    ? findSavedCertification(submittedCert)
+                                    : undefined;
 
-                            if (
-                                submittedCert?.certificateDocument?.dataUrl &&
-                                currentCert.certificateDocument?.dataUrl ===
-                                    submittedCert.certificateDocument.dataUrl &&
-                                savedCert?.certificateDocument?.filePath
-                            ) {
-                                return {
-                                    ...currentCert,
-                                    certificateDocument:
-                                        savedCert.certificateDocument,
-                                };
-                            }
+                                if (
+                                    submittedCert?.certificateDocument
+                                        ?.dataUrl &&
+                                    currentCert.certificateDocument?.dataUrl ===
+                                        submittedCert.certificateDocument
+                                            .dataUrl &&
+                                    savedCert?.certificateDocument?.filePath
+                                ) {
+                                    return {
+                                        ...currentCert,
+                                        certificateDocument:
+                                            savedCert.certificateDocument,
+                                    };
+                                }
 
-                            return currentCert;
-                        }),
+                                return currentCert;
+                            },
+                        ),
                     }));
                 }
 
@@ -535,7 +553,7 @@ export default function BuildProfile() {
                 if (!silent) {
                     setErrors(flat);
                     scrollTop();
-                    toast.error("Please fix the errors before continuing.", {
+                    toast.error('Please fix the errors before continuing.', {
                         description: flat[0],
                     });
                 }
@@ -547,22 +565,22 @@ export default function BuildProfile() {
             if (!silent) {
                 setErrors(flat);
                 scrollTop();
-                toast.error("Failed to save profile.", {
+                toast.error('Failed to save profile.', {
                     description: flat[0],
                 });
             }
             return false;
         } catch (error) {
-            if (error instanceof DOMException && error.name === "AbortError") {
+            if (error instanceof DOMException && error.name === 'AbortError') {
                 return false;
             }
             if (!silent) {
-                toast.error("Network error", {
+                toast.error('Network error', {
                     description:
-                        "Could not save your profile. Please check your connection.",
+                        'Could not save your profile. Please check your connection.',
                 });
                 setErrors([
-                    "Network error – could not save your profile. Please try again.",
+                    'Network error – could not save your profile. Please try again.',
                 ]);
                 scrollTop();
             }
@@ -577,8 +595,8 @@ export default function BuildProfile() {
         setSavedAt(new Date().toISOString());
         const ok = await persistToServer(pruned);
         if (ok) {
-            toast.success("Draft saved", {
-                description: "You can continue later — nothing is lost.",
+            toast.success('Draft saved', {
+                description: 'You can continue later — nothing is lost.',
             });
         }
         // persistToServer already shows validation errors via setErrors + toast.error when !ok
@@ -639,17 +657,20 @@ export default function BuildProfile() {
 
     function handlePhotoFile(file: File | undefined) {
         if (!file) return;
-        if (!file.type.startsWith("image/")) {
-            toast.error("Please choose an image file for your photo.");
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please choose an image file for your photo.');
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
-            toast.error("Photo must be smaller than 5 MB.");
+            toast.error('Photo must be smaller than 5 MB.');
             return;
         }
         const reader = new FileReader();
-        reader.onload = () =>
-            patch({ photoDataUrl: String(reader.result ?? "") });
+        reader.onload = () => {
+            if (typeof reader.result === 'string') {
+                patch({ photoDataUrl: reader.result });
+            }
+        };
         reader.readAsDataURL(file);
     }
 
@@ -664,16 +685,17 @@ export default function BuildProfile() {
                 return;
             }
             const doc: ProfileDocument = {
-                id: newId("doc"),
+                id: newId('doc'),
                 name: file.name,
                 size: file.size,
-                type: file.type || "application/octet-stream",
+                type: file.type || 'application/octet-stream',
                 category: docCategory,
                 uploadDate: new Date().toISOString(),
             };
             const reader = new FileReader();
             reader.onload = () => {
-                const dataUrl = String(reader.result ?? "");
+                if (typeof reader.result !== 'string') return;
+                const dataUrl = reader.result;
                 setProfile((prev) => ({
                     ...prev,
                     documents: prev.documents.map((d) =>
@@ -691,24 +713,24 @@ export default function BuildProfile() {
             }));
             toast.success(
                 next.length === 1
-                    ? "Document added"
+                    ? 'Document added'
                     : `${next.length} documents added`,
             );
         }
-        if (docsRef.current) docsRef.current.value = "";
+        if (docsRef.current) docsRef.current.value = '';
     }
 
     function addSkill(raw: string) {
-        const value = raw.trim().replace(/\s+/g, " ");
+        const value = raw.trim().replace(/\s+/g, ' ');
         if (!value) return;
         if (
             profile.skills.some((s) => s.toLowerCase() === value.toLowerCase())
         ) {
-            toast.info("That skill is already on your list.");
+            toast.info('That skill is already on your list.');
             return;
         }
         patch({ skills: [...profile.skills, value] });
-        setSkillInput("");
+        setSkillInput('');
     }
 
     function updateEducation(id: string, p: Partial<EducationEntry>) {
@@ -727,7 +749,7 @@ export default function BuildProfile() {
                           ...e,
                           ...p,
                           endDate: p.currentlyWorking
-                              ? ""
+                              ? ''
                               : (p.endDate ?? e.endDate),
                       }
                     : e,
@@ -747,25 +769,25 @@ export default function BuildProfile() {
         if (!file) return;
 
         const supportedTypes = [
-            "application/pdf",
-            "image/jpeg",
-            "image/png",
-            "image/gif",
-            "image/webp",
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp',
         ];
         if (!supportedTypes.includes(file.type)) {
-            toast.error("Choose a PDF or image file.");
+            toast.error('Choose a PDF or image file.');
             return;
         }
         if (file.size > 10 * 1024 * 1024) {
-            toast.error("Certificate documents must be 10 MB or smaller.");
+            toast.error('Certificate documents must be 10 MB or smaller.');
             return;
         }
 
         const reader = new FileReader();
         reader.onload = () => {
-            if (typeof reader.result !== "string") {
-                toast.error("Could not read the certificate document.");
+            if (typeof reader.result !== 'string') {
+                toast.error('Could not read the certificate document.');
                 return;
             }
 
@@ -779,53 +801,53 @@ export default function BuildProfile() {
             });
         };
         reader.onerror = () =>
-            toast.error("Could not read the certificate document.");
+            toast.error('Could not read the certificate document.');
         reader.readAsDataURL(file);
     }
 
     const initials =
-        `${profile.firstName.trim()[0] ?? ""}${profile.lastName.trim()[0] ?? ""}`.toUpperCase() ||
-        "YOU";
+        `${profile.firstName.trim()[0] ?? ''}${profile.lastName.trim()[0] ?? ''}`.toUpperCase() ||
+        'YOU';
 
     const savedLabel = savedAt
-        ? `Saved ${new Date(savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-        : "Saving…";
+        ? `Saved ${new Date(savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+        : 'Saving…';
 
     return (
         <>
             <Head title="Build Your Profile" />
             <div
                 ref={topRef}
-                className="flex min-h-svh scroll-mt-4 flex-col bg-sand-50 font-sans text-ember antialiased"
+                className="bg-sand-50 text-ember flex min-h-svh scroll-mt-4 flex-col font-sans antialiased"
             >
                 {/* ── Top bar ── */}
-                <header className="border-b border-harbor/10 bg-sand-50/85 backdrop-blur-md">
+                <header className="border-harbor/10 bg-sand-50/85 border-b backdrop-blur-md">
                     <div
                         aria-hidden
-                        className="h-1 bg-gradient-to-r from-harbor via-sienna to-amber"
+                        className="from-harbor via-sienna to-amber h-1 bg-gradient-to-r"
                     />
                     <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
                         <span className="flex items-center gap-2.5">
-                            <AppLogoIcon className="size-9 rounded-xl object-contain shadow-md shadow-harbor/25" />
-                            <span className="text-[15px] font-bold tracking-tight text-harbor">
+                            <AppLogoIcon className="shadow-harbor/25 size-9 rounded-xl object-contain shadow-md" />
+                            <span className="text-harbor text-[15px] font-bold tracking-tight">
                                 AlphaForce ProjectLink
                             </span>
                         </span>
-                        <div className="inline-flex items-center gap-2 text-xs font-bold text-ember-500">
-                            <span className="hidden items-center gap-1.5 rounded-full border border-moss/25 bg-moss/10 px-3 py-1.5 text-moss-600 sm:inline-flex">
+                        <div className="text-ember-500 inline-flex items-center gap-2 text-xs font-bold">
+                            <span className="border-moss/25 bg-moss/10 text-moss-600 hidden items-center gap-1.5 rounded-full border px-3 py-1.5 sm:inline-flex">
                                 <Save className="size-3.5" />
                                 {savedLabel} · continues later
                             </span>
                             <span
                                 aria-hidden
-                                className="flex size-9 items-center justify-center rounded-full bg-sienna text-xs font-extrabold text-white shadow-md shadow-sienna/30"
+                                className="bg-sienna shadow-sienna/30 flex size-9 items-center justify-center rounded-full text-xs font-extrabold text-white shadow-md"
                             >
                                 {initials}
                             </span>
                             <button
                                 type="button"
-                                onClick={() => router.post("/logout")}
-                                className="inline-flex h-9 items-center gap-1.5 rounded-full border border-harbor/15 px-3 text-[12px] font-bold text-ember-500 transition hover:border-sienna hover:text-sienna"
+                                onClick={() => router.post('/logout')}
+                                className="border-harbor/15 text-ember-500 hover:border-sienna hover:text-sienna inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-[12px] font-bold transition"
                             >
                                 <LogOut className="size-3.5" />
                                 <span className="hidden sm:inline">
@@ -839,11 +861,11 @@ export default function BuildProfile() {
                 <main className="relative flex-1 overflow-hidden">
                     <div
                         aria-hidden
-                        className="pointer-events-none absolute -top-24 -right-24 size-96 rounded-full bg-clay/25 blur-3xl"
+                        className="bg-clay/25 pointer-events-none absolute -top-24 -right-24 size-96 rounded-full blur-3xl"
                     />
                     <div
                         aria-hidden
-                        className="pointer-events-none absolute -bottom-32 -left-24 size-96 rounded-full bg-amber/15 blur-3xl"
+                        className="bg-amber/15 pointer-events-none absolute -bottom-32 -left-24 size-96 rounded-full blur-3xl"
                     />
 
                     <div className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
@@ -858,20 +880,20 @@ export default function BuildProfile() {
                                         <span className="flex w-full items-center">
                                             <span
                                                 aria-hidden
-                                                className={`h-0.5 flex-1 rounded ${i === 0 ? "bg-transparent" : "bg-moss/50"}`}
+                                                className={`h-0.5 flex-1 rounded ${i === 0 ? 'bg-transparent' : 'bg-moss/50'}`}
                                             />
                                             <span
                                                 className={`flex size-9 items-center justify-center rounded-full ${
-                                                    s.state === "done"
-                                                        ? "bg-moss text-white shadow-md shadow-moss/30"
-                                                        : s.state === "current"
-                                                          ? "relative bg-sienna text-white shadow-lg shadow-sienna/40"
-                                                          : "border border-harbor/15 bg-white text-[13px] font-extrabold text-ember-400"
+                                                    s.state === 'done'
+                                                        ? 'bg-moss shadow-moss/30 text-white shadow-md'
+                                                        : s.state === 'current'
+                                                          ? 'bg-sienna shadow-sienna/40 relative text-white shadow-lg'
+                                                          : 'border-harbor/15 text-ember-400 border bg-white text-[13px] font-extrabold'
                                                 }`}
                                             >
-                                                {s.state === "done" ? (
+                                                {s.state === 'done' ? (
                                                     <BadgeCheck className="size-4.5" />
-                                                ) : s.state === "current" ? (
+                                                ) : s.state === 'current' ? (
                                                     <FileText className="size-4.5" />
                                                 ) : (
                                                     i + 1
@@ -879,14 +901,14 @@ export default function BuildProfile() {
                                             </span>
                                             <span
                                                 aria-hidden
-                                                className={`h-0.5 flex-1 rounded ${s.state === "done" ? "bg-moss/50" : "bg-harbor/10"} ${i === JOURNEY.length - 1 ? "bg-transparent" : ""}`}
+                                                className={`h-0.5 flex-1 rounded ${s.state === 'done' ? 'bg-moss/50' : 'bg-harbor/10'} ${i === JOURNEY.length - 1 ? 'bg-transparent' : ''}`}
                                             />
                                         </span>
                                         <span
-                                            className={`text-center text-[11px] leading-tight font-bold ${s.state === "current" ? "text-sienna" : s.state === "done" ? "text-moss-600" : "text-ember-400"}`}
+                                            className={`text-center text-[11px] leading-tight font-bold ${s.state === 'current' ? 'text-sienna' : s.state === 'done' ? 'text-moss-600' : 'text-ember-400'}`}
                                             aria-current={
-                                                s.state === "current"
-                                                    ? "step"
+                                                s.state === 'current'
+                                                    ? 'step'
                                                     : undefined
                                             }
                                         >
@@ -895,8 +917,8 @@ export default function BuildProfile() {
                                     </li>
                                 ))}
                             </ol>
-                            <p className="text-center text-[13px] font-bold text-ember-500 sm:hidden">
-                                Step 3 of 5 ·{" "}
+                            <p className="text-ember-500 text-center text-[13px] font-bold sm:hidden">
+                                Step 3 of 5 ·{' '}
                                 <span className="text-sienna">
                                     Build Your Profile
                                 </span>
@@ -908,7 +930,7 @@ export default function BuildProfile() {
                             <aside className="space-y-4 lg:sticky lg:top-6">
                                 <section
                                     aria-label="Profile completion"
-                                    className="rounded-[1.75rem] border border-harbor/10 bg-harbor p-6 text-sand-50 shadow-xl shadow-harbor/25"
+                                    className="border-harbor/10 bg-harbor text-sand-50 shadow-harbor/25 rounded-[1.75rem] border p-6 shadow-xl"
                                 >
                                     <div className="flex items-center justify-between gap-3">
                                         <p className="inline-flex items-center gap-2 text-[13px] font-extrabold tracking-wide uppercase opacity-90">
@@ -928,18 +950,18 @@ export default function BuildProfile() {
                                         className="mt-4 h-2.5 overflow-hidden rounded-full bg-white/15"
                                     >
                                         <div
-                                            className="h-full rounded-full bg-gradient-to-r from-sienna-200 via-amber-200 to-amber transition-all duration-500"
+                                            className="from-sienna-200 to-amber h-full rounded-full bg-gradient-to-r via-amber-200 transition-all duration-500"
                                             style={{ width: `${percent}%` }}
                                         />
                                     </div>
-                                    <p className="mt-3 text-[13px] leading-relaxed text-sand-100/85">
+                                    <p className="text-sand-100/85 mt-3 text-[13px] leading-relaxed">
                                         {percent < 40
-                                            ? "Great start — complete the core sections so organisations can find you."
+                                            ? 'Great start — complete the core sections so organisations can find you.'
                                             : percent < 80
-                                              ? "Looking strong. Add education and experience to stand out."
+                                              ? 'Looking strong. Add education and experience to stand out.'
                                               : percent < 100
-                                                ? "Almost there — a few finishing touches left."
-                                                : "Excellent — your profile is complete and ready to preview."}
+                                                ? 'Almost there — a few finishing touches left.'
+                                                : 'Excellent — your profile is complete and ready to preview.'}
                                     </p>
 
                                     <ol className="mt-5 space-y-1">
@@ -953,22 +975,22 @@ export default function BuildProfile() {
                                                         onClick={() => goTo(i)}
                                                         aria-current={
                                                             active
-                                                                ? "step"
+                                                                ? 'step'
                                                                 : undefined
                                                         }
                                                         className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${
                                                             active
-                                                                ? "bg-white/12 ring-1 ring-white/25"
-                                                                : "hover:bg-white/8"
+                                                                ? 'bg-white/12 ring-1 ring-white/25'
+                                                                : 'hover:bg-white/8'
                                                         }`}
                                                     >
                                                         <span
                                                             className={`flex size-7 shrink-0 items-center justify-center rounded-full text-[12px] font-extrabold ${
                                                                 st.complete
-                                                                    ? "bg-moss text-white"
+                                                                    ? 'bg-moss text-white'
                                                                     : active
-                                                                      ? "bg-amber text-harbor"
-                                                                      : "bg-white/12 text-sand-100"
+                                                                      ? 'bg-amber text-harbor'
+                                                                      : 'text-sand-100 bg-white/12'
                                                             }`}
                                                         >
                                                             {st.complete ? (
@@ -981,7 +1003,7 @@ export default function BuildProfile() {
                                                             <span className="flex items-center gap-1.5 text-[13.5px] font-bold">
                                                                 {s.shortLabel}
                                                                 {!s.required && (
-                                                                    <span className="text-[10.5px] font-bold text-sand-100/60 uppercase">
+                                                                    <span className="text-sand-100/60 text-[10.5px] font-bold uppercase">
                                                                         ·
                                                                         optional
                                                                     </span>
@@ -989,7 +1011,7 @@ export default function BuildProfile() {
                                                             </span>
                                                             <span className="mt-1 block h-1 overflow-hidden rounded-full bg-white/12">
                                                                 <span
-                                                                    className={`block h-full rounded-full ${st.complete ? "bg-moss-200" : "bg-amber-200/80"}`}
+                                                                    className={`block h-full rounded-full ${st.complete ? 'bg-moss-200' : 'bg-amber-200/80'}`}
                                                                     style={{
                                                                         width: `${st.percent}%`,
                                                                     }}
@@ -1006,12 +1028,12 @@ export default function BuildProfile() {
                                     </ol>
                                 </section>
 
-                                <section className="hidden rounded-[1.75rem] border border-harbor/10 bg-white p-6 shadow-lg shadow-harbor/10 lg:block">
-                                    <p className="inline-flex items-center gap-2 text-[13.5px] font-extrabold text-harbor">
-                                        <Eye className="size-4.5 text-clay-600" />
+                                <section className="border-harbor/10 shadow-harbor/10 hidden rounded-[1.75rem] border bg-white p-6 shadow-lg lg:block">
+                                    <p className="text-harbor inline-flex items-center gap-2 text-[13.5px] font-extrabold">
+                                        <Eye className="text-clay-600 size-4.5" />
                                         How managers see you
                                     </p>
-                                    <p className="mt-2 text-[13px] leading-relaxed text-ember-500">
+                                    <p className="text-ember-500 mt-2 text-[13px] leading-relaxed">
                                         Project Managers scan for a clear
                                         summary, relevant skills, and recent
                                         experience. Keep entries short and
@@ -1023,10 +1045,10 @@ export default function BuildProfile() {
                             {/* ── Main step card ── */}
                             <section
                                 aria-labelledby="step-heading"
-                                className="overflow-hidden rounded-[2rem] border border-harbor/10 bg-white shadow-2xl shadow-harbor/15"
+                                className="border-harbor/10 shadow-harbor/15 overflow-hidden rounded-[2rem] border bg-white shadow-2xl"
                             >
                                 {/* Stepper strip */}
-                                <div className="border-b border-harbor/10 bg-sand-100/70 px-6 pt-4 pb-6 sm:px-8">
+                                <div className="border-harbor/10 bg-sand-100/70 border-b px-6 pt-4 pb-6 sm:px-8">
                                     <ol
                                         aria-label="Profile sections"
                                         className="flex items-center gap-1 overflow-x-auto pb-2"
@@ -1041,11 +1063,11 @@ export default function BuildProfile() {
                                                     onClick={() => goTo(i)}
                                                     className={`rounded-full px-3 py-1.5 text-[12px] font-extrabold whitespace-nowrap transition ${
                                                         i === stepIndex
-                                                            ? "bg-harbor text-sand-50 shadow-md shadow-harbor/25"
+                                                            ? 'bg-harbor text-sand-50 shadow-harbor/25 shadow-md'
                                                             : statusById[s.id]
                                                                     .complete
-                                                              ? "bg-moss/12 text-moss-600"
-                                                              : "text-ember-400 hover:bg-white hover:text-harbor"
+                                                              ? 'bg-moss/12 text-moss-600'
+                                                              : 'text-ember-400 hover:text-harbor hover:bg-white'
                                                     }`}
                                                 >
                                                     {i + 1}. {s.shortLabel}
@@ -1053,7 +1075,7 @@ export default function BuildProfile() {
                                                 {i < STEPS.length - 1 && (
                                                     <ChevronRight
                                                         aria-hidden
-                                                        className="size-3.5 shrink-0 text-ember-400/50"
+                                                        className="text-ember-400/50 size-3.5 shrink-0"
                                                     />
                                                 )}
                                             </li>
@@ -1062,38 +1084,38 @@ export default function BuildProfile() {
                                 </div>
 
                                 <div className="px-6 py-7 sm:px-8 sm:py-9">
-                                    <p className="inline-flex items-center gap-2 text-[12px] font-extrabold tracking-widest text-sienna uppercase">
+                                    <p className="text-sienna inline-flex items-center gap-2 text-[12px] font-extrabold tracking-widest uppercase">
                                         Step {stepIndex + 1} of {STEPS.length}
                                         <span
-                                            className={`rounded-full px-2.5 py-0.5 normal-case ${step.required ? "bg-sienna/10 text-sienna-600" : "bg-sand-100 text-ember-500"}`}
+                                            className={`rounded-full px-2.5 py-0.5 normal-case ${step.required ? 'bg-sienna/10 text-sienna-600' : 'bg-sand-100 text-ember-500'}`}
                                         >
                                             {step.required
-                                                ? "Required"
-                                                : "Optional — skippable"}
+                                                ? 'Required'
+                                                : 'Optional — skippable'}
                                         </span>
                                     </p>
                                     <h1
                                         id="step-heading"
-                                        className="mt-2 text-2xl font-bold tracking-tight text-harbor sm:text-[28px]"
+                                        className="text-harbor mt-2 text-2xl font-bold tracking-tight sm:text-[28px]"
                                     >
                                         {step.label}
                                     </h1>
-                                    <p className="mt-1.5 text-[14.5px] text-ember-500">
+                                    <p className="text-ember-500 mt-1.5 text-[14.5px]">
                                         {step.hint}
                                     </p>
 
                                     {errors.length > 0 && (
                                         <div
                                             role="alert"
-                                            className="mt-5 flex gap-3 rounded-2xl border border-sienna/25 bg-sienna-100/50 p-4"
+                                            className="border-sienna/25 bg-sienna-100/50 mt-5 flex gap-3 rounded-2xl border p-4"
                                         >
-                                            <CircleAlert className="mt-0.5 size-5 shrink-0 text-sienna" />
+                                            <CircleAlert className="text-sienna mt-0.5 size-5 shrink-0" />
                                             <div>
-                                                <p className="text-[14px] font-extrabold text-harbor">
+                                                <p className="text-harbor text-[14px] font-extrabold">
                                                     Please complete the required
                                                     information
                                                 </p>
-                                                <ul className="mt-1.5 list-disc space-y-1 pl-5 text-[13.5px] font-medium text-ember-600">
+                                                <ul className="text-ember-600 mt-1.5 list-disc space-y-1 pl-5 text-[13.5px] font-medium">
                                                     {errors.map((e) => (
                                                         <li key={e}>{e}</li>
                                                     ))}
@@ -1105,12 +1127,12 @@ export default function BuildProfile() {
                                     <div className="mt-7">{renderStep()}</div>
 
                                     {/* ── Navigation ── */}
-                                    <div className="mt-9 flex flex-col gap-3 border-t border-harbor/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="border-harbor/10 mt-9 flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
                                         <button
                                             type="button"
                                             onClick={() => goTo(stepIndex - 1)}
                                             disabled={stepIndex === 0}
-                                            className="inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 border-harbor/15 px-6 text-[14.5px] font-bold text-harbor transition hover:border-harbor hover:bg-harbor hover:text-sand-50 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-harbor/15 disabled:hover:bg-transparent disabled:hover:text-harbor"
+                                            className="border-harbor/15 text-harbor hover:border-harbor hover:bg-harbor hover:text-sand-50 disabled:hover:border-harbor/15 disabled:hover:text-harbor inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 px-6 text-[14.5px] font-bold transition disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent"
                                         >
                                             <ArrowLeft className="size-4.5" />
                                             Back
@@ -1121,23 +1143,23 @@ export default function BuildProfile() {
                                                 type="button"
                                                 onClick={handleSaveDraft}
                                                 disabled={isSaving}
-                                                className="inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 border-dashed border-clay-400/60 px-6 text-[14.5px] font-bold text-clay-600 transition hover:border-clay-600 hover:bg-clay-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="border-clay-400/60 text-clay-600 hover:border-clay-600 hover:bg-clay-100 inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 border-dashed px-6 text-[14.5px] font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
                                             >
                                                 <Save className="size-4.5" />
                                                 {isSaving
-                                                    ? "Saving..."
-                                                    : "Save as Draft"}
+                                                    ? 'Saving...'
+                                                    : 'Save as Draft'}
                                             </button>
                                             {stepIndex < STEPS.length - 1 ? (
                                                 <button
                                                     type="button"
                                                     onClick={handleContinue}
                                                     disabled={isSaving}
-                                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-sienna px-8 text-[14.5px] font-bold text-white shadow-xl shadow-sienna/35 transition-all hover:-translate-y-0.5 hover:bg-sienna-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="bg-sienna shadow-sienna/35 hover:bg-sienna-600 inline-flex h-12 items-center justify-center gap-2 rounded-full px-8 text-[14.5px] font-bold text-white shadow-xl transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                                                 >
                                                     {isSaving
-                                                        ? "Saving..."
-                                                        : "Save & Continue"}
+                                                        ? 'Saving...'
+                                                        : 'Save & Continue'}
                                                     <ArrowRight className="size-4.5" />
                                                 </button>
                                             ) : (
@@ -1148,10 +1170,10 @@ export default function BuildProfile() {
                                                         // Validate all required steps before preview
                                                         const requiredSteps: StepId[] =
                                                             [
-                                                                "personal",
-                                                                "summary",
-                                                                "skills",
-                                                                "documents",
+                                                                'personal',
+                                                                'summary',
+                                                                'skills',
+                                                                'documents',
                                                             ];
                                                         const allErrors =
                                                             requiredSteps.flatMap(
@@ -1169,7 +1191,7 @@ export default function BuildProfile() {
                                                             );
                                                             scrollTop();
                                                             toast.error(
-                                                                "Please complete the required sections before previewing.",
+                                                                'Please complete the required sections before previewing.',
                                                                 {
                                                                     description:
                                                                         allErrors[0],
@@ -1186,15 +1208,15 @@ export default function BuildProfile() {
                                                             );
                                                         if (!ok) return;
                                                         router.visit(
-                                                            "/onboarding/profile-preview",
+                                                            '/onboarding/profile-preview',
                                                         );
                                                     }}
-                                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-harbor px-8 text-[14.5px] font-bold text-sand-50 shadow-xl shadow-harbor/35 transition-all hover:-translate-y-0.5 hover:bg-harbor-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="bg-harbor text-sand-50 shadow-harbor/35 hover:bg-harbor-700 inline-flex h-12 items-center justify-center gap-2 rounded-full px-8 text-[14.5px] font-bold shadow-xl transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                                                 >
                                                     <Eye className="size-4.5" />
                                                     {isSaving
-                                                        ? "Saving..."
-                                                        : "Preview Profile"}
+                                                        ? 'Saving...'
+                                                        : 'Preview Profile'}
                                                 </button>
                                             )}
                                         </div>
@@ -1202,26 +1224,26 @@ export default function BuildProfile() {
 
                                     {!step.required &&
                                         stepIndex < STEPS.length - 1 && (
-                                            <p className="mt-4 text-center text-[13px] font-medium text-ember-400 sm:text-right">
-                                                Nothing to add here?{" "}
+                                            <p className="text-ember-400 mt-4 text-center text-[13px] font-medium sm:text-right">
+                                                Nothing to add here?{' '}
                                                 <button
                                                     type="button"
                                                     onClick={handleContinue}
-                                                    className="font-bold text-sienna underline-offset-2 hover:underline"
+                                                    className="text-sienna font-bold underline-offset-2 hover:underline"
                                                 >
                                                     Skip for now
-                                                </button>{" "}
+                                                </button>{' '}
                                                 — you can come back anytime.
                                             </p>
                                         )}
                                 </div>
                             </section>
 
-                            <div className="flex items-center justify-end text-[12.5px] font-semibold text-ember-400">
+                            <div className="text-ember-400 flex items-center justify-end text-[12.5px] font-semibold">
                                 <span>
-                                    Next:{" "}
+                                    Next:{' '}
                                     {STEPS[stepIndex + 1]?.label ??
-                                        "Profile Preview"}
+                                        'Profile Preview'}
                                 </span>
                             </div>
                         </div>
@@ -1235,22 +1257,22 @@ export default function BuildProfile() {
 
     function renderStep() {
         switch (step.id) {
-            case "personal":
+            case 'personal':
                 return (
                     <div className="space-y-6">
                         {/* Photo */}
-                        <div className="flex flex-col items-start gap-4 rounded-2xl border border-harbor/10 bg-sand-50/60 p-5 sm:flex-row sm:items-center">
+                        <div className="border-harbor/10 bg-sand-50/60 flex flex-col items-start gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center">
                             <span className="relative">
                                 {profile.photoDataUrl ? (
                                     <img
                                         src={profile.photoDataUrl}
                                         alt="Profile photo preview"
-                                        className="size-20 rounded-2xl border border-harbor/10 object-cover shadow-md"
+                                        className="border-harbor/10 size-20 rounded-2xl border object-cover shadow-md"
                                     />
                                 ) : (
                                     <span
                                         aria-hidden
-                                        className="flex size-20 items-center justify-center rounded-2xl bg-harbor text-xl font-extrabold text-sand-50"
+                                        className="bg-harbor text-sand-50 flex size-20 items-center justify-center rounded-2xl text-xl font-extrabold"
                                     >
                                         {initials}
                                     </span>
@@ -1259,19 +1281,19 @@ export default function BuildProfile() {
                                     type="button"
                                     onClick={() => photoRef.current?.click()}
                                     aria-label="Upload profile photo"
-                                    className="absolute -right-2 -bottom-2 flex size-8 items-center justify-center rounded-full bg-sienna text-white shadow-lg shadow-sienna/40 transition hover:bg-sienna-600"
+                                    className="bg-sienna shadow-sienna/40 hover:bg-sienna-600 absolute -right-2 -bottom-2 flex size-8 items-center justify-center rounded-full text-white shadow-lg transition"
                                 >
                                     <Camera className="size-4" />
                                 </button>
                             </span>
                             <div className="flex-1">
-                                <p className="text-[14px] font-extrabold text-harbor">
-                                    Profile photo{" "}
-                                    <span className="ml-1 rounded-full bg-sand-100 px-2 py-0.5 text-[11px] font-bold text-ember-400">
+                                <p className="text-harbor text-[14px] font-extrabold">
+                                    Profile photo{' '}
+                                    <span className="bg-sand-100 text-ember-400 ml-1 rounded-full px-2 py-0.5 text-[11px] font-bold">
                                         Optional
                                     </span>
                                 </p>
-                                <p className="mt-1 text-[13px] text-ember-500">
+                                <p className="text-ember-500 mt-1 text-[13px]">
                                     A clear headshot helps organisations
                                     recognise you. JPG or PNG, max 5 MB.
                                 </p>
@@ -1281,11 +1303,11 @@ export default function BuildProfile() {
                                         onClick={() =>
                                             photoRef.current?.click()
                                         }
-                                        className="inline-flex h-9 items-center gap-1.5 rounded-full border border-harbor/15 px-4 text-[13px] font-bold text-ember-500 transition hover:border-sienna hover:text-sienna"
+                                        className="border-harbor/15 text-ember-500 hover:border-sienna hover:text-sienna inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-[13px] font-bold transition"
                                     >
                                         {profile.photoDataUrl
-                                            ? "Change photo"
-                                            : "Upload photo"}
+                                            ? 'Change photo'
+                                            : 'Upload photo'}
                                     </button>
                                     {profile.photoDataUrl && (
                                         <button
@@ -1293,7 +1315,7 @@ export default function BuildProfile() {
                                             onClick={() =>
                                                 patch({ photoDataUrl: null })
                                             }
-                                            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-harbor/15 px-4 text-[13px] font-bold text-ember-500 transition hover:border-sienna hover:text-sienna"
+                                            className="border-harbor/15 text-ember-500 hover:border-sienna hover:text-sienna inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-[13px] font-bold transition"
                                         >
                                             <X className="size-3.5" />
                                             Remove
@@ -1424,12 +1446,14 @@ export default function BuildProfile() {
                             country={profile.country}
                             required
                             inputClassName={inputCls}
-                            onChange={(city, country) => patch({ city, country })}
+                            onChange={(city, country) =>
+                                patch({ city, country })
+                            }
                         />
                     </div>
                 );
 
-            case "summary":
+            case 'summary':
                 return (
                     <div className="space-y-5">
                         <Field
@@ -1449,12 +1473,12 @@ export default function BuildProfile() {
                                 }
                             />
                         </Field>
-                        <div className="rounded-2xl border border-moss/20 bg-moss/8 p-5">
-                            <p className="inline-flex items-center gap-2 text-[13.5px] font-extrabold text-moss-600">
+                        <div className="border-moss/20 bg-moss/8 rounded-2xl border p-5">
+                            <p className="text-moss-600 inline-flex items-center gap-2 text-[13.5px] font-extrabold">
                                 <Award className="size-4.5" />
                                 What makes a strong summary?
                             </p>
-                            <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px] leading-relaxed text-ember-600">
+                            <ul className="text-ember-600 mt-2 list-disc space-y-1 pl-5 text-[13px] leading-relaxed">
                                 <li>
                                     Your years of experience and sector focus
                                 </li>
@@ -1468,7 +1492,7 @@ export default function BuildProfile() {
                     </div>
                 );
 
-            case "skills":
+            case 'skills':
                 return (
                     <div className="space-y-5">
                         <Field
@@ -1487,7 +1511,7 @@ export default function BuildProfile() {
                                         setSkillInput(e.target.value)
                                     }
                                     onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
+                                        if (e.key === 'Enter') {
                                             e.preventDefault();
                                             addSkill(skillInput);
                                         }
@@ -1496,7 +1520,7 @@ export default function BuildProfile() {
                                 <button
                                     type="button"
                                     onClick={() => addSkill(skillInput)}
-                                    className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-xl bg-harbor px-5 text-[14px] font-bold text-sand-50 transition hover:bg-harbor-700"
+                                    className="bg-harbor text-sand-50 hover:bg-harbor-700 inline-flex h-12 shrink-0 items-center gap-1.5 rounded-xl px-5 text-[14px] font-bold transition"
                                 >
                                     <Plus className="size-4.5" />
                                     Add
@@ -1512,7 +1536,7 @@ export default function BuildProfile() {
                                 {profile.skills.map((s) => (
                                     <li
                                         key={s}
-                                        className="inline-flex items-center gap-1.5 rounded-full border border-harbor/12 bg-harbor py-1.5 pr-2 pl-4 text-[13.5px] font-bold text-sand-50 shadow-sm"
+                                        className="border-harbor/12 bg-harbor text-sand-50 inline-flex items-center gap-1.5 rounded-full border py-1.5 pr-2 pl-4 text-[13.5px] font-bold shadow-sm"
                                     >
                                         {s}
                                         <button
@@ -1525,7 +1549,7 @@ export default function BuildProfile() {
                                                 })
                                             }
                                             aria-label={`Remove skill ${s}`}
-                                            className="flex size-5.5 items-center justify-center rounded-full bg-white/15 transition hover:bg-sienna"
+                                            className="hover:bg-sienna flex size-5.5 items-center justify-center rounded-full bg-white/15 transition"
                                         >
                                             <X className="size-3.5" />
                                         </button>
@@ -1533,13 +1557,13 @@ export default function BuildProfile() {
                                 ))}
                             </ul>
                         ) : (
-                            <p className="rounded-2xl border border-dashed border-harbor/20 bg-sand-50/60 p-5 text-center text-[13.5px] font-medium text-ember-400">
+                            <p className="border-harbor/20 bg-sand-50/60 text-ember-400 rounded-2xl border border-dashed p-5 text-center text-[13.5px] font-medium">
                                 No skills yet — add your first skill above.
                             </p>
                         )}
 
                         <div>
-                            <p className="text-[13px] font-bold text-harbor">
+                            <p className="text-harbor text-[13px] font-bold">
                                 Suggestions — select to add:
                             </p>
                             <div className="mt-2 flex flex-wrap gap-2">
@@ -1555,7 +1579,7 @@ export default function BuildProfile() {
                                         key={s}
                                         type="button"
                                         onClick={() => addSkill(s)}
-                                        className="inline-flex items-center gap-1 rounded-full border border-clay-400/40 bg-white px-3.5 py-1.5 text-[13px] font-bold text-clay-600 transition hover:border-sienna hover:bg-sienna hover:text-white"
+                                        className="border-clay-400/40 text-clay-600 hover:border-sienna hover:bg-sienna inline-flex items-center gap-1 rounded-full border bg-white px-3.5 py-1.5 text-[13px] font-bold transition hover:text-white"
                                     >
                                         <Plus className="size-3.5" />
                                         {s}
@@ -1566,11 +1590,11 @@ export default function BuildProfile() {
                     </div>
                 );
 
-            case "education":
+            case 'education':
                 return (
                     <div className="space-y-5">
                         {profile.education.length === 0 && (
-                            <p className="rounded-2xl border border-dashed border-harbor/20 bg-sand-50/60 p-5 text-center text-[13.5px] font-medium text-ember-400">
+                            <p className="border-harbor/20 bg-sand-50/60 text-ember-400 rounded-2xl border border-dashed p-5 text-center text-[13.5px] font-medium">
                                 No education added yet. Add your most recent
                                 qualification first.
                             </p>
@@ -1591,7 +1615,7 @@ export default function BuildProfile() {
                                             })
                                         }
                                         aria-label={`Remove education ${idx + 1}`}
-                                        className="inline-flex size-9 items-center justify-center rounded-full border border-harbor/12 text-ember-400 transition hover:border-sienna hover:text-sienna"
+                                        className="border-harbor/12 text-ember-400 hover:border-sienna hover:text-sienna inline-flex size-9 items-center justify-center rounded-full border transition"
                                     >
                                         <Trash2 className="size-4" />
                                     </button>
@@ -1724,7 +1748,7 @@ export default function BuildProfile() {
                                     ],
                                 })
                             }
-                            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-harbor/20 text-[14.5px] font-bold text-harbor transition hover:border-sienna hover:bg-sienna/5 hover:text-sienna"
+                            className="border-harbor/20 text-harbor hover:border-sienna hover:bg-sienna/5 hover:text-sienna inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed text-[14.5px] font-bold transition"
                         >
                             <GraduationCap className="size-5" />
                             Add Education
@@ -1732,11 +1756,11 @@ export default function BuildProfile() {
                     </div>
                 );
 
-            case "experience":
+            case 'experience':
                 return (
                     <div className="space-y-5">
                         {profile.experience.length === 0 && (
-                            <p className="rounded-2xl border border-dashed border-harbor/20 bg-sand-50/60 p-5 text-center text-[13.5px] font-medium text-ember-400">
+                            <p className="border-harbor/20 bg-sand-50/60 text-ember-400 rounded-2xl border border-dashed p-5 text-center text-[13.5px] font-medium">
                                 No experience added yet. Start with your most
                                 recent role.
                             </p>
@@ -1757,7 +1781,7 @@ export default function BuildProfile() {
                                             })
                                         }
                                         aria-label={`Remove experience ${idx + 1}`}
-                                        className="inline-flex size-9 items-center justify-center rounded-full border border-harbor/12 text-ember-400 transition hover:border-sienna hover:text-sienna"
+                                        className="border-harbor/12 text-ember-400 hover:border-sienna hover:text-sienna inline-flex size-9 items-center justify-center rounded-full border transition"
                                     >
                                         <Trash2 className="size-4" />
                                     </button>
@@ -1802,7 +1826,9 @@ export default function BuildProfile() {
                                     <CountryCityFields
                                         idPrefix={`experience-${exp.id}`}
                                         city={splitLocation(exp.location).city}
-                                        country={splitLocation(exp.location).country}
+                                        country={
+                                            splitLocation(exp.location).country
+                                        }
                                         optional
                                         wrapperClassName="sm:col-span-2"
                                         inputClassName={inputCls}
@@ -1852,7 +1878,7 @@ export default function BuildProfile() {
                                             />
                                         </Field>
                                     </div>
-                                    <div className="flex items-center gap-3 rounded-xl bg-sand-100/70 px-4 py-3 sm:col-span-2">
+                                    <div className="bg-sand-100/70 flex items-center gap-3 rounded-xl px-4 py-3 sm:col-span-2">
                                         <button
                                             type="button"
                                             role="switch"
@@ -1864,13 +1890,13 @@ export default function BuildProfile() {
                                                         !exp.currentlyWorking,
                                                 })
                                             }
-                                            className={`relative h-6.5 w-11.5 shrink-0 rounded-full transition ${exp.currentlyWorking ? "bg-moss" : "bg-harbor/20"}`}
+                                            className={`relative h-6.5 w-11.5 shrink-0 rounded-full transition ${exp.currentlyWorking ? 'bg-moss' : 'bg-harbor/20'}`}
                                         >
                                             <span
-                                                className={`absolute top-0.5 left-0.5 size-5.5 rounded-full bg-white shadow transition-transform ${exp.currentlyWorking ? "translate-x-5" : ""}`}
+                                                className={`absolute top-0.5 left-0.5 size-5.5 rounded-full bg-white shadow transition-transform ${exp.currentlyWorking ? 'translate-x-5' : ''}`}
                                             />
                                         </button>
-                                        <span className="text-[13.5px] font-bold text-harbor">
+                                        <span className="text-harbor text-[13.5px] font-bold">
                                             Currently working here
                                         </span>
                                     </div>
@@ -1909,7 +1935,7 @@ export default function BuildProfile() {
                                     ],
                                 })
                             }
-                            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-harbor/20 text-[14.5px] font-bold text-harbor transition hover:border-sienna hover:bg-sienna/5 hover:text-sienna"
+                            className="border-harbor/20 text-harbor hover:border-sienna hover:bg-sienna/5 hover:text-sienna inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed text-[14.5px] font-bold transition"
                         >
                             <Briefcase className="size-5" />
                             Add Experience
@@ -1917,11 +1943,11 @@ export default function BuildProfile() {
                     </div>
                 );
 
-            case "certifications":
+            case 'certifications':
                 return (
                     <div className="space-y-5">
                         {profile.certifications.length === 0 && (
-                            <p className="rounded-2xl border border-dashed border-harbor/20 bg-sand-50/60 p-5 text-center text-[13.5px] font-medium text-ember-400">
+                            <p className="border-harbor/20 bg-sand-50/60 text-ember-400 rounded-2xl border border-dashed p-5 text-center text-[13.5px] font-medium">
                                 No certifications yet — this section is
                                 optional. Add professional certificates if you
                                 have them.
@@ -1943,7 +1969,7 @@ export default function BuildProfile() {
                                             })
                                         }
                                         aria-label={`Remove certification ${idx + 1}`}
-                                        className="inline-flex size-9 items-center justify-center rounded-full border border-harbor/12 text-ember-400 transition hover:border-sienna hover:text-sienna"
+                                        className="border-harbor/12 text-ember-400 hover:border-sienna hover:text-sienna inline-flex size-9 items-center justify-center rounded-full border transition"
                                     >
                                         <Trash2 className="size-4" />
                                     </button>
@@ -1964,15 +1990,24 @@ export default function BuildProfile() {
                                                 placeholder="Search or enter a certification"
                                                 value={cert.name}
                                                 onChange={(e) =>
-                                                    updateCertification(cert.id, {
-                                                        name: e.target.value,
-                                                    })
+                                                    updateCertification(
+                                                        cert.id,
+                                                        {
+                                                            name: e.target
+                                                                .value,
+                                                        },
+                                                    )
                                                 }
                                             />
-                                            <datalist id={`cert-name-options-${cert.id}`}>
+                                            <datalist
+                                                id={`cert-name-options-${cert.id}`}
+                                            >
                                                 {CERTIFICATION_SUGGESTIONS.map(
                                                     (suggestion) => (
-                                                        <option key={suggestion} value={suggestion} />
+                                                        <option
+                                                            key={suggestion}
+                                                            value={suggestion}
+                                                        />
                                                     ),
                                                 )}
                                             </datalist>
@@ -1997,10 +2032,15 @@ export default function BuildProfile() {
                                                 })
                                             }
                                         />
-                                        <datalist id={`cert-issuer-options-${cert.id}`}>
+                                        <datalist
+                                            id={`cert-issuer-options-${cert.id}`}
+                                        >
                                             {CERTIFICATION_ISSUER_SUGGESTIONS.map(
                                                 (suggestion) => (
-                                                    <option key={suggestion} value={suggestion} />
+                                                    <option
+                                                        key={suggestion}
+                                                        value={suggestion}
+                                                    />
                                                 ),
                                             )}
                                         </datalist>
@@ -2044,21 +2084,27 @@ export default function BuildProfile() {
                                         />
                                     </Field>
                                     <div className="sm:col-span-2">
-                                        <label className="inline-flex cursor-pointer items-center gap-2.5 text-sm font-semibold text-harbor">
+                                        <label className="text-harbor inline-flex cursor-pointer items-center gap-2.5 text-sm font-semibold">
                                             <input
                                                 type="checkbox"
                                                 checked={cert.doesNotExpire}
                                                 onChange={(event) =>
-                                                    updateCertification(cert.id, {
-                                                        doesNotExpire:
-                                                            event.currentTarget.checked,
-                                                        expiryDate:
-                                                            event.currentTarget.checked
-                                                                ? ""
+                                                    updateCertification(
+                                                        cert.id,
+                                                        {
+                                                            doesNotExpire:
+                                                                event
+                                                                    .currentTarget
+                                                                    .checked,
+                                                            expiryDate: event
+                                                                .currentTarget
+                                                                .checked
+                                                                ? ''
                                                                 : cert.expiryDate,
-                                                    })
+                                                        },
+                                                    )
                                                 }
-                                                className="size-4 rounded border-harbor/30 accent-harbor"
+                                                className="border-harbor/30 accent-harbor size-4 rounded"
                                             />
                                             This certification does not expire
                                         </label>
@@ -2076,7 +2122,8 @@ export default function BuildProfile() {
                                             onChange={(event) =>
                                                 updateCertification(cert.id, {
                                                     credentialNumber:
-                                                        event.currentTarget.value,
+                                                        event.currentTarget
+                                                            .value,
                                                 })
                                             }
                                         />
@@ -2095,7 +2142,8 @@ export default function BuildProfile() {
                                             onChange={(event) =>
                                                 updateCertification(cert.id, {
                                                     credentialUrl:
-                                                        event.currentTarget.value,
+                                                        event.currentTarget
+                                                            .value,
                                                 })
                                             }
                                         />
@@ -2115,16 +2163,18 @@ export default function BuildProfile() {
                                                 onChange={(event) => {
                                                     uploadCertificationDocument(
                                                         cert.id,
-                                                        event.currentTarget.files?.[0],
+                                                        event.currentTarget
+                                                            .files?.[0],
                                                     );
-                                                    event.currentTarget.value = "";
+                                                    event.currentTarget.value =
+                                                        '';
                                                 }}
                                             />
                                             <label
                                                 htmlFor={`cert-document-${cert.id}`}
-                                                className="group flex cursor-pointer items-center gap-4 rounded-2xl border-2 border-dashed border-harbor/20 bg-white p-4 transition hover:border-sienna/50 hover:bg-sand-50 peer-focus-visible:border-sienna peer-focus-visible:ring-2 peer-focus-visible:ring-sienna/25"
+                                                className="group border-harbor/20 hover:border-sienna/50 hover:bg-sand-50 peer-focus-visible:border-sienna peer-focus-visible:ring-sienna/25 flex cursor-pointer items-center gap-4 rounded-2xl border-2 border-dashed bg-white p-4 transition peer-focus-visible:ring-2"
                                             >
-                                                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-harbor/8 text-harbor transition group-hover:bg-sienna/10 group-hover:text-sienna">
+                                                <span className="bg-harbor/8 text-harbor group-hover:bg-sienna/10 group-hover:text-sienna flex size-12 shrink-0 items-center justify-center rounded-xl transition">
                                                     {cert.certificateDocument ? (
                                                         <BadgeCheck className="size-6" />
                                                     ) : (
@@ -2132,35 +2182,68 @@ export default function BuildProfile() {
                                                     )}
                                                 </span>
                                                 <span className="min-w-0 flex-1">
-                                                    <span className="block truncate text-sm font-extrabold text-harbor">
+                                                    <span className="text-harbor block truncate text-sm font-extrabold">
                                                         {cert.certificateDocument
-                                                            ? cert.certificateDocument.name
-                                                            : "Upload your certificate"}
+                                                            ? cert
+                                                                  .certificateDocument
+                                                                  .name
+                                                            : 'Upload your certificate'}
                                                     </span>
-                                                    <span className="mt-0.5 block text-xs text-ember-400">
-                                                        PDF or image · Up to 10 MB
+                                                    <span className="text-ember-400 mt-0.5 block text-xs">
+                                                        PDF or image · Up to 10
+                                                        MB
                                                     </span>
                                                 </span>
-                                                <span className="inline-flex h-9 shrink-0 items-center rounded-lg border border-harbor/15 px-3 text-xs font-bold text-harbor transition group-hover:border-sienna group-hover:text-sienna">
+                                                <span className="border-harbor/15 text-harbor group-hover:border-sienna group-hover:text-sienna inline-flex h-9 shrink-0 items-center rounded-lg border px-3 text-xs font-bold transition">
                                                     {cert.certificateDocument
-                                                        ? "Replace file"
-                                                        : "Choose file"}
+                                                        ? 'Replace file'
+                                                        : 'Choose file'}
                                                 </span>
                                             </label>
                                             {cert.certificateDocument && (
-                                                <div className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-sand-100/70 px-3 py-2 text-sm">
-                                                    <span className="min-w-0 truncate font-semibold text-harbor">
+                                                <div className="bg-sand-100/70 mt-2 flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm">
+                                                    <span className="text-harbor min-w-0 truncate font-semibold">
                                                         {fileTypeLabel(
-                                                            cert.certificateDocument.type,
-                                                            cert.certificateDocument.name,
-                                                        )} · {formatFileSize(cert.certificateDocument.size)}
+                                                            cert
+                                                                .certificateDocument
+                                                                .type,
+                                                            cert
+                                                                .certificateDocument
+                                                                .name,
+                                                        )}{' '}
+                                                        ·{' '}
+                                                        {formatFileSize(
+                                                            cert
+                                                                .certificateDocument
+                                                                .size,
+                                                        )}
                                                     </span>
                                                     <div className="flex shrink-0 items-center gap-2">
-                                                        {(cert.certificateDocument.downloadUrl || cert.certificateDocument.dataUrl) && (
+                                                        {(cert
+                                                            .certificateDocument
+                                                            .downloadUrl ||
+                                                            cert
+                                                                .certificateDocument
+                                                                .dataUrl) && (
                                                             <a
-                                                                href={cert.certificateDocument.downloadUrl ?? cert.certificateDocument.dataUrl}
-                                                                download={cert.certificateDocument.dataUrl ? cert.certificateDocument.name : undefined}
-                                                                className="text-xs font-bold text-sienna hover:underline"
+                                                                href={
+                                                                    cert
+                                                                        .certificateDocument
+                                                                        .downloadUrl ??
+                                                                    cert
+                                                                        .certificateDocument
+                                                                        .dataUrl
+                                                                }
+                                                                download={
+                                                                    cert
+                                                                        .certificateDocument
+                                                                        .dataUrl
+                                                                        ? cert
+                                                                              .certificateDocument
+                                                                              .name
+                                                                        : undefined
+                                                                }
+                                                                className="text-sienna text-xs font-bold hover:underline"
                                                             >
                                                                 Download
                                                             </a>
@@ -2168,8 +2251,16 @@ export default function BuildProfile() {
                                                         <button
                                                             type="button"
                                                             aria-label="Remove certificate document"
-                                                            className="rounded-full p-1 text-ember-400 hover:bg-sand-100 hover:text-sienna"
-                                                            onClick={() => updateCertification(cert.id, { certificateDocument: null })}
+                                                            className="text-ember-400 hover:bg-sand-100 hover:text-sienna rounded-full p-1"
+                                                            onClick={() =>
+                                                                updateCertification(
+                                                                    cert.id,
+                                                                    {
+                                                                        certificateDocument:
+                                                                            null,
+                                                                    },
+                                                                )
+                                                            }
                                                         >
                                                             <X className="size-4" />
                                                         </button>
@@ -2192,9 +2283,12 @@ export default function BuildProfile() {
                                                     ...profile.skills,
                                                 ]}
                                                 onChange={(relatedSkills) =>
-                                                    updateCertification(cert.id, {
-                                                        relatedSkills,
-                                                    })
+                                                    updateCertification(
+                                                        cert.id,
+                                                        {
+                                                            relatedSkills,
+                                                        },
+                                                    )
                                                 }
                                             />
                                         </Field>
@@ -2212,7 +2306,7 @@ export default function BuildProfile() {
                                     ],
                                 })
                             }
-                            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-harbor/20 text-[14.5px] font-bold text-harbor transition hover:border-sienna hover:bg-sienna/5 hover:text-sienna"
+                            className="border-harbor/20 text-harbor hover:border-sienna hover:bg-sienna/5 hover:text-sienna inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed text-[14.5px] font-bold transition"
                         >
                             <Award className="size-5" />
                             Add Certification
@@ -2220,14 +2314,14 @@ export default function BuildProfile() {
                     </div>
                 );
 
-            case "documents":
+            case 'documents':
                 return (
                     <div className="space-y-5">
-                        <div className="rounded-2xl border border-harbor/10 bg-sand-50/60 p-5 sm:p-6">
-                            <p className="text-[14px] font-extrabold text-harbor">
+                        <div className="border-harbor/10 bg-sand-50/60 rounded-2xl border p-5 sm:p-6">
+                            <p className="text-harbor text-[14px] font-extrabold">
                                 Upload professional documents
                             </p>
-                            <p className="mt-1 text-[13px] text-ember-500">
+                            <p className="text-ember-500 mt-1 text-[13px]">
                                 Upload your ID, proof of residence, and SARS
                                 document. A bank letter is optional. CVs,
                                 certificates, and other supporting documents are
@@ -2237,7 +2331,7 @@ export default function BuildProfile() {
                             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                                 <label
                                     htmlFor="docCategory"
-                                    className="flex flex-1 flex-col gap-1.5 text-[13px] font-bold text-harbor"
+                                    className="text-harbor flex flex-1 flex-col gap-1.5 text-[13px] font-bold"
                                 >
                                     Document type
                                     <select
@@ -2246,7 +2340,7 @@ export default function BuildProfile() {
                                         onChange={(e) =>
                                             setDocCategory(
                                                 e.target
-                                                    .value as ProfileDocument["category"],
+                                                    .value as ProfileDocument['category'],
                                             )
                                         }
                                         className={`${inputCls} appearance-none`}
@@ -2275,7 +2369,7 @@ export default function BuildProfile() {
                                 <button
                                     type="button"
                                     onClick={() => docsRef.current?.click()}
-                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-harbor px-6 text-[14px] font-bold text-sand-50 transition hover:bg-harbor-700 sm:self-end"
+                                    className="bg-harbor text-sand-50 hover:bg-harbor-700 inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6 text-[14px] font-bold transition sm:self-end"
                                 >
                                     <Upload className="size-4.5" />
                                     Choose files
@@ -2295,9 +2389,9 @@ export default function BuildProfile() {
                         </div>
 
                         {profile.documents.length === 0 ? (
-                            <p className="rounded-2xl border border-dashed border-harbor/20 bg-white p-5 text-center text-[13.5px] font-medium text-ember-400">
-                                Required uploads:{" "}
-                                {REQUIRED_DOCUMENT_CATEGORIES.join(", ")}. A
+                            <p className="border-harbor/20 text-ember-400 rounded-2xl border border-dashed bg-white p-5 text-center text-[13.5px] font-medium">
+                                Required uploads:{' '}
+                                {REQUIRED_DOCUMENT_CATEGORIES.join(', ')}. A
                                 bank letter is optional.
                             </p>
                         ) : (
@@ -2308,22 +2402,22 @@ export default function BuildProfile() {
                                 {profile.documents.map((doc) => (
                                     <li
                                         key={doc.id}
-                                        className="flex items-center gap-4 rounded-2xl border border-harbor/10 bg-white p-4 shadow-sm"
+                                        className="border-harbor/10 flex items-center gap-4 rounded-2xl border bg-white p-4 shadow-sm"
                                     >
-                                        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-harbor/8 text-harbor">
+                                        <span className="bg-harbor/8 text-harbor flex size-11 shrink-0 items-center justify-center rounded-xl">
                                             <FileText className="size-5" />
                                         </span>
                                         <span className="min-w-0 flex-1">
-                                            <span className="block truncate text-[14px] font-extrabold text-harbor">
+                                            <span className="text-harbor block truncate text-[14px] font-extrabold">
                                                 {doc.name}
                                             </span>
-                                            <span className="mt-0.5 block text-[12.5px] font-medium text-ember-400">
-                                                {doc.category} ·{" "}
+                                            <span className="text-ember-400 mt-0.5 block text-[12.5px] font-medium">
+                                                {doc.category} ·{' '}
                                                 {fileTypeLabel(
                                                     doc.type,
                                                     doc.name,
-                                                )}{" "}
-                                                · {formatFileSize(doc.size)} ·{" "}
+                                                )}{' '}
+                                                · {formatFileSize(doc.size)} ·{' '}
                                                 {new Date(
                                                     doc.uploadDate,
                                                 ).toLocaleDateString()}
@@ -2341,12 +2435,12 @@ export default function BuildProfile() {
                                                         : undefined
                                                 }
                                                 aria-label={`Download ${doc.name}`}
-                                                className="inline-flex size-9 items-center justify-center rounded-full border border-harbor/12 text-harbor transition hover:border-harbor hover:bg-harbor hover:text-sand-50"
+                                                className="border-harbor/12 text-harbor hover:border-harbor hover:bg-harbor hover:text-sand-50 inline-flex size-9 items-center justify-center rounded-full border transition"
                                             >
                                                 <Download className="size-4" />
                                             </a>
                                         ) : (
-                                            <span className="text-[11.5px] font-bold text-ember-400">
+                                            <span className="text-ember-400 text-[11.5px] font-bold">
                                                 Preparing…
                                             </span>
                                         )}
@@ -2362,7 +2456,7 @@ export default function BuildProfile() {
                                                 })
                                             }
                                             aria-label={`Remove ${doc.name}`}
-                                            className="inline-flex size-9 items-center justify-center rounded-full border border-harbor/12 text-ember-400 transition hover:border-sienna hover:text-sienna"
+                                            className="border-harbor/12 text-ember-400 hover:border-sienna hover:text-sienna inline-flex size-9 items-center justify-center rounded-full border transition"
                                         >
                                             <Trash2 className="size-4" />
                                         </button>
@@ -2371,17 +2465,17 @@ export default function BuildProfile() {
                             </ul>
                         )}
 
-                        <div className="rounded-2xl border border-harbor/10 bg-harbor p-5 text-sand-50 sm:p-6">
+                        <div className="border-harbor/10 bg-harbor text-sand-50 rounded-2xl border p-5 sm:p-6">
                             <p className="inline-flex items-center gap-2 text-[14px] font-extrabold">
                                 <UserRound className="size-4.5 text-amber-200" />
                                 You're at the final step
                             </p>
-                            <p className="mt-1.5 text-[13.5px] leading-relaxed text-sand-100/85">
+                            <p className="text-sand-100/85 mt-1.5 text-[13.5px] leading-relaxed">
                                 Review everything on the next screen. Your
                                 profile is {percent}% complete
                                 {percent < 100
-                                    ? " — complete the required sections before entering the dashboard."
-                                    : " — nicely done."}
+                                    ? ' — complete the required sections before entering the dashboard.'
+                                    : ' — nicely done.'}
                             </p>
                             <div className="mt-4 flex flex-wrap gap-2">
                                 <button
@@ -2392,11 +2486,11 @@ export default function BuildProfile() {
                                             await persistToServer(freshProfile);
                                         if (!ok) return;
                                         setProfile(emptyProfile());
-                                        setSkillInput("");
+                                        setSkillInput('');
                                         setStepIndex(0);
                                         scrollTop();
                                         toast.info(
-                                            "Started fresh — draft cleared.",
+                                            'Started fresh — draft cleared.',
                                         );
                                     }}
                                     className="inline-flex h-10 items-center rounded-full border border-white/25 px-5 text-[13px] font-bold transition hover:bg-white/10"

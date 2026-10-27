@@ -1,10 +1,10 @@
-import { CountrySelect, GetCountries } from "react-country-state-city";
-import type { Country } from "react-country-state-city/dist/esm/types";
-import { useEffect, useMemo, useState } from "react";
-import "react-country-state-city/dist/react-country-state-city.css";
+import { CountrySelect, GetCountries } from 'react-country-state-city';
+import type { Country } from 'react-country-state-city/dist/esm/types';
+import { useEffect, useMemo, useState } from 'react';
+import 'react-country-state-city/dist/react-country-state-city.css';
 
 const CITY_DATA_URL =
-    "https://venkatvidyut.github.io/react-country-state-city/data/citiesminified.json";
+    'https://venkatvidyut.github.io/react-country-state-city/data/citiesminified.json';
 
 type City = {
     id: number;
@@ -45,7 +45,7 @@ function getCountryCities(countryId: number): Promise<string[]> {
     citiesRequest ??= fetch(CITY_DATA_URL)
         .then((response) => {
             if (!response.ok) {
-                throw new Error("Could not load location data.");
+                throw new Error('Could not load location data.');
             }
 
             return response.json() as Promise<CountryCityData[]>;
@@ -86,7 +86,7 @@ function FieldIndicator({
     }
 
     return optional ? (
-        <span className="ml-1.5 rounded-full bg-sand-100 px-2 py-0.5 text-[11px] font-bold text-ember-400">
+        <span className="bg-sand-100 text-ember-400 ml-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold">
             Optional
         </span>
     ) : null;
@@ -131,10 +131,10 @@ function CitySearch({
     }, [cities, query]);
 
     const placeholder = loading
-        ? "Loading cities…"
+        ? 'Loading cities…'
         : disabled
-          ? "Select a country first"
-          : "Search or select a city";
+          ? 'Select a country first'
+          : 'Search or select a city';
 
     return (
         <div className="relative">
@@ -154,12 +154,12 @@ function CitySearch({
                 onBlur={() => setIsOpen(false)}
                 onChange={(event) => {
                     setQuery(event.currentTarget.value);
-                    onChange("");
+                    onChange('');
                     setIsOpen(true);
                 }}
                 onKeyDown={(event) => {
-                    if (event.key === "Escape") setIsOpen(false);
-                    if (event.key === "Enter" && matchingCities.length === 1) {
+                    if (event.key === 'Escape') setIsOpen(false);
+                    if (event.key === 'Enter' && matchingCities.length === 1) {
                         event.preventDefault();
                         const selectedCity = matchingCities[0];
                         setQuery(selectedCity);
@@ -172,7 +172,7 @@ function CitySearch({
                 <div
                     id={`${idPrefix}-city-options`}
                     role="listbox"
-                    className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-harbor/15 bg-white py-1 shadow-lg"
+                    className="border-harbor/15 absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border bg-white py-1 shadow-lg"
                 >
                     {matchingCities.map((name) => (
                         <button
@@ -180,7 +180,7 @@ function CitySearch({
                             role="option"
                             aria-selected={name === city}
                             key={name}
-                            className="block w-full px-4 py-2 text-left text-sm text-ember hover:bg-sand-100 focus:bg-sand-100 focus:outline-none"
+                            className="text-ember hover:bg-sand-100 focus:bg-sand-100 block w-full px-4 py-2 text-left text-sm focus:outline-none"
                             onMouseDown={(event) => event.preventDefault()}
                             onClick={() => {
                                 setQuery(name);
@@ -192,21 +192,18 @@ function CitySearch({
                         </button>
                     ))}
                     {hasMoreMatches && (
-                        <p className="px-4 py-2 text-xs text-ember-400">
+                        <p className="text-ember-400 px-4 py-2 text-xs">
                             Showing the first 50 matches. Keep typing to narrow
                             the list.
                         </p>
                     )}
                 </div>
             )}
-            {isOpen &&
-                !disabled &&
-                !loading &&
-                matchingCities.length === 0 && (
-                    <div className="absolute z-50 mt-1 w-full rounded-xl border border-harbor/15 bg-white px-4 py-3 text-sm text-ember-400 shadow-lg">
-                        No matching cities found.
-                    </div>
-                )}
+            {isOpen && !disabled && !loading && matchingCities.length === 0 && (
+                <div className="border-harbor/15 text-ember-400 absolute z-50 mt-1 w-full rounded-xl border bg-white px-4 py-3 text-sm shadow-lg">
+                    No matching cities found.
+                </div>
+            )}
         </div>
     );
 }
@@ -218,8 +215,8 @@ export function CountryCityFields({
     onChange,
     required = false,
     optional = false,
-    inputClassName = "h-12 w-full rounded-xl border border-harbor/15 bg-white px-4 text-[14.5px] font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25 disabled:cursor-not-allowed disabled:bg-sand-100 disabled:opacity-70",
-    wrapperClassName = "",
+    inputClassName = 'h-12 w-full rounded-xl border border-harbor/15 bg-white px-4 text-[14.5px] font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25 disabled:cursor-not-allowed disabled:bg-sand-100 disabled:opacity-70',
+    wrapperClassName = '',
 }: CountryCityFieldsProps) {
     const [countries, setCountries] = useState<Country[]>([]);
     const [countriesLoading, setCountriesLoading] = useState(true);
@@ -247,7 +244,9 @@ export function CountryCityFields({
     }, []);
 
     const selectedCountry = countries.find(
-        (item) => item.name.toLocaleLowerCase() === country.trim().toLocaleLowerCase(),
+        (item) =>
+            item.name.toLocaleLowerCase() ===
+            country.trim().toLocaleLowerCase(),
     );
 
     useEffect(() => {
@@ -289,10 +288,14 @@ export function CountryCityFields({
             <div className="grid gap-2">
                 <label
                     htmlFor={`${idPrefix}-country`}
-                    className="flex items-baseline justify-between gap-2 text-[13.5px] font-bold text-harbor"
+                    className="text-harbor flex items-baseline justify-between gap-2 text-[13.5px] font-bold"
                 >
                     <span>
-                        Country <FieldIndicator required={required} optional={optional} />
+                        Country{' '}
+                        <FieldIndicator
+                            required={required}
+                            optional={optional}
+                        />
                     </span>
                 </label>
                 {countriesLoading ? (
@@ -311,13 +314,13 @@ export function CountryCityFields({
                         placeHolder="Search for a country"
                         onTextChange={() => {
                             if (country) {
-                                onChange("", "");
+                                onChange('', '');
                             }
                         }}
                         onChange={(selection) => {
                             const selected = selection as Country;
                             onChange(
-                                selected.name === country ? city : "",
+                                selected.name === country ? city : '',
                                 selected.name,
                             );
                         }}
@@ -328,26 +331,31 @@ export function CountryCityFields({
             <div className="grid gap-2">
                 <label
                     htmlFor={`${idPrefix}-city`}
-                    className="flex items-baseline justify-between gap-2 text-[13.5px] font-bold text-harbor"
+                    className="text-harbor flex items-baseline justify-between gap-2 text-[13.5px] font-bold"
                 >
                     <span>
-                        City <FieldIndicator required={required} optional={optional} />
+                        City{' '}
+                        <FieldIndicator
+                            required={required}
+                            optional={optional}
+                        />
                     </span>
                 </label>
                 <CitySearch
-                    key={selectedCountry?.id ?? "no-country"}
+                    key={selectedCountry?.id ?? 'no-country'}
                     idPrefix={idPrefix}
                     city={city}
                     cities={cities}
                     disabled={!selectedCountry}
                     loading={citiesLoading}
                     className={inputClassName}
-                    onChange={(selectedCity) =>
-                        onChange(selectedCity, country)
-                    }
+                    onChange={(selectedCity) => onChange(selectedCity, country)}
                 />
                 {citiesFailed && selectedCountry && (
-                    <p role="alert" className="text-xs font-semibold text-sienna">
+                    <p
+                        role="alert"
+                        className="text-sienna text-xs font-semibold"
+                    >
                         Could not load cities. Search for the country again to
                         retry.
                     </p>

@@ -26,7 +26,7 @@ export default function Login({ status, canResetPassword }: Props) {
             <Head title="Log in" />
 
             {status && (
-                <div className="mb-5 rounded-xl border border-moss/30 bg-moss/10 px-4 py-3 text-center text-sm font-semibold text-moss-600">
+                <div className="border-moss/30 bg-moss/10 text-moss-600 mb-5 rounded-xl border px-4 py-3 text-center text-sm font-semibold">
                     {status}
                 </div>
             )}
@@ -42,12 +42,12 @@ export default function Login({ status, canResetPassword }: Props) {
                             <div className="grid gap-2">
                                 <Label
                                     htmlFor="email"
-                                    className="text-sm font-bold text-harbor"
+                                    className="text-harbor text-sm font-bold"
                                 >
                                     Email address
                                 </Label>
                                 <div className="relative">
-                                    <Mail className="pointer-events-none absolute top-1/2 left-4 size-4.5 -translate-y-1/2 text-clay-600" />
+                                    <Mail className="text-clay-600 pointer-events-none absolute top-1/2 left-4 size-4.5 -translate-y-1/2" />
                                     <Input
                                         id="email"
                                         type="email"
@@ -67,14 +67,14 @@ export default function Login({ status, canResetPassword }: Props) {
                                 <div className="flex items-center">
                                     <Label
                                         htmlFor="password"
-                                        className="text-sm font-bold text-harbor"
+                                        className="text-harbor text-sm font-bold"
                                     >
                                         Password
                                     </Label>
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
-                                            className="ml-auto text-sm font-bold text-sienna decoration-sienna/40 hover:text-sienna-600"
+                                            className="text-sienna decoration-sienna/40 hover:text-sienna-600 ml-auto text-sm font-bold"
                                             tabIndex={5}
                                         >
                                             Forgot your password?
@@ -82,7 +82,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                     )}
                                 </div>
                                 <div className="relative">
-                                    <LockKeyhole className="pointer-events-none absolute top-1/2 left-4 z-10 size-4.5 -translate-y-1/2 text-clay-600" />
+                                    <LockKeyhole className="text-clay-600 pointer-events-none absolute top-1/2 left-4 z-10 size-4.5 -translate-y-1/2" />
                                     <PasswordInput
                                         id="password"
                                         name="password"
@@ -101,11 +101,11 @@ export default function Login({ status, canResetPassword }: Props) {
                                     id="remember"
                                     name="remember"
                                     tabIndex={3}
-                                    className="size-5 rounded-md border-harbor/25 data-[state=checked]:border-sienna data-[state=checked]:bg-sienna"
+                                    className="border-harbor/25 data-[state=checked]:border-sienna data-[state=checked]:bg-sienna size-5 rounded-md"
                                 />
                                 <Label
                                     htmlFor="remember"
-                                    className="text-sm font-semibold text-ember-600"
+                                    className="text-ember-600 text-sm font-semibold"
                                 >
                                     Remember me
                                 </Label>
@@ -113,7 +113,7 @@ export default function Login({ status, canResetPassword }: Props) {
 
                             <Button
                                 type="submit"
-                                className="h-12 w-full rounded-full bg-sienna text-[15px] font-bold text-white shadow-lg shadow-sienna/30 transition-all hover:-translate-y-px hover:bg-sienna-600"
+                                className="bg-sienna shadow-sienna/30 hover:bg-sienna-600 h-12 w-full rounded-full text-[15px] font-bold text-white shadow-lg transition-all hover:-translate-y-px"
                                 tabIndex={4}
                                 disabled={processing}
                                 data-test="login-button"
@@ -124,12 +124,12 @@ export default function Login({ status, canResetPassword }: Props) {
                             </Button>
                         </div>
 
-                        <div className="text-center text-sm font-medium text-ember-500">
+                        <div className="text-ember-500 text-center text-sm font-medium">
                             New to ProjectLink?{' '}
                             <TextLink
                                 href={register()}
                                 tabIndex={5}
-                                className="font-bold text-sienna decoration-sienna/40 hover:text-sienna-600"
+                                className="text-sienna decoration-sienna/40 hover:text-sienna-600 font-bold"
                             >
                                 Create your account
                             </TextLink>

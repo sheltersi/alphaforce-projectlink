@@ -1,4 +1,4 @@
-import { Link } from "@inertiajs/react";
+import { Link } from '@inertiajs/react';
 import {
     ArrowLeft,
     CalendarCheck2,
@@ -7,40 +7,40 @@ import {
     Sparkles,
     Star,
     UserRound,
-} from "lucide-react";
-import { home } from "@/routes";
-import AppLogoIcon from "@/components/app-logo-icon";
-import type { AuthLayoutProps } from "@/types";
+} from 'lucide-react';
+import { home } from '@/routes';
+import AppLogoIcon from '@/components/app-logo-icon';
+import type { AuthLayoutProps } from '@/types';
 
 const highlights = [
     {
         icon: Compass,
-        title: "Discover projects",
-        text: "Ongoing and upcoming projects from verified organisations.",
+        title: 'Discover projects',
+        text: 'Ongoing and upcoming projects from verified organisations.',
     },
     {
         icon: UserRound,
-        title: "One professional profile",
-        text: "Your experience, skills and qualifications in a single place.",
+        title: 'One professional profile',
+        text: 'Your experience, skills and qualifications in a single place.',
     },
     {
         icon: CalendarCheck2,
-        title: "Track your impact",
-        text: "Log hours, follow progress and build a record of contribution.",
+        title: 'Track your impact',
+        text: 'Log hours, follow progress and build a record of contribution.',
     },
 ];
 
 const stats = [
-    { value: "2,400+", label: "Participants" },
-    { value: "150+", label: "Live projects" },
-    { value: "40+", label: "Organisations" },
+    { value: '2,400+', label: 'Participants' },
+    { value: '150+', label: 'Live projects' },
+    { value: '40+', label: 'Organisations' },
 ];
 
 const avatarStack = [
-    { initials: "SJ", bg: "bg-sienna" },
-    { initials: "JC", bg: "bg-harbor" },
-    { initials: "PN", bg: "bg-moss" },
-    { initials: "TN", bg: "bg-clay-600" },
+    { initials: 'SJ', bg: 'bg-sienna' },
+    { initials: 'JC', bg: 'bg-harbor' },
+    { initials: 'PN', bg: 'bg-moss' },
+    { initials: 'TN', bg: 'bg-clay-600' },
 ];
 
 export default function AuthSimpleLayout({
@@ -48,7 +48,7 @@ export default function AuthSimpleLayout({
     title,
     description,
 }: AuthLayoutProps) {
-    const isRegister = /join/i.test(title ?? "");
+    const isRegister = /join/i.test(title ?? '');
 
     return (
         <div className="bg-sand-50 text-ember min-h-svh font-sans antialiased">
@@ -75,8 +75,8 @@ export default function AuthSimpleLayout({
                         className="absolute inset-0 opacity-40"
                         style={{
                             backgroundImage:
-                                "radial-gradient(circle, rgba(244,234,217,0.12) 1px, transparent 1px)",
-                            backgroundSize: "26px 26px",
+                                'radial-gradient(circle, rgba(244,234,217,0.12) 1px, transparent 1px)',
+                            backgroundSize: '26px 26px',
                         }}
                     />
                     <div
@@ -106,21 +106,21 @@ export default function AuthSimpleLayout({
                             <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[11px] font-bold tracking-[0.18em] text-amber-200 uppercase backdrop-blur-md">
                                 <Sparkles className="size-3.5" />
                                 {isRegister
-                                    ? "Join the opportunity platform"
-                                    : "The opportunity platform"}
+                                    ? 'Join the opportunity platform'
+                                    : 'The opportunity platform'}
                             </p>
                             <h2 className="mt-5 max-w-lg text-4xl leading-[1.06] font-bold tracking-tight text-white drop-shadow-lg xl:text-[3.4rem]">
-                                Where skills meet{" "}
+                                Where skills meet{' '}
                                 <span className="relative whitespace-nowrap text-amber-200">
                                     meaningful
                                     {/* purposely removed the svg icon from here */}
-                                </span>{" "}
+                                </span>{' '}
                                 projects.
                             </h2>
                             <p className="text-sand-100/85 mt-5 max-w-md text-[16px] leading-relaxed drop-shadow">
                                 {isRegister
-                                    ? "Create your profile once — then get discovered by verified organisations running real projects."
-                                    : "Log in to track your applications, log hours and keep building your impact record."}
+                                    ? 'Create your profile once — then get discovered by verified organisations running real projects.'
+                                    : 'Log in to track your applications, log hours and keep building your impact record.'}
                             </p>
 
                             {/* Stats */}
@@ -199,7 +199,7 @@ export default function AuthSimpleLayout({
                                     three projects in a week. Two accepted me.”
                                 </p>
                                 <p className="mt-3 text-[13px] font-bold text-amber-200">
-                                    Thandi N.{" "}
+                                    Thandi N.{' '}
                                     <span className="text-sand-100/60 font-medium">
                                         · Participant, Youth mentor
                                     </span>
@@ -224,12 +224,12 @@ export default function AuthSimpleLayout({
                         className="pointer-events-none absolute inset-0 opacity-70"
                         style={{
                             backgroundImage:
-                                "radial-gradient(circle, rgba(30,47,68,0.08) 1px, transparent 1px)",
-                            backgroundSize: "24px 24px",
+                                'radial-gradient(circle, rgba(30,47,68,0.08) 1px, transparent 1px)',
+                            backgroundSize: '24px 24px',
                             maskImage:
-                                "linear-gradient(to bottom, black 0%, transparent 60%)",
+                                'linear-gradient(to bottom, black 0%, transparent 60%)',
                             WebkitMaskImage:
-                                "linear-gradient(to bottom, black 0%, transparent 60%)",
+                                'linear-gradient(to bottom, black 0%, transparent 60%)',
                         }}
                     />
 
@@ -268,14 +268,14 @@ export default function AuthSimpleLayout({
                                 <div className="absolute inset-x-0 bottom-0 p-5">
                                     <p className="text-[11px] font-bold tracking-[0.18em] text-amber-200 uppercase">
                                         {isRegister
-                                            ? "Join the platform"
-                                            : "Welcome back"}
+                                            ? 'Join the platform'
+                                            : 'Welcome back'}
                                     </p>
                                     <p className="mt-1 text-xl leading-snug font-bold tracking-tight text-white">
-                                        Where skills meet{" "}
+                                        Where skills meet{' '}
                                         <span className="text-amber-200">
                                             meaningful
-                                        </span>{" "}
+                                        </span>{' '}
                                         projects.
                                     </p>
                                 </div>
@@ -311,7 +311,7 @@ export default function AuthSimpleLayout({
                                 <p className="text-ember-500 text-[13px] font-semibold">
                                     <span className="text-harbor font-extrabold">
                                         2,400+ participants
-                                    </span>{" "}
+                                    </span>{' '}
                                     already building impact
                                 </p>
                             </div>

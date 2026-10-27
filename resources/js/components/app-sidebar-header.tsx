@@ -13,14 +13,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
-import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
+import type {
+    AppPageProps,
+    BreadcrumbItem as BreadcrumbItemType,
+} from '@/types';
 
 export function AppSidebarHeader({
     breadcrumbs = [],
 }: {
     breadcrumbs?: BreadcrumbItemType[];
 }) {
-    const page = usePage();
+    const page = usePage<AppPageProps>();
     const { auth } = page.props;
     const getInitials = useInitials();
     const unreadNotificationsCount =

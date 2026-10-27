@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ParticipantProfileController extends Controller
 {
@@ -388,7 +389,7 @@ class ParticipantProfileController extends Controller
         return Storage::disk($doc->disk)->download($doc->file_path, $doc->original_name);
     }
 
-    public function downloadCertificationDocument(Request $request, int $certificationId)
+    public function downloadCertificationDocument(Request $request, int $certificationId): StreamedResponse
     {
         $certification = Certification::query()
             ->whereHas('participantProfile', fn ($query) => $query->where('user_id', $request->user()->id))
