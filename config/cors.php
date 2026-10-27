@@ -25,6 +25,8 @@ return [
         // Next.js frontend served through Valet.
         'https://orangepie.test',
         'http://orangepie.test',
+        'https://orangepie.alphaforce.co.za',
+        'http://orangepie.alphaforce.co.za',
     ],
 
     'allowed_origins_patterns' => [],
