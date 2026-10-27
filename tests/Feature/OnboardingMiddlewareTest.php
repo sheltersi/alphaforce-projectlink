@@ -39,10 +39,10 @@ test('participant with profile can access dashboard', function () {
         'last_name' => 'Doe',
         'email' => $user->email,
         'id_number' => 'ID-12345',
-        'phone' => '+260 97 000 0000',
-        'nationality' => 'Zambian',
-        'city' => 'Lusaka',
-        'country' => 'Zambia',
+        'phone' => '+27 84 000 0000',
+        'nationality' => 'South African',
+        'city' => 'Johannesburg',
+        'country' => 'South Africa',
         'summary' => str_repeat('A complete participant profile summary. ', 2),
     ]);
     Skill::create(['participant_profile_id' => $profile->id, 'name' => 'Research']);

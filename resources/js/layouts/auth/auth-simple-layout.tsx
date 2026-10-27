@@ -40,7 +40,7 @@ const avatarStack = [
     { initials: "SJ", bg: "bg-sienna" },
     { initials: "JC", bg: "bg-harbor" },
     { initials: "PN", bg: "bg-moss" },
-    { initials: "AO", bg: "bg-clay-600" },
+    { initials: "TN", bg: "bg-clay-600" },
 ];
 
 export default function AuthSimpleLayout({
@@ -204,7 +204,7 @@ export default function AuthSimpleLayout({
                                     three projects in a week. Two accepted me.”
                                 </p>
                                 <p className="mt-3 text-[13px] font-bold text-amber-200">
-                                    Amara O.{" "}
+                                    Thandi N.{" "}
                                     <span className="text-sand-100/60 font-medium">
                                         · Participant, Youth mentor
                                     </span>

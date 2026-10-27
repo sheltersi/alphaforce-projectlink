@@ -1085,7 +1085,7 @@ export default function BuildProfile() {
                                 <input
                                     id="firstName"
                                     className={inputCls}
-                                    placeholder="e.g. Amara"
+                                    placeholder="e.g. Thandi"
                                     autoComplete="given-name"
                                     value={profile.firstName}
                                     onChange={(e) =>
@@ -1101,7 +1101,7 @@ export default function BuildProfile() {
                                 <input
                                     id="lastName"
                                     className={inputCls}
-                                    placeholder="e.g. Okafor"
+                                    placeholder="e.g. Nkosi"
                                     autoComplete="family-name"
                                     value={profile.lastName}
                                     onChange={(e) =>
@@ -1135,7 +1135,7 @@ export default function BuildProfile() {
                                 <input
                                     id="nationality"
                                     className={inputCls}
-                                    placeholder="e.g. Zambian"
+                                    placeholder="e.g. South African"
                                     autoComplete="country-name"
                                     value={profile.nationality}
                                     onChange={(e) =>
@@ -1172,7 +1172,7 @@ export default function BuildProfile() {
                                     id="phone"
                                     type="tel"
                                     className={inputCls}
-                                    placeholder="+260 97 000 0000"
+                                    placeholder="+27 84 000 0000"
                                     autoComplete="tel"
                                     value={profile.phone}
                                     onChange={(e) =>
@@ -1192,7 +1192,7 @@ export default function BuildProfile() {
                                     <input
                                         id="city"
                                         className={`${inputCls} pl-11`}
-                                        placeholder="e.g. Lusaka"
+                                        placeholder="e.g. Johannesburg"
                                         autoComplete="address-level2"
                                         value={profile.city}
                                         onChange={(e) =>
@@ -1205,7 +1205,7 @@ export default function BuildProfile() {
                                 <input
                                     id="country"
                                     className={inputCls}
-                                    placeholder="e.g. Zambia"
+                                    placeholder="e.g. South Africa"
                                     autoComplete="country-name"
                                     value={profile.country}
                                     onChange={(e) =>
@@ -1395,7 +1395,7 @@ export default function BuildProfile() {
                                             <input
                                                 id={`edu-inst-${edu.id}`}
                                                 className={inputCls}
-                                                placeholder="e.g. University of Zambia"
+                                                placeholder="e.g. University of South Africa"
                                                 value={edu.institution}
                                                 onChange={(e) =>
                                                     updateEducation(edu.id, {
@@ -1595,7 +1595,7 @@ export default function BuildProfile() {
                                         <input
                                             id={`exp-loc-${exp.id}`}
                                             className={inputCls}
-                                            placeholder="e.g. Ndola, Zambia"
+                                            placeholder="e.g. Johannesburg, South Africa"
                                             value={exp.location}
                                             onChange={(e) =>
                                                 updateExperience(exp.id, {
@@ -1892,7 +1892,9 @@ export default function BuildProfile() {
                                         <option value="Supporting document">
                                             Supporting document
                                         </option>
-                                        <option value="ID">ID (required)</option>
+                                        <option value="ID">
+                                            ID (required)
+                                        </option>
                                         <option value="Proof of residence">
                                             Proof of residence (required)
                                         </option>
@@ -1928,9 +1930,9 @@ export default function BuildProfile() {
 
                         {profile.documents.length === 0 ? (
                             <p className="rounded-2xl border border-dashed border-harbor/20 bg-white p-5 text-center text-[13.5px] font-medium text-ember-400">
-                                Required uploads: {REQUIRED_DOCUMENT_CATEGORIES.join(
-                                    ", ",
-                                )}. A bank letter is optional.
+                                Required uploads:{" "}
+                                {REQUIRED_DOCUMENT_CATEGORIES.join(", ")}. A
+                                bank letter is optional.
                             </p>
                         ) : (
                             <ul

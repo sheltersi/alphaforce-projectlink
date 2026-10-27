@@ -21,19 +21,19 @@ test('participant can save profile with all onboarding data', function () {
     $user->assignRole('participant');
 
     $payload = [
-        'firstName' => 'Amara',
-        'lastName' => 'Okafor',
-        'email' => 'amara@example.org',
+        'firstName' => 'Thandi',
+        'lastName' => 'Nkosi',
+        'email' => 'thandi@example.org',
         'idNumber' => 'ID-12345',
-        'phone' => '+260 97 000 0000',
-        'city' => 'Lusaka',
-        'country' => 'Zambia',
-        'nationality' => 'Zambian',
+        'phone' => '+27 84 000 0000',
+        'city' => 'Johannesburg',
+        'country' => 'South Africa',
+        'nationality' => 'South African',
         'summary' => str_repeat('Experienced project participant with strong community mobilization skills. ', 5), // >40 chars
         'skills' => ['Data Analysis', 'Communication', 'Research'],
         'education' => [
             [
-                'institution' => 'University of Zambia',
+                'institution' => 'University of South Africa',
                 'qualification' => 'BSc',
                 'fieldOfStudy' => 'Development Studies',
                 'startYear' => '2018',
@@ -45,7 +45,7 @@ test('participant can save profile with all onboarding data', function () {
             [
                 'jobTitle' => 'Field Officer',
                 'organisation' => 'Community Health Alliance',
-                'location' => 'Ndola, Zambia',
+                'location' => 'Johannesburg, South Africa',
                 'startDate' => '2022-01',
                 'endDate' => '2023-12',
                 'currentlyWorking' => false,
@@ -69,14 +69,14 @@ test('participant can save profile with all onboarding data', function () {
 
     $profile = ParticipantProfile::where('user_id', $user->id)->first();
     expect($profile)->not->toBeNull();
-    expect($profile->first_name)->toBe('Amara');
+    expect($profile->first_name)->toBe('Thandi');
     expect($profile->skills)->toHaveCount(3);
     expect($profile->educations)->toHaveCount(1);
     expect($profile->workExperiences)->toHaveCount(1);
     expect($profile->certifications)->toHaveCount(1);
-    expect($profile->phone)->toBe('+260 97 000 0000');
+    expect($profile->phone)->toBe('+27 87 000 0000');
     expect($profile->id_number)->toBe('ID-12345');
-    expect($profile->nationality)->toBe('Zambian');
+    expect($profile->nationality)->toBe('South African');
 });
 
 test('participant can save profile with photo via base64', function () {
@@ -430,9 +430,9 @@ test('profile preview renders the saved profile from the database', function () 
     $user->assignRole('participant');
 
     $this->actingAs($user)->postJson(route('onboarding.profile.store'), [
-        'firstName' => 'Amara',
-        'lastName' => 'Okafor',
-        'email' => 'amara@example.org',
+        'firstName' => 'Thandi',
+        'lastName' => 'Nkosi',
+        'email' => 'thandi@example.org',
         'summary' => str_repeat('Experienced project participant. ', 5),
         'skills' => ['Research'],
     ])->assertOk();
@@ -442,7 +442,7 @@ test('profile preview renders the saved profile from the database', function () 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
         ->component('onboarding/profile-preview')
-        ->where('profile.firstName', 'Amara')
+        ->where('profile.firstName', 'Thandi')
         ->where('profile.skills.0', 'Research'),
     );
 });
@@ -454,9 +454,9 @@ test('saving from the preview redirects to the dashboard', function () {
     $response = $this->actingAs($user)
         ->withHeader('X-Inertia', 'true')
         ->post(route('onboarding.profile.store'), [
-            'firstName' => 'Amara',
-            'lastName' => 'Okafor',
-            'email' => 'amara@example.org',
+            'firstName' => 'Thandi',
+            'lastName' => 'Nkosi',
+            'email' => 'thandi@example.org',
             'summary' => str_repeat('Experienced project participant. ', 5),
             'skills' => ['Research'],
             'redirect_to' => 'dashboard',

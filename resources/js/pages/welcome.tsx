@@ -181,9 +181,9 @@ const orgPoints = [
 const testimonials = [
     {
         quote: "I built my profile once and applied to three projects in a week. Two accepted me.",
-        name: "Amara O.",
+        name: "Thandi N.",
         role: "Participant · Youth mentor",
-        initials: "AO",
+        initials: "TN",
         tile: "bg-sienna text-white",
     },
     {
@@ -473,7 +473,7 @@ export default function Welcome() {
                             <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
                                 <div className="flex -space-x-2.5">
                                     {[
-                                        ["AO", "bg-sienna text-white"],
+                                        ["TN", "bg-sienna text-white"],
                                         ["DK", "bg-harbor text-sand-50"],
                                         ["PS", "bg-moss text-white"],
                                         ["+9", "bg-amber text-white"],
@@ -1042,7 +1042,7 @@ export default function Welcome() {
                                     <div className="mt-3 space-y-2.5">
                                         {[
                                             {
-                                                n: "Amara O. — Mentor",
+                                                n: "Thandi N. — Mentor",
                                                 tag: "Shortlisted",
                                                 cls: "bg-moss/15 text-moss-600",
                                             },
