@@ -648,9 +648,14 @@ export default function ProfilePreview() {
                                                                 <span className="block text-[13px] font-medium text-ember-500">
                                                                     {[
                                                                         c.issuingOrganisation,
-                                                                        c.issueDate
+                                                                         c.issueDate
                                                                             ? `Issued ${formatMonth(c.issueDate)}`
                                                                             : "",
+                                                                        c.doesNotExpire
+                                                                            ? "Does not expire"
+                                                                            : c.expiryDate
+                                                                              ? `Expires ${formatMonth(c.expiryDate)}`
+                                                                              : "",
                                                                         c.credentialNumber
                                                                             ? `#${c.credentialNumber}`
                                                                             : "",
@@ -663,6 +668,38 @@ export default function ProfilePreview() {
                                                                         ) ||
                                                                         "—"}
                                                                 </span>
+                                                                {c.credentialUrl && (
+                                                                    <a
+                                                                        href={c.credentialUrl}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        className="mt-1 block text-xs font-bold text-sienna hover:underline"
+                                                                    >
+                                                                        View credential
+                                                                    </a>
+                                                                )}
+                                                                {c.relatedSkills.length > 0 && (
+                                                                    <span className="mt-2 flex flex-wrap gap-1.5">
+                                                                        {c.relatedSkills.map((skill) => (
+                                                                            <span
+                                                                                key={skill}
+                                                                                className="rounded-full bg-moss/10 px-2 py-0.5 text-[11px] font-bold text-moss-700"
+                                                                            >
+                                                                                {skill}
+                                                                            </span>
+                                                                        ))}
+                                                                    </span>
+                                                                )}
+                                                                {c.certificateDocument && (
+                                                                    <a
+                                                                        href={c.certificateDocument.downloadUrl ?? c.certificateDocument.dataUrl}
+                                                                        download={c.certificateDocument.dataUrl ? c.certificateDocument.name : undefined}
+                                                                        className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-harbor hover:underline"
+                                                                    >
+                                                                        <Download className="size-3.5" />
+                                                                        {c.certificateDocument.name}
+                                                                    </a>
+                                                                )}
                                                             </span>
                                                         </li>
                                                     ),

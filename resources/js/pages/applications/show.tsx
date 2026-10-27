@@ -63,6 +63,9 @@ type ApplicationPayload = {
                 credential_number: string | null;
                 issue_date: string | null;
                 expiry_date: string | null;
+                does_not_expire: boolean;
+                credential_url: string | null;
+                related_skills: string[];
             }[];
         };
     };
@@ -356,12 +359,36 @@ export default function ApplicationShow() {
                                                 : ""}
                                             {cert.expiry_date
                                                 ? ` · Expires ${cert.expiry_date}`
-                                                : ""}
+                                                : cert.does_not_expire
+                                                  ? " · Does not expire"
+                                                  : ""}
                                         </p>
                                         {cert.credential_number ? (
                                             <p className="mt-1 text-[11px] text-muted-foreground">
                                                 Credential #{cert.credential_number}
                                             </p>
+                                        ) : null}
+                                        {cert.credential_url ? (
+                                            <a
+                                                href={cert.credential_url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="mt-1 block text-xs font-semibold text-sienna hover:underline"
+                                            >
+                                                Verify credential
+                                            </a>
+                                        ) : null}
+                                        {cert.related_skills.length > 0 ? (
+                                            <div className="mt-2 flex flex-wrap gap-1.5">
+                                                {cert.related_skills.map((skill) => (
+                                                    <span
+                                                        key={skill}
+                                                        className="rounded-full bg-moss/10 px-2 py-0.5 text-[10px] font-semibold text-moss-700"
+                                                    >
+                                                        {skill}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         ) : null}
                                     </li>
                                 ))}

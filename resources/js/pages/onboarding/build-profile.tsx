@@ -112,6 +112,27 @@ const inputCls =
 const textareaCls =
     "w-full rounded-xl border border-harbor/15 bg-white px-4 py-3.5 text-[14.5px] leading-relaxed font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25";
 
+const CERTIFICATION_SUGGESTIONS = [
+    "Project Management Professional (PMP)",
+    "AWS Certified Cloud Practitioner",
+    "Google Data Analytics Professional Certificate",
+    "Microsoft Azure Fundamentals",
+    "CompTIA A+",
+    "First Aid Level 1",
+    "Occupational Health and Safety",
+    "TEFL Certificate",
+];
+
+const CERTIFICATION_ISSUER_SUGGESTIONS = [
+    "PMI",
+    "Google",
+    "Microsoft",
+    "Amazon Web Services",
+    "CompTIA",
+    "South African Red Cross Society",
+    "University of South Africa",
+];
+
 function splitLocation(location: string): { city: string; country: string } {
     const separator = location.lastIndexOf(",");
     if (separator < 0) return { city: "", country: location.trim() };
@@ -153,6 +174,110 @@ function SectionCard({
                 {action}
             </div>
             <div className="mt-4">{children}</div>
+        </div>
+    );
+}
+
+function CertificationSkillsPicker({
+    id,
+    value,
+    options,
+    onChange,
+}: {
+    id: string;
+    value: string[];
+    options: string[];
+    onChange: (skills: string[]) => void;
+}) {
+    const [skillInput, setSkillInput] = useState("");
+
+    function addSkill(raw: string) {
+        const skill = raw.trim().replace(/\s+/g, " ");
+        if (!skill) return;
+
+        if (value.some((selected) => selected.toLowerCase() === skill.toLowerCase())) {
+            toast.info("That related skill is already selected.");
+            return;
+        }
+
+        onChange([...value, skill]);
+        setSkillInput("");
+    }
+
+    return (
+        <div className="space-y-3">
+            <div className="flex gap-2">
+                <input
+                    id={id}
+                    className={inputCls}
+                    placeholder="e.g. Data Analysis"
+                    value={skillInput}
+                    onChange={(event) => setSkillInput(event.currentTarget.value)}
+                    onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                            event.preventDefault();
+                            addSkill(skillInput);
+                        }
+                    }}
+                />
+                <button
+                    type="button"
+                    onClick={() => addSkill(skillInput)}
+                    className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-xl bg-harbor px-5 text-[14px] font-bold text-sand-50 transition hover:bg-harbor-700"
+                >
+                    <Plus className="size-4.5" />
+                    Add
+                </button>
+            </div>
+            {value.length > 0 && (
+                <ul aria-label="Related certification skills" className="flex flex-wrap gap-2">
+                    {value.map((skill) => (
+                        <li
+                            key={skill}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-harbor/12 bg-harbor py-1.5 pr-2 pl-4 text-[13.5px] font-bold text-sand-50 shadow-sm"
+                        >
+                            {skill}
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    onChange(value.filter((item) => item !== skill))
+                                }
+                                aria-label={`Remove related skill ${skill}`}
+                                className="flex size-5.5 items-center justify-center rounded-full bg-white/15 transition hover:bg-sienna"
+                            >
+                                <X className="size-3.5" />
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            )}
+            <div>
+                <p className="text-[13px] font-bold text-harbor">
+                    Suggestions — select to add:
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                    {Array.from(new Set(options))
+                        .filter(
+                            (skill) =>
+                                !value.some(
+                                    (selected) =>
+                                        selected.toLowerCase() ===
+                                        skill.toLowerCase(),
+                                ),
+                        )
+                        .map((skill) => (
+                            <button
+                                key={skill}
+                                type="button"
+                                onClick={() => addSkill(skill)}
+                                className="inline-flex items-center gap-1 rounded-full border border-clay-400/40 bg-white px-3.5 py-1.5 text-[13px] font-bold text-clay-600 transition hover:border-sienna hover:bg-sienna hover:text-white"
+                            >
+                                <Plus className="size-3.5" />
+                                {skill}
+                            </button>
+                        ))}
+                </div>
+            </div>
         </div>
     );
 }
@@ -347,7 +472,60 @@ export default function BuildProfile() {
             });
 
             if (res.ok) {
-                await res.json();
+                const payload = (await res.json()) as {
+                    profile?: ParticipantProfile;
+                };
+                const savedCertifications = payload.profile?.certifications;
+                const findSavedCertification = (submittedCert: CertificationEntry) =>
+                    savedCertifications?.find(
+                        (certification) =>
+                            certification.name === submittedCert.name &&
+                            certification.issuingOrganisation ===
+                                submittedCert.issuingOrganisation &&
+                            certification.certificateDocument?.name ===
+                                submittedCert.certificateDocument?.name,
+                    );
+                const hasUploadedCertificateDocument =
+                    savedCertifications &&
+                    profileToSave.certifications.some(
+                        (certification) =>
+                            Boolean(certification.certificateDocument?.dataUrl) &&
+                            Boolean(
+                                findSavedCertification(certification)
+                                    ?.certificateDocument?.filePath,
+                            ),
+                    );
+
+                if (hasUploadedCertificateDocument) {
+                    setProfile((current) => ({
+                        ...current,
+                        certifications: current.certifications.map((currentCert) => {
+                            const submittedCert = profileToSave.certifications.find(
+                                (certification) =>
+                                    certification.id === currentCert.id,
+                            );
+                            const savedCert = submittedCert
+                                ? findSavedCertification(submittedCert)
+                                : undefined;
+
+                            if (
+                                submittedCert?.certificateDocument?.dataUrl &&
+                                currentCert.certificateDocument?.dataUrl ===
+                                    submittedCert.certificateDocument.dataUrl &&
+                                savedCert?.certificateDocument?.filePath
+                            ) {
+                                return {
+                                    ...currentCert,
+                                    certificateDocument:
+                                        savedCert.certificateDocument,
+                                };
+                            }
+
+                            return currentCert;
+                        }),
+                    }));
+                }
+
                 return true;
             }
 
@@ -427,7 +605,13 @@ export default function BuildProfile() {
                 (c) =>
                     c.name.trim() ||
                     c.issuingOrganisation.trim() ||
-                    c.credentialNumber.trim(),
+                    c.issueDate.trim() ||
+                    c.expiryDate.trim() ||
+                    c.credentialNumber.trim() ||
+                    c.credentialUrl.trim() ||
+                    c.relatedSkills.length > 0 ||
+                    c.doesNotExpire ||
+                    c.certificateDocument !== null,
             ),
         };
     }
@@ -557,6 +741,46 @@ export default function BuildProfile() {
                 c.id === id ? { ...c, ...p } : c,
             ),
         });
+    }
+
+    function uploadCertificationDocument(id: string, file?: File) {
+        if (!file) return;
+
+        const supportedTypes = [
+            "application/pdf",
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+        ];
+        if (!supportedTypes.includes(file.type)) {
+            toast.error("Choose a PDF or image file.");
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("Certificate documents must be 10 MB or smaller.");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (typeof reader.result !== "string") {
+                toast.error("Could not read the certificate document.");
+                return;
+            }
+
+            updateCertification(id, {
+                certificateDocument: {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    dataUrl: reader.result,
+                },
+            });
+        };
+        reader.onerror = () =>
+            toast.error("Could not read the certificate document.");
+        reader.readAsDataURL(file);
     }
 
     const initials =
@@ -1734,19 +1958,24 @@ export default function BuildProfile() {
                                         >
                                             <input
                                                 id={`cert-name-${cert.id}`}
+                                                list={`cert-name-options-${cert.id}`}
                                                 className={inputCls}
-                                                placeholder="e.g. PMP, Data Analytics Professional"
+                                                required
+                                                placeholder="Search or enter a certification"
                                                 value={cert.name}
                                                 onChange={(e) =>
-                                                    updateCertification(
-                                                        cert.id,
-                                                        {
-                                                            name: e.target
-                                                                .value,
-                                                        },
-                                                    )
+                                                    updateCertification(cert.id, {
+                                                        name: e.target.value,
+                                                    })
                                                 }
                                             />
+                                            <datalist id={`cert-name-options-${cert.id}`}>
+                                                {CERTIFICATION_SUGGESTIONS.map(
+                                                    (suggestion) => (
+                                                        <option key={suggestion} value={suggestion} />
+                                                    ),
+                                                )}
+                                            </datalist>
                                         </Field>
                                     </div>
                                     <Field
@@ -1756,8 +1985,10 @@ export default function BuildProfile() {
                                     >
                                         <input
                                             id={`cert-org-${cert.id}`}
+                                            list={`cert-issuer-options-${cert.id}`}
                                             className={inputCls}
-                                            placeholder="e.g. PMI, Google"
+                                            required
+                                            placeholder="Search or enter the issuing organisation"
                                             value={cert.issuingOrganisation}
                                             onChange={(e) =>
                                                 updateCertification(cert.id, {
@@ -1766,34 +1997,24 @@ export default function BuildProfile() {
                                                 })
                                             }
                                         />
+                                        <datalist id={`cert-issuer-options-${cert.id}`}>
+                                            {CERTIFICATION_ISSUER_SUGGESTIONS.map(
+                                                (suggestion) => (
+                                                    <option key={suggestion} value={suggestion} />
+                                                ),
+                                            )}
+                                        </datalist>
                                     </Field>
                                     <Field
-                                        label="Credential / reference number"
-                                        optional
-                                        htmlFor={`cert-cred-${cert.id}`}
-                                    >
-                                        <input
-                                            id={`cert-cred-${cert.id}`}
-                                            className={inputCls}
-                                            placeholder="e.g. CERT-2024-8841"
-                                            value={cert.credentialNumber}
-                                            onChange={(e) =>
-                                                updateCertification(cert.id, {
-                                                    credentialNumber:
-                                                        e.target.value,
-                                                })
-                                            }
-                                        />
-                                    </Field>
-                                    <Field
-                                        label="Issue date"
-                                        optional
+                                        label="Issue Date"
+                                        required
                                         htmlFor={`cert-issue-${cert.id}`}
                                     >
                                         <FlatpickrInput
                                             id={`cert-issue-${cert.id}`}
                                             pickerType="month"
                                             className={inputCls}
+                                            required
                                             value={cert.issueDate}
                                             onChange={(value) =>
                                                 updateCertification(cert.id, {
@@ -1803,14 +2024,17 @@ export default function BuildProfile() {
                                         />
                                     </Field>
                                     <Field
-                                        label="Expiry date"
-                                        optional
+                                        label="Expiration Date"
+                                        required={!cert.doesNotExpire}
+                                        optional={cert.doesNotExpire}
                                         htmlFor={`cert-exp-${cert.id}`}
                                     >
                                         <FlatpickrInput
                                             id={`cert-exp-${cert.id}`}
                                             pickerType="month"
                                             className={inputCls}
+                                            required={!cert.doesNotExpire}
+                                            disabled={cert.doesNotExpire}
                                             value={cert.expiryDate}
                                             onChange={(value) =>
                                                 updateCertification(cert.id, {
@@ -1819,6 +2043,162 @@ export default function BuildProfile() {
                                             }
                                         />
                                     </Field>
+                                    <div className="sm:col-span-2">
+                                        <label className="inline-flex cursor-pointer items-center gap-2.5 text-sm font-semibold text-harbor">
+                                            <input
+                                                type="checkbox"
+                                                checked={cert.doesNotExpire}
+                                                onChange={(event) =>
+                                                    updateCertification(cert.id, {
+                                                        doesNotExpire:
+                                                            event.currentTarget.checked,
+                                                        expiryDate:
+                                                            event.currentTarget.checked
+                                                                ? ""
+                                                                : cert.expiryDate,
+                                                    })
+                                                }
+                                                className="size-4 rounded border-harbor/30 accent-harbor"
+                                            />
+                                            This certification does not expire
+                                        </label>
+                                    </div>
+                                    <Field
+                                        label="Credential ID / Certificate Number"
+                                        optional
+                                        htmlFor={`cert-cred-${cert.id}`}
+                                    >
+                                        <input
+                                            id={`cert-cred-${cert.id}`}
+                                            className={inputCls}
+                                            placeholder="e.g. CERT-2024-8841"
+                                            value={cert.credentialNumber}
+                                            onChange={(event) =>
+                                                updateCertification(cert.id, {
+                                                    credentialNumber:
+                                                        event.currentTarget.value,
+                                                })
+                                            }
+                                        />
+                                    </Field>
+                                    <Field
+                                        label="Credential URL"
+                                        optional
+                                        htmlFor={`cert-url-${cert.id}`}
+                                    >
+                                        <input
+                                            id={`cert-url-${cert.id}`}
+                                            type="url"
+                                            className={inputCls}
+                                            placeholder="https://example.com/verify"
+                                            value={cert.credentialUrl}
+                                            onChange={(event) =>
+                                                updateCertification(cert.id, {
+                                                    credentialUrl:
+                                                        event.currentTarget.value,
+                                                })
+                                            }
+                                        />
+                                    </Field>
+                                    <div className="sm:col-span-2">
+                                        <Field
+                                            label="Certificate Document"
+                                            optional
+                                            htmlFor={`cert-document-${cert.id}`}
+                                            hint="PDF or image, up to 10 MB."
+                                        >
+                                            <input
+                                                id={`cert-document-${cert.id}`}
+                                                type="file"
+                                                accept="application/pdf,image/jpeg,image/png,image/gif,image/webp"
+                                                className="peer sr-only"
+                                                onChange={(event) => {
+                                                    uploadCertificationDocument(
+                                                        cert.id,
+                                                        event.currentTarget.files?.[0],
+                                                    );
+                                                    event.currentTarget.value = "";
+                                                }}
+                                            />
+                                            <label
+                                                htmlFor={`cert-document-${cert.id}`}
+                                                className="group flex cursor-pointer items-center gap-4 rounded-2xl border-2 border-dashed border-harbor/20 bg-white p-4 transition hover:border-sienna/50 hover:bg-sand-50 peer-focus-visible:border-sienna peer-focus-visible:ring-2 peer-focus-visible:ring-sienna/25"
+                                            >
+                                                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-harbor/8 text-harbor transition group-hover:bg-sienna/10 group-hover:text-sienna">
+                                                    {cert.certificateDocument ? (
+                                                        <BadgeCheck className="size-6" />
+                                                    ) : (
+                                                        <Upload className="size-6" />
+                                                    )}
+                                                </span>
+                                                <span className="min-w-0 flex-1">
+                                                    <span className="block truncate text-sm font-extrabold text-harbor">
+                                                        {cert.certificateDocument
+                                                            ? cert.certificateDocument.name
+                                                            : "Upload your certificate"}
+                                                    </span>
+                                                    <span className="mt-0.5 block text-xs text-ember-400">
+                                                        PDF or image · Up to 10 MB
+                                                    </span>
+                                                </span>
+                                                <span className="inline-flex h-9 shrink-0 items-center rounded-lg border border-harbor/15 px-3 text-xs font-bold text-harbor transition group-hover:border-sienna group-hover:text-sienna">
+                                                    {cert.certificateDocument
+                                                        ? "Replace file"
+                                                        : "Choose file"}
+                                                </span>
+                                            </label>
+                                            {cert.certificateDocument && (
+                                                <div className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-sand-100/70 px-3 py-2 text-sm">
+                                                    <span className="min-w-0 truncate font-semibold text-harbor">
+                                                        {fileTypeLabel(
+                                                            cert.certificateDocument.type,
+                                                            cert.certificateDocument.name,
+                                                        )} · {formatFileSize(cert.certificateDocument.size)}
+                                                    </span>
+                                                    <div className="flex shrink-0 items-center gap-2">
+                                                        {(cert.certificateDocument.downloadUrl || cert.certificateDocument.dataUrl) && (
+                                                            <a
+                                                                href={cert.certificateDocument.downloadUrl ?? cert.certificateDocument.dataUrl}
+                                                                download={cert.certificateDocument.dataUrl ? cert.certificateDocument.name : undefined}
+                                                                className="text-xs font-bold text-sienna hover:underline"
+                                                            >
+                                                                Download
+                                                            </a>
+                                                        )}
+                                                        <button
+                                                            type="button"
+                                                            aria-label="Remove certificate document"
+                                                            className="rounded-full p-1 text-ember-400 hover:bg-sand-100 hover:text-sienna"
+                                                            onClick={() => updateCertification(cert.id, { certificateDocument: null })}
+                                                        >
+                                                            <X className="size-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </Field>
+                                    </div>
+                                    <div className="sm:col-span-2">
+                                        <Field
+                                            label="Related Skills"
+                                            optional
+                                            htmlFor={`cert-skills-${cert.id}`}
+                                        >
+                                            <CertificationSkillsPicker
+                                                id={`cert-skills-${cert.id}`}
+                                                value={cert.relatedSkills}
+                                                options={[
+                                                    ...SKILL_SUGGESTIONS,
+                                                    ...profile.skills,
+                                                ]}
+                                                onChange={(relatedSkills) =>
+                                                    updateCertification(cert.id, {
+                                                        relatedSkills,
+                                                    })
+                                                }
+                                            />
+                                        </Field>
+                                    </div>
                                 </div>
                             </SectionCard>
                         ))}

@@ -79,6 +79,56 @@ test('participant can save profile with all onboarding data', function () {
     expect($profile->nationality)->toBe('South African');
 });
 
+test('participant certification details and document are persisted', function () {
+    $user = User::factory()->create();
+    $user->assignRole('participant');
+    $documentDataUrl = 'data:application/pdf;base64,'.base64_encode('certificate PDF');
+
+    $response = $this->actingAs($user)->postJson(
+        route('onboarding.profile.store'),
+        [
+            'certifications' => [
+                [
+                    'name' => 'Project Management Professional',
+                    'issuingOrganisation' => 'PMI',
+                    'issueDate' => '2024-03',
+                    'doesNotExpire' => true,
+                    'credentialNumber' => 'PMP-12345',
+                    'credentialUrl' => 'https://example.org/verify/PMP-12345',
+                    'relatedSkills' => ['Project Management', 'Leadership'],
+                    'certificateDocument' => [
+                        'name' => 'pmp-certificate.pdf',
+                        'size' => strlen('certificate PDF'),
+                        'type' => 'application/pdf',
+                        'dataUrl' => $documentDataUrl,
+                    ],
+                ],
+            ],
+        ],
+    );
+
+    $response->assertOk()
+        ->assertJsonPath('profile.certifications.0.doesNotExpire', true)
+        ->assertJsonPath('profile.certifications.0.credentialUrl', 'https://example.org/verify/PMP-12345')
+        ->assertJsonPath('profile.certifications.0.relatedSkills.0', 'Project Management')
+        ->assertJsonPath('profile.certifications.0.certificateDocument.name', 'pmp-certificate.pdf');
+
+    $certification = ParticipantProfile::where('user_id', $user->id)
+        ->firstOrFail()
+        ->certifications()
+        ->firstOrFail();
+
+    expect($certification->issue_date->format('Y-m'))->toBe('2024-03')
+        ->and($certification->does_not_expire)->toBeTrue()
+        ->and($certification->credential_number)->toBe('PMP-12345')
+        ->and($certification->related_skills)->toBe(['Project Management', 'Leadership']);
+
+    Storage::disk('local')->assertExists($certification->document_path);
+    $this->actingAs($user)
+        ->get($response->json('profile.certifications.0.certificateDocument.downloadUrl'))
+        ->assertOk();
+});
+
 test('participant can save profile with photo via base64', function () {
     $user = User::factory()->create();
     $user->assignRole('participant');

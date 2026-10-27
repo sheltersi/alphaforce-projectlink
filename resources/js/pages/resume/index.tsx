@@ -49,6 +49,9 @@ type Certification = {
     credential_number: string | null;
     issue_date: string | null;
     expiry_date: string | null;
+    does_not_expire: boolean;
+    credential_url: string | null;
+    related_skills: string[];
 };
 
 type Resume = {
@@ -440,8 +443,29 @@ export default function ResumeIndex() {
                                                 <p className="mt-0.5 text-xs text-sienna-600 dark:text-sienna-400">{cert.issuer ?? "—"}</p>
                                                 <p className="mt-1 text-[10px] text-muted-foreground">
                                                     {cert.issue_date && <>Issued {cert.issue_date}</>}
-                                                    {cert.expiry_date && <> · Expires {cert.expiry_date}</>}
+                                                    {cert.does_not_expire
+                                                        ? <> · Does not expire</>
+                                                        : cert.expiry_date && <> · Expires {cert.expiry_date}</>}
                                                 </p>
+                                                {cert.credential_url && (
+                                                    <a
+                                                        href={cert.credential_url}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="mt-1 block text-xs font-semibold text-sienna-600 hover:underline dark:text-sienna-400"
+                                                    >
+                                                        Verify credential
+                                                    </a>
+                                                )}
+                                                {cert.related_skills.length > 0 && (
+                                                    <div className="mt-2 flex flex-wrap gap-1.5">
+                                                        {cert.related_skills.map((skill) => (
+                                                            <span key={skill} className="rounded-full bg-moss-100 px-2 py-0.5 text-[10px] font-semibold text-moss-700 dark:bg-moss-900/30 dark:text-moss-300">
+                                                                {skill}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

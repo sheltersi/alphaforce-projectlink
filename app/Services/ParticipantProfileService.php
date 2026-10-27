@@ -189,6 +189,12 @@ class ParticipantProfileService
 
     private function syncCertifications(ParticipantProfile $profile, array $certifications): void
     {
+        $existingCertifications = $profile->certifications()->get();
+        $existingDocuments = $existingCertifications
+            ->filter(fn ($certification) => filled($certification->document_path))
+            ->keyBy('document_path');
+        $keptDocumentPaths = [];
+
         $profile->certifications()->delete();
 
         $filtered = collect($certifications)
@@ -200,14 +206,78 @@ class ParticipantProfileService
                 continue;
             }
 
+            $document = is_array($cert['certificate_document'] ?? null)
+                ? $cert['certificate_document']
+                : [];
+            $storedDocument = null;
+
+            if (! empty($document['data_url'])) {
+                $decoded = $this->storeBase64File(
+                    $document['data_url'],
+                    "participant-certifications/{$profile->id}",
+                    'local',
+                );
+
+                if ($decoded && in_array($decoded['mime'], [
+                    'application/pdf',
+                    'image/jpeg',
+                    'image/png',
+                    'image/gif',
+                    'image/webp',
+                ], true)) {
+                    $storedDocument = [
+                        'document_path' => $decoded['path'],
+                        'document_original_name' => trim($document['name'] ?? 'Certificate document'),
+                        'document_mime_type' => $decoded['mime'],
+                        'document_file_size' => $decoded['size'],
+                    ];
+                } elseif ($decoded) {
+                    $this->deleteIfExists($decoded['path'], 'local');
+                }
+            }
+
+            $existingPath = $document['file_path'] ?? null;
+            if (! $storedDocument && $existingPath && $existingDocuments->has($existingPath)) {
+                $existingDocument = $existingDocuments->get($existingPath);
+                $storedDocument = [
+                    'document_path' => $existingDocument->document_path,
+                    'document_original_name' => $existingDocument->document_original_name,
+                    'document_mime_type' => $existingDocument->document_mime_type,
+                    'document_file_size' => $existingDocument->document_file_size,
+                ];
+            }
+
+            if ($storedDocument) {
+                $keptDocumentPaths[] = $storedDocument['document_path'];
+            }
+
             $profile->certifications()->create([
                 'name' => trim($cert['name']),
                 'issuing_organisation' => trim($cert['issuing_organisation']),
-                'credential_number' => $cert['credential_number'] ?? null,
+                'credential_number' => filled($cert['credential_number'] ?? null)
+                    ? trim($cert['credential_number'])
+                    : null,
                 'issue_date' => $cert['issue_date'] ?? null,
-                'expiry_date' => $cert['expiry_date'] ?? null,
+                'expiry_date' => ! empty($cert['does_not_expire'])
+                    ? null
+                    : ($cert['expiry_date'] ?? null),
+                'does_not_expire' => (bool) ($cert['does_not_expire'] ?? false),
+                'credential_url' => filled($cert['credential_url'] ?? null)
+                    ? trim($cert['credential_url'])
+                    : null,
+                'related_skills' => collect($cert['related_skills'] ?? [])
+                    ->filter(fn ($skill) => is_string($skill) && trim($skill) !== '')
+                    ->map(fn ($skill) => trim($skill))
+                    ->unique(fn ($skill) => mb_strtolower($skill))
+                    ->values()
+                    ->all(),
+                ...($storedDocument ?? []),
                 'sort_order' => $idx,
             ]);
+        }
+
+        foreach ($existingDocuments->keys()->diff($keptDocumentPaths) as $path) {
+            $this->deleteIfExists($path, 'local');
         }
     }
 
@@ -327,6 +397,8 @@ class ParticipantProfileService
         return match (true) {
             str_contains($mime, 'jpeg') || str_contains($mime, 'jpg') => 'jpg',
             str_contains($mime, 'png') => 'png',
+            str_contains($mime, 'gif') => 'gif',
+            str_contains($mime, 'webp') => 'webp',
             str_contains($mime, 'pdf') => 'pdf',
             str_contains($mime, 'msword') => 'doc',
             str_contains($mime, 'officedocument.wordprocessingml') => 'docx',
@@ -373,8 +445,8 @@ class ParticipantProfileService
                 'jobTitle' => $ex->job_title,
                 'organisation' => $ex->organisation,
                 'location' => $ex->location ?? '',
-                'startDate' => $ex->start_date ?? '',
-                'endDate' => $ex->end_date ?? '',
+                'startDate' => $ex->start_date?->format('Y-m') ?? '',
+                'endDate' => $ex->end_date?->format('Y-m') ?? '',
                 'currentlyWorking' => (bool) $ex->currently_working,
                 'description' => $ex->description ?? '',
             ])->toArray(),
@@ -382,9 +454,21 @@ class ParticipantProfileService
                 'id' => (string) $c->id,
                 'name' => $c->name,
                 'issuingOrganisation' => $c->issuing_organisation,
-                'issueDate' => $c->issue_date ?? '',
-                'expiryDate' => $c->expiry_date ?? '',
+                'issueDate' => $c->issue_date?->format('Y-m') ?? '',
+                'expiryDate' => $c->expiry_date?->format('Y-m') ?? '',
+                'doesNotExpire' => (bool) $c->does_not_expire,
                 'credentialNumber' => $c->credential_number ?? '',
+                'credentialUrl' => $c->credential_url ?? '',
+                'relatedSkills' => $c->related_skills ?? [],
+                'certificateDocument' => $c->document_path ? [
+                    'name' => $c->document_original_name,
+                    'size' => $c->document_file_size,
+                    'type' => $c->document_mime_type,
+                    'filePath' => $c->document_path,
+                    'downloadUrl' => route('onboarding.profile.certification-document.download', [
+                        'certification' => $c->id,
+                    ]),
+                ] : null,
             ])->toArray(),
             'documents' => $profile->documents->map(fn ($d) => [
                 'id' => (string) $d->id,

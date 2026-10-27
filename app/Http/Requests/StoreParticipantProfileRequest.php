@@ -74,11 +74,21 @@ class StoreParticipantProfileRequest extends FormRequest
 
             // Certifications – optional, multiple
             'certifications' => ['nullable', 'array'],
-            'certifications.*.name' => ['required_with:certifications', 'string', 'max:255'],
-            'certifications.*.issuing_organisation' => ['required_with:certifications', 'string', 'max:255'],
+            'certifications.*.name' => ['nullable', 'string', 'max:255'],
+            'certifications.*.issuing_organisation' => ['nullable', 'string', 'max:255'],
             'certifications.*.credential_number' => ['nullable', 'string', 'max:255'],
             'certifications.*.issue_date' => ['nullable', 'string', 'regex:/^\d{4}-\d{2}$/'],
             'certifications.*.expiry_date' => ['nullable', 'string', 'regex:/^\d{4}-\d{2}$/'],
+            'certifications.*.does_not_expire' => ['nullable', 'boolean'],
+            'certifications.*.credential_url' => ['nullable', 'url', 'max:2048'],
+            'certifications.*.related_skills' => ['nullable', 'array'],
+            'certifications.*.related_skills.*' => ['string', 'max:100', 'distinct'],
+            'certifications.*.certificate_document' => ['nullable', 'array'],
+            'certifications.*.certificate_document.name' => ['nullable', 'string', 'max:255'],
+            'certifications.*.certificate_document.size' => ['nullable', 'integer', 'min:1', 'max:10485760'],
+            'certifications.*.certificate_document.type' => ['nullable', 'string', 'in:application/pdf,image/jpeg,image/png,image/gif,image/webp'],
+            'certifications.*.certificate_document.data_url' => ['nullable', 'string', 'max:15000000'],
+            'certifications.*.certificate_document.file_path' => ['nullable', 'string', 'max:255'],
 
             // Documents – optional, can be file uploads or base64 payloads
             'documents' => ['nullable', 'array'],
@@ -107,6 +117,44 @@ class StoreParticipantProfileRequest extends FormRequest
         return [function (Validator $validator): void {
             if ($this->input('redirect_to') !== 'dashboard') {
                 return;
+            }
+
+            foreach ($this->input('certifications', []) as $index => $certification) {
+                if (! is_array($certification)) {
+                    continue;
+                }
+
+                $started = filled($certification['name'] ?? null)
+                    || filled($certification['issuing_organisation'] ?? null)
+                    || filled($certification['issue_date'] ?? null)
+                    || filled($certification['expiry_date'] ?? null)
+                    || filled($certification['credential_number'] ?? null)
+                    || filled($certification['credential_url'] ?? null)
+                    || ! empty($certification['related_skills'] ?? [])
+                    || ! empty($certification['does_not_expire'] ?? false)
+                    || ! empty($certification['certificate_document']['data_url'] ?? null)
+                    || ! empty($certification['certificate_document']['file_path'] ?? null);
+
+                if (! $started) {
+                    continue;
+                }
+
+                foreach ([
+                    'name' => 'Certification name is required.',
+                    'issuing_organisation' => 'Issuing organisation is required.',
+                    'issue_date' => 'Issue date is required.',
+                ] as $field => $message) {
+                    if (blank($certification[$field] ?? null)) {
+                        $validator->errors()->add("certifications.{$index}.{$field}", $message);
+                    }
+                }
+
+                if (empty($certification['does_not_expire']) && blank($certification['expiry_date'] ?? null)) {
+                    $validator->errors()->add(
+                        "certifications.{$index}.expiry_date",
+                        'Enter an expiration date or mark the certification as non-expiring.',
+                    );
+                }
             }
 
             $profile = $this->user()?->participantProfile;
@@ -203,6 +251,10 @@ class StoreParticipantProfileRequest extends FormRequest
             'credentialNumber' => 'credential_number',
             'issueDate' => 'issue_date',
             'expiryDate' => 'expiry_date',
+            'doesNotExpire' => 'does_not_expire',
+            'credentialUrl' => 'credential_url',
+            'relatedSkills' => 'related_skills',
+            'certificateDocument' => 'certificate_document',
         ];
 
         $input = $this->all();
@@ -222,7 +274,23 @@ class StoreParticipantProfileRequest extends FormRequest
             $input['experience'] = array_map(fn ($e) => $this->normalizeKeys($e, $map), $input['experience']);
         }
         if (isset($input['certifications']) && is_array($input['certifications'])) {
-            $input['certifications'] = array_map(fn ($c) => $this->normalizeKeys($c, $map), $input['certifications']);
+            $input['certifications'] = array_map(function ($certification) use ($map) {
+                $certification = $this->normalizeKeys($certification, $map);
+
+                if (isset($certification['certificate_document']) && is_array($certification['certificate_document'])) {
+                    $certification['certificate_document'] = $this->normalizeKeys(
+                        $certification['certificate_document'],
+                        [
+                            'fileSize' => 'size',
+                            'mimeType' => 'type',
+                            'dataUrl' => 'data_url',
+                            'filePath' => 'file_path',
+                        ],
+                    );
+                }
+
+                return $certification;
+            }, $input['certifications']);
         }
         if (isset($input['documents']) && is_array($input['documents'])) {
             // documents use original_name, file_size etc. – map dataUrl -> data_url

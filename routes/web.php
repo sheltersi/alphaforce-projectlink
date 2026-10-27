@@ -22,6 +22,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('onboarding/profile', [ParticipantProfileController::class, 'store'])->name('onboarding.profile.store');
     Route::put('onboarding/profile', [ParticipantProfileController::class, 'update'])->name('onboarding.profile.update');
     Route::get('onboarding/profile/document/{document}/download', [ParticipantProfileController::class, 'downloadDocument'])->name('onboarding.profile.document.download');
+    Route::get('onboarding/profile/certification/{certification}/document/download', [ParticipantProfileController::class, 'downloadCertificationDocument'])->name('onboarding.profile.certification-document.download');
 });
 
 Route::middleware(['auth', 'verified', 'ensure.participant.profile'])->group(function () {

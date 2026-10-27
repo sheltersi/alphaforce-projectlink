@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreParticipantProfileRequest;
+use App\Models\Certification;
 use App\Models\ParticipantDocument;
 use App\Models\ParticipantProfile;
 use App\Models\ResumeShareLink;
@@ -148,6 +149,9 @@ class ParticipantProfileController extends Controller
                 'credential_number' => $c->credential_number,
                 'issue_date' => $c->issue_date?->format('M Y'),
                 'expiry_date' => $c->expiry_date?->format('M Y'),
+                'does_not_expire' => (bool) $c->does_not_expire,
+                'credential_url' => $c->credential_url,
+                'related_skills' => $c->related_skills ?? [],
             ])->values(),
             'profile_strength' => $profile->isComplete() ? 100 : max(40, min(
                 95,
@@ -330,6 +334,9 @@ class ParticipantProfileController extends Controller
                 'credential_number' => $c->credential_number,
                 'issue_date' => $c->issue_date?->format('M Y'),
                 'expiry_date' => $c->expiry_date?->format('M Y'),
+                'does_not_expire' => (bool) $c->does_not_expire,
+                'credential_url' => $c->credential_url,
+                'related_skills' => $c->related_skills ?? [],
             ])->values()->all(),
             'profile_strength' => $profile->isComplete() ? 100 : max(40, min(
                 95,
@@ -379,6 +386,22 @@ class ParticipantProfileController extends Controller
         }
 
         return Storage::disk($doc->disk)->download($doc->file_path, $doc->original_name);
+    }
+
+    public function downloadCertificationDocument(Request $request, int $certificationId)
+    {
+        $certification = Certification::query()
+            ->whereHas('participantProfile', fn ($query) => $query->where('user_id', $request->user()->id))
+            ->findOrFail($certificationId);
+
+        if (! $certification->document_path || ! Storage::disk('local')->exists($certification->document_path)) {
+            abort(404, 'Certificate document not found.');
+        }
+
+        return Storage::disk('local')->download(
+            $certification->document_path,
+            $certification->document_original_name ?? 'certificate',
+        );
     }
 
     /**
@@ -483,6 +506,10 @@ class ParticipantProfileController extends Controller
                 'name' => $c->name,
                 'issuer' => $c->issuing_organisation,
                 'issue_date' => $c->issue_date?->format('M Y'),
+                'expiry_date' => $c->expiry_date?->format('M Y'),
+                'does_not_expire' => (bool) $c->does_not_expire,
+                'credential_url' => $c->credential_url,
+                'related_skills' => $c->related_skills ?? [],
             ])->values()->all(),
             'email' => $profile->email,
             'profile_owner_name' => $link->user?->name,

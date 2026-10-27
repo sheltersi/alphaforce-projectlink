@@ -25,7 +25,20 @@ export interface CertificationEntry {
     issuingOrganisation: string;
     issueDate: string;
     expiryDate: string;
+    doesNotExpire: boolean;
     credentialNumber: string;
+    credentialUrl: string;
+    relatedSkills: string[];
+    certificateDocument: CertificationDocument | null;
+}
+
+export interface CertificationDocument {
+    name: string;
+    size: number;
+    type: string;
+    dataUrl?: string;
+    filePath?: string;
+    downloadUrl?: string;
 }
 
 export interface ProfileDocument {
@@ -126,7 +139,11 @@ export function emptyCertification(): CertificationEntry {
         issuingOrganisation: '',
         issueDate: '',
         expiryDate: '',
+        doesNotExpire: false,
         credentialNumber: '',
+        credentialUrl: '',
+        relatedSkills: [],
+        certificateDocument: null,
     };
 }
 
@@ -239,7 +256,12 @@ function isExperienceComplete(e: ExperienceEntry): boolean {
 }
 
 function isCertificationComplete(c: CertificationEntry): boolean {
-    return Boolean(c.name.trim() && c.issuingOrganisation.trim());
+    return Boolean(
+        c.name.trim() &&
+            c.issuingOrganisation.trim() &&
+            c.issueDate.trim() &&
+            (c.doesNotExpire || c.expiryDate.trim()),
+    );
 }
 
 export function sectionStatuses(profile: ParticipantProfile): SectionStatus[] {
@@ -407,6 +429,42 @@ export function requiredBlockingErrors(
         if (profile.skills.length === 0) {
             errors.push('Add at least one skill to continue.');
         }
+    }
+    if (step === 'certifications') {
+        profile.certifications.forEach((certification, index) => {
+            const started = Boolean(
+                certification.name.trim() ||
+                    certification.issuingOrganisation.trim() ||
+                    certification.issueDate.trim() ||
+                    certification.expiryDate.trim() ||
+                    certification.credentialNumber.trim() ||
+                    certification.credentialUrl.trim() ||
+                    certification.relatedSkills.length > 0 ||
+                    certification.doesNotExpire ||
+                    certification.certificateDocument,
+            );
+
+            if (!started) return;
+
+            const entry = `Certification ${index + 1}`;
+            if (!certification.name.trim()) {
+                errors.push(`${entry}: certification name is required.`);
+            }
+            if (!certification.issuingOrganisation.trim()) {
+                errors.push(`${entry}: issuing organisation is required.`);
+            }
+            if (!certification.issueDate.trim()) {
+                errors.push(`${entry}: issue date is required.`);
+            }
+            if (
+                !certification.doesNotExpire &&
+                !certification.expiryDate.trim()
+            ) {
+                errors.push(
+                    `${entry}: enter an expiration date or mark it as non-expiring.`,
+                );
+            }
+        });
     }
     if (step === 'documents') {
         const documentCategories = new Set(
