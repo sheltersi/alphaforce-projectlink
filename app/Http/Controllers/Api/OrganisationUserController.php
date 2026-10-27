@@ -21,7 +21,7 @@ class OrganisationUserController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-            // dd("we are here");
+        // dd("we are here");
         $organisation = $this->currentOrganisation($request);
 
         Gate::authorize('viewMembers', $organisation);

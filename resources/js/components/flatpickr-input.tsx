@@ -1,15 +1,15 @@
-import flatpickr from "flatpickr";
-import monthSelectPlugin from "flatpickr/dist/plugins/monthSelect/index.js";
-import { useEffect, useRef } from "react";
-import type { ComponentPropsWithoutRef } from "react";
-import "flatpickr/dist/flatpickr.css";
-import "flatpickr/dist/plugins/monthSelect/style.css";
+import flatpickr from 'flatpickr';
+import monthSelectPlugin from 'flatpickr/dist/plugins/monthSelect/index.js';
+import { useEffect, useRef } from 'react';
+import type { ComponentPropsWithoutRef } from 'react';
+import 'flatpickr/dist/flatpickr.css';
+import 'flatpickr/dist/plugins/monthSelect/style.css';
 
-type PickerType = "date" | "month" | "time";
+type PickerType = 'date' | 'month' | 'time';
 
 type FlatpickrInputProps = Omit<
-    ComponentPropsWithoutRef<"input">,
-    "onChange" | "type" | "value"
+    ComponentPropsWithoutRef<'input'>,
+    'onChange' | 'type' | 'value'
 > & {
     pickerType: PickerType;
     value: string;
@@ -26,9 +26,9 @@ export function FlatpickrInput({
     const pickerRef = useRef<flatpickr.Instance | null>(null);
     const onChangeRef = useRef(onChange);
     const placeholder = {
-        date: "YYYY-MM-DD",
-        month: "YYYY-MM",
-        time: "HH:MM",
+        date: 'YYYY-MM-DD',
+        month: 'YYYY-MM',
+        time: 'HH:MM',
     }[pickerType];
 
     useEffect(() => {
@@ -39,24 +39,24 @@ export function FlatpickrInput({
         if (!inputRef.current) return;
 
         const dateFormat = {
-            date: "Y-m-d",
-            month: "Y-m",
-            time: "H:i",
+            date: 'Y-m-d',
+            month: 'Y-m',
+            time: 'H:i',
         }[pickerType];
 
         const picker = flatpickr(inputRef.current, {
             allowInput: true,
             dateFormat,
             defaultDate: value || undefined,
-            enableTime: pickerType === "time",
-            noCalendar: pickerType === "time",
+            enableTime: pickerType === 'time',
+            noCalendar: pickerType === 'time',
             time_24hr: true,
             plugins:
-                pickerType === "month"
+                pickerType === 'month'
                     ? [
                           monthSelectPlugin({
-                              dateFormat: "Y-m",
-                              altFormat: "F Y",
+                              dateFormat: 'Y-m',
+                              altFormat: 'F Y',
                           }),
                       ]
                     : [],

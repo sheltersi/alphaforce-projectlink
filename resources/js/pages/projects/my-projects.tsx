@@ -13,7 +13,10 @@ import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { index as myProjectsIndex } from '@/routes/my-projects';
-import { index as projectsIndex, show as projectsShow } from '@/routes/projects';
+import {
+    index as projectsIndex,
+    show as projectsShow,
+} from '@/routes/projects';
 
 type MyProject = {
     id: number;
@@ -60,7 +63,11 @@ function statusLabel(status: MyProject['membership_status']) {
 }
 
 function ProjectRow({ project }: { project: MyProject }) {
-    const meta = [project.organisation ?? 'Independent project', project.role, project.team]
+    const meta = [
+        project.organisation ?? 'Independent project',
+        project.role,
+        project.team,
+    ]
         .filter(Boolean)
         .join(' · ');
     const dates =
@@ -71,18 +78,20 @@ function ProjectRow({ project }: { project: MyProject }) {
     return (
         <article className="group flex items-start justify-between gap-4 py-4 first:pt-1 last:pb-1">
             <div className="flex min-w-0 flex-1 items-start gap-3">
-                <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-sienna dark:text-sienna-300">
+                <span className="bg-secondary text-sienna dark:text-sienna-300 mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl">
                     <BriefcaseBusiness className="size-4.5" />
                 </span>
                 <div className="min-w-0 flex-1">
                     <Link
                         href={projectsShow({ project: project.id }).url}
-                        className="block truncate text-sm font-bold text-foreground hover:text-sienna hover:underline hover:underline-offset-4 dark:hover:text-sienna-300"
+                        className="text-foreground hover:text-sienna dark:hover:text-sienna-300 block truncate text-sm font-bold hover:underline hover:underline-offset-4"
                     >
                         {project.title}
                     </Link>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{meta}</p>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-muted-foreground">
+                    <p className="text-muted-foreground mt-0.5 truncate text-xs">
+                        {meta}
+                    </p>
+                    <div className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium">
                         {project.location && (
                             <span className="inline-flex items-center gap-1">
                                 <MapPin className="size-3" aria-hidden />
@@ -109,7 +118,7 @@ function ProjectRow({ project }: { project: MyProject }) {
                 </span>
                 <Link
                     href={projectsShow({ project: project.id }).url}
-                    className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-sienna hover:bg-sienna-100 dark:text-sienna-300 dark:hover:bg-sienna-900/30"
+                    className="text-sienna hover:bg-sienna-100 dark:text-sienna-300 dark:hover:bg-sienna-900/30 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold"
                 >
                     View
                     <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -135,10 +144,17 @@ export default function MyProjects() {
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
         return all.filter((project) => {
-            const matchesStatus = filter === 'all' || project.membership_status === filter;
+            const matchesStatus =
+                filter === 'all' || project.membership_status === filter;
             if (!matchesStatus) return false;
             if (!q) return true;
-            const haystack = [project.title, project.organisation, project.role, project.team, project.location]
+            const haystack = [
+                project.title,
+                project.organisation,
+                project.role,
+                project.team,
+                project.location,
+            ]
                 .filter(Boolean)
                 .join(' ')
                 .toLowerCase();
@@ -146,34 +162,38 @@ export default function MyProjects() {
         });
     }, [all, query, filter]);
 
-    const currentFiltered = filtered.filter((p) => p.membership_status === 'active');
+    const currentFiltered = filtered.filter(
+        (p) => p.membership_status === 'active',
+    );
     // Past = everything not active, so Withdrawn stays visible alongside Completed.
-    const pastFiltered = filtered.filter((p) => p.membership_status !== 'active');
+    const pastFiltered = filtered.filter(
+        (p) => p.membership_status !== 'active',
+    );
 
     const hasQuery = query.trim().length > 0 || filter !== 'all';
 
     return (
         <>
             <Head title="My projects" />
-            <main className="min-h-full bg-background px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+            <main className="bg-background min-h-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
                 <div className="mx-auto max-w-7xl">
                     {/* Header — single purpose, no discover controls mixed in */}
-                    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end animate-fade-in-up">
+                    <div className="animate-fade-in-up flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                         <div>
-                            <p className="text-sm font-bold text-sienna dark:text-sienna-300">
+                            <p className="text-sienna dark:text-sienna-300 text-sm font-bold">
                                 Your work
                             </p>
-                            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                            <h1 className="text-foreground mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
                                 My projects
                             </h1>
-                            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                            <p className="text-muted-foreground mt-2 max-w-xl text-sm">
                                 Projects you&apos;re assigned to, and the ones
                                 you&apos;ve completed or stepped back from.
                             </p>
                         </div>
                         <Link
                             href={projectsIndex({}).url}
-                            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-harbor px-4 text-sm font-bold text-white shadow-lg shadow-harbor/20 transition-all hover:-translate-y-0.5 hover:bg-harbor-700 dark:bg-harbor-600 dark:hover:bg-harbor-500"
+                            className="bg-harbor shadow-harbor/20 hover:bg-harbor-700 dark:bg-harbor-600 dark:hover:bg-harbor-500 inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5"
                         >
                             <Compass className="size-4" />
                             Discover more
@@ -182,12 +202,15 @@ export default function MyProjects() {
 
                     {/* Stats */}
                     <div
-                        className="mt-6 grid grid-cols-3 gap-3 animate-fade-in-up stagger-1"
+                        className="animate-fade-in-up stagger-1 mt-6 grid grid-cols-3 gap-3"
                         role="group"
                         aria-label="Project counts"
                     >
                         {[
-                            { label: 'Active', value: myProjects.current.length },
+                            {
+                                label: 'Active',
+                                value: myProjects.current.length,
+                            },
                             {
                                 label: 'Past',
                                 value: myProjects.past.length,
@@ -198,10 +221,10 @@ export default function MyProjects() {
                                 key={stat.label}
                                 className="glass-card rounded-2xl px-3 py-4 text-center"
                             >
-                                <p className="text-2xl font-extrabold text-foreground tabular-nums">
+                                <p className="text-foreground text-2xl font-extrabold tabular-nums">
                                     {stat.value}
                                 </p>
-                                <p className="mt-0.5 text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
+                                <p className="text-muted-foreground mt-0.5 text-[10px] font-bold tracking-wider uppercase">
                                     {stat.label}
                                 </p>
                             </div>
@@ -209,26 +232,31 @@ export default function MyProjects() {
                     </div>
 
                     {/* Toolbar: search + membership filter. Scoped to THIS page only. */}
-                    <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center animate-fade-in-up stagger-2">
+                    <div className="animate-fade-in-up stagger-2 mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
                         <div className="relative flex-1">
-                            <label htmlFor="my-projects-search" className="sr-only">
+                            <label
+                                htmlFor="my-projects-search"
+                                className="sr-only"
+                            >
                                 Search my projects
                             </label>
-                            <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" />
+                            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2" />
                             <input
                                 id="my-projects-search"
                                 type="search"
                                 value={query}
-                                onChange={(event) => setQuery(event.target.value)}
+                                onChange={(event) =>
+                                    setQuery(event.target.value)
+                                }
                                 placeholder="Search by title, organisation, role, location…"
-                                className="w-full rounded-xl border border-border bg-card py-3 pr-10 pl-11 text-sm text-foreground placeholder:text-muted-foreground focus:border-sienna/50 focus:ring-2 focus:ring-sienna/20 focus:outline-none"
+                                className="border-border bg-card text-foreground placeholder:text-muted-foreground focus:border-sienna/50 focus:ring-sienna/20 w-full rounded-xl border py-3 pr-10 pl-11 text-sm focus:ring-2 focus:outline-none"
                             />
                             {query && (
                                 <button
                                     type="button"
                                     onClick={() => setQuery('')}
                                     aria-label="Clear search"
-                                    className="absolute top-1/2 right-3 -translate-y-1/2 rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                                    className="text-muted-foreground hover:bg-accent hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 rounded-lg p-1"
                                 >
                                     <X className="size-4" />
                                 </button>
@@ -237,7 +265,7 @@ export default function MyProjects() {
                         <div
                             role="group"
                             aria-label="Filter by membership status"
-                            className="flex items-center gap-1.5 rounded-xl border border-border bg-card p-1.5"
+                            className="border-border bg-card flex items-center gap-1.5 rounded-xl border p-1.5"
                         >
                             {filterOptions.map((option) => (
                                 <button
@@ -246,7 +274,7 @@ export default function MyProjects() {
                                     aria-pressed={filter === option.value}
                                     onClick={() => setFilter(option.value)}
                                     className={cn(
-                                        'rounded-lg px-3.5 py-2 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-sienna/40 focus-visible:outline-none',
+                                        'focus-visible:ring-sienna/40 rounded-lg px-3.5 py-2 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:outline-none',
                                         filter === option.value
                                             ? 'bg-harbor text-white shadow-sm'
                                             : 'text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -258,7 +286,10 @@ export default function MyProjects() {
                         </div>
                     </div>
 
-                    <p className="mt-4 text-xs font-semibold text-muted-foreground" role="status">
+                    <p
+                        className="text-muted-foreground mt-4 text-xs font-semibold"
+                        role="status"
+                    >
                         Showing {filtered.length} of {all.length} projects
                         {hasQuery && (
                             <>
@@ -269,7 +300,7 @@ export default function MyProjects() {
                                         setQuery('');
                                         setFilter('all');
                                     }}
-                                    className="font-bold text-sienna underline underline-offset-4 hover:text-sienna-600 dark:text-sienna-300"
+                                    className="text-sienna hover:text-sienna-600 dark:text-sienna-300 font-bold underline underline-offset-4"
                                 >
                                     Clear filters
                                 </button>
@@ -305,28 +336,28 @@ export default function MyProjects() {
                                 <section
                                     key={group.title}
                                     aria-label={group.title}
-                                    className="glass-card rounded-2xl p-5 sm:p-6 animate-fade-in-up"
+                                    className="glass-card animate-fade-in-up rounded-2xl p-5 sm:p-6"
                                 >
-                                    <div className="flex items-center justify-between gap-3 border-b border-border pb-3">
+                                    <div className="border-border flex items-center justify-between gap-3 border-b pb-3">
                                         <div className="flex items-center gap-2.5">
-                                            <span className="flex size-9 items-center justify-center rounded-xl bg-secondary text-sienna dark:text-sienna-300">
+                                            <span className="bg-secondary text-sienna dark:text-sienna-300 flex size-9 items-center justify-center rounded-xl">
                                                 <group.icon className="size-4.5" />
                                             </span>
                                             <div>
-                                                <h2 className="text-sm font-extrabold text-foreground">
+                                                <h2 className="text-foreground text-sm font-extrabold">
                                                     {group.title}
                                                 </h2>
-                                                <p className="text-[11px] text-muted-foreground">
+                                                <p className="text-muted-foreground text-[11px]">
                                                     {group.description}
                                                 </p>
                                             </div>
                                         </div>
-                                        <span className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-extrabold text-secondary-foreground tabular-nums">
+                                        <span className="bg-secondary text-secondary-foreground rounded-full px-2.5 py-1 text-[11px] font-extrabold tabular-nums">
                                             {group.projects.length}
                                         </span>
                                     </div>
                                     {group.projects.length > 0 ? (
-                                        <div className="divide-y divide-border">
+                                        <div className="divide-border divide-y">
                                             {group.projects.map((project) => (
                                                 <ProjectRow
                                                     key={`${project.id}-${project.membership_status}`}
@@ -335,7 +366,7 @@ export default function MyProjects() {
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="py-6 text-center text-sm text-muted-foreground">
+                                        <p className="text-muted-foreground py-6 text-center text-sm">
                                             {group.empty}
                                         </p>
                                     )}
@@ -343,18 +374,20 @@ export default function MyProjects() {
                             ))}
                         </div>
                     ) : (
-                        <div className="glass-card mt-4 rounded-2xl p-10 text-center animate-fade-in-up">
-                            <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-secondary">
+                        <div className="glass-card animate-fade-in-up mt-4 rounded-2xl p-10 text-center">
+                            <div className="bg-secondary mx-auto flex size-12 items-center justify-center rounded-xl">
                                 {hasQuery ? (
-                                    <Search className="size-5 text-sienna dark:text-sienna-300" />
+                                    <Search className="text-sienna dark:text-sienna-300 size-5" />
                                 ) : (
-                                    <BriefcaseBusiness className="size-5 text-sienna dark:text-sienna-300" />
+                                    <BriefcaseBusiness className="text-sienna dark:text-sienna-300 size-5" />
                                 )}
                             </div>
-                            <h2 className="mt-4 text-lg font-extrabold text-foreground">
-                                {hasQuery ? 'No projects match your filters' : 'No projects yet'}
+                            <h2 className="text-foreground mt-4 text-lg font-extrabold">
+                                {hasQuery
+                                    ? 'No projects match your filters'
+                                    : 'No projects yet'}
                             </h2>
-                            <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+                            <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-sm">
                                 {hasQuery
                                     ? 'Try a different search term or clearing the status filter.'
                                     : 'Once you join a project, it will show up here.'}
@@ -367,7 +400,7 @@ export default function MyProjects() {
                                             setQuery('');
                                             setFilter('all');
                                         }}
-                                        className="inline-flex items-center gap-1.5 rounded-xl bg-secondary px-4 py-2.5 text-xs font-bold text-secondary-foreground transition-colors hover:bg-secondary/80"
+                                        className="bg-secondary text-secondary-foreground hover:bg-secondary/80 inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-colors"
                                     >
                                         <X className="size-3.5" />
                                         Clear filters
@@ -375,7 +408,7 @@ export default function MyProjects() {
                                 )}
                                 <Link
                                     href={projectsIndex({}).url}
-                                    className="inline-flex items-center gap-1.5 rounded-xl bg-harbor px-4 py-2.5 text-xs font-bold text-white hover:bg-harbor-700"
+                                    className="bg-harbor hover:bg-harbor-700 inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-white"
                                 >
                                     <Compass className="size-3.5" />
                                     Discover projects

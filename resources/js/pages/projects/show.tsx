@@ -1,5 +1,5 @@
-import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
 import {
     ArrowLeft,
     BookOpen,
@@ -15,19 +15,23 @@ import {
     Send,
     Sparkles,
     UsersRound,
-} from "lucide-react";
-import { dashboard } from "@/routes";
-import { index as projectsIndex, like as projectsLike, apply as projectsApply } from "@/routes/projects";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from 'lucide-react';
+import { dashboard } from '@/routes';
+import {
+    index as projectsIndex,
+    like as projectsLike,
+    apply as projectsApply,
+} from '@/routes/projects';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 type ShowProject = {
     id: number;
@@ -35,7 +39,7 @@ type ShowProject = {
     slug: string | null;
     description: string | null;
     location: string | null;
-    status: "open" | "in_progress" | "completed" | "draft" | "cancelled";
+    status: 'open' | 'in_progress' | 'completed' | 'draft' | 'cancelled';
     start_date: string | null;
     end_date: string | null;
     positions: number;
@@ -68,74 +72,74 @@ type ShowProject = {
 };
 
 const gradients = [
-    "bg-gradient-to-br from-sienna-500 to-sienna-700 dark:from-sienna-600 dark:to-sienna-800",
-    "bg-gradient-to-br from-moss-500 to-moss-700 dark:from-moss-600 dark:to-moss-800",
-    "bg-gradient-to-br from-amber-400 to-amber-600 dark:from-amber-600 dark:to-amber-800",
-    "bg-gradient-to-br from-harbor-500 to-harbor-700 dark:from-harbor-600 dark:to-harbor-800",
-    "bg-gradient-to-br from-clay-400 to-clay-600 dark:from-clay-600 dark:to-clay-800",
+    'bg-gradient-to-br from-sienna-500 to-sienna-700 dark:from-sienna-600 dark:to-sienna-800',
+    'bg-gradient-to-br from-moss-500 to-moss-700 dark:from-moss-600 dark:to-moss-800',
+    'bg-gradient-to-br from-amber-400 to-amber-600 dark:from-amber-600 dark:to-amber-800',
+    'bg-gradient-to-br from-harbor-500 to-harbor-700 dark:from-harbor-600 dark:to-harbor-800',
+    'bg-gradient-to-br from-clay-400 to-clay-600 dark:from-clay-600 dark:to-clay-800',
 ];
 
 const statusMeta: Record<
-    "open" | "in_progress" | "completed" | "draft" | "cancelled",
+    'open' | 'in_progress' | 'completed' | 'draft' | 'cancelled',
     { label: string; className: string; dot: string }
 > = {
     open: {
-        label: "Open for applications",
+        label: 'Open for applications',
         className:
-            "border-sandy-600 bg-amber-100 text-sienna-700 dark:border-amber-600/40 dark:bg-amber-950/40 dark:text-amber-300",
-        dot: "bg-sienna-500 dark:bg-amber-400",
+            'border-sandy-600 bg-amber-100 text-sienna-700 dark:border-amber-600/40 dark:bg-amber-950/40 dark:text-amber-300',
+        dot: 'bg-sienna-500 dark:bg-amber-400',
     },
     in_progress: {
-        label: "In progress",
+        label: 'In progress',
         className:
-            "border-harbor-600 bg-harbor-100 text-harbor-700 dark:border-harbor-500/40 dark:bg-harbor-900/40 dark:text-harbor-300",
-        dot: "bg-harbor-500",
+            'border-harbor-600 bg-harbor-100 text-harbor-700 dark:border-harbor-500/40 dark:bg-harbor-900/40 dark:text-harbor-300',
+        dot: 'bg-harbor-500',
     },
     completed: {
-        label: "Completed",
+        label: 'Completed',
         className:
-            "border-moss-600 bg-moss-100 text-moss-700 dark:border-moss-500/40 dark:bg-moss-900/40 dark:text-moss-300",
-        dot: "bg-moss-500",
+            'border-moss-600 bg-moss-100 text-moss-700 dark:border-moss-500/40 dark:bg-moss-900/40 dark:text-moss-300',
+        dot: 'bg-moss-500',
     },
     draft: {
-        label: "Draft",
+        label: 'Draft',
         className:
-            "border-clay-600 bg-clay-100 text-clay-700 dark:border-clay-500/40 dark:bg-clay-900/40 dark:text-clay-300",
-        dot: "bg-clay-500",
+            'border-clay-600 bg-clay-100 text-clay-700 dark:border-clay-500/40 dark:bg-clay-900/40 dark:text-clay-300',
+        dot: 'bg-clay-500',
     },
     cancelled: {
-        label: "Cancelled",
+        label: 'Cancelled',
         className:
-            "border-sienna-600 bg-sienna-100 text-sienna-800 dark:border-sienna-500/40 dark:bg-sienna-900/40 dark:text-sienna-300",
-        dot: "bg-sienna-600",
+            'border-sienna-600 bg-sienna-100 text-sienna-800 dark:border-sienna-500/40 dark:bg-sienna-900/40 dark:text-sienna-300',
+        dot: 'bg-sienna-600',
     },
 };
 
 const applicationMeta: Record<string, { label: string; className: string }> = {
     submitted: {
-        label: "Application submitted",
+        label: 'Application submitted',
         className:
-            "border-harbor-600 bg-harbor-100 text-harbor-700 dark:border-harbor-500/40 dark:bg-harbor-900/40 dark:text-harbor-300",
+            'border-harbor-600 bg-harbor-100 text-harbor-700 dark:border-harbor-500/40 dark:bg-harbor-900/40 dark:text-harbor-300',
     },
     under_review: {
-        label: "Under review",
+        label: 'Under review',
         className:
-            "border-amber-500 bg-amber-100 text-sienna-700 dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-300",
+            'border-amber-500 bg-amber-100 text-sienna-700 dark:border-amber-500/40 dark:bg-amber-950/40 dark:text-amber-300',
     },
     shortlisted: {
-        label: "Shortlisted",
+        label: 'Shortlisted',
         className:
-            "border-moss-600 bg-moss-100 text-moss-700 dark:border-moss-500/40 dark:bg-moss-900/40 dark:text-moss-300",
+            'border-moss-600 bg-moss-100 text-moss-700 dark:border-moss-500/40 dark:bg-moss-900/40 dark:text-moss-300',
     },
     accepted: {
-        label: "Accepted",
+        label: 'Accepted',
         className:
-            "border-moss-600 bg-moss-100 text-moss-700 dark:border-moss-500/40 dark:bg-moss-900/40 dark:text-moss-300",
+            'border-moss-600 bg-moss-100 text-moss-700 dark:border-moss-500/40 dark:bg-moss-900/40 dark:text-moss-300',
     },
     rejected: {
-        label: "Not selected this time",
+        label: 'Not selected this time',
         className:
-            "border-sienna-600 bg-sienna-100 text-sienna-800 dark:border-sienna-500/40 dark:bg-sienna-900/40 dark:text-sienna-300",
+            'border-sienna-600 bg-sienna-100 text-sienna-800 dark:border-sienna-500/40 dark:bg-sienna-900/40 dark:text-sienna-300',
     },
 };
 
@@ -144,7 +148,7 @@ function SectionHeader({
     title,
     description,
     icon: Icon,
-    tone = "text-sienna dark:text-sienna-300",
+    tone = 'text-sienna dark:text-sienna-300',
 }: {
     eyebrow: string;
     title: string;
@@ -156,17 +160,28 @@ function SectionHeader({
         <div className="flex items-start gap-3">
             <span
                 className={cn(
-                    "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary",
+                    'bg-secondary mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl',
                     tone,
                 )}
             >
                 <Icon className="size-[18px]" />
             </span>
             <div>
-                <p className={cn("text-xs font-bold tracking-widest uppercase", tone)}>{eyebrow}</p>
-                <h2 className="mt-0.5 text-lg font-extrabold text-foreground">{title}</h2>
+                <p
+                    className={cn(
+                        'text-xs font-bold tracking-widest uppercase',
+                        tone,
+                    )}
+                >
+                    {eyebrow}
+                </p>
+                <h2 className="text-foreground mt-0.5 text-lg font-extrabold">
+                    {title}
+                </h2>
                 {description && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+                    <p className="text-muted-foreground mt-0.5 text-xs">
+                        {description}
+                    </p>
                 )}
             </div>
         </div>
@@ -202,14 +217,16 @@ function MatchRing({ match }: { match: number }) {
                     />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xl font-extrabold text-foreground">{match}%</span>
+                    <span className="text-foreground text-xl font-extrabold">
+                        {match}%
+                    </span>
                 </div>
             </div>
             <div>
-                <p className="text-sm font-bold text-foreground">Skill match</p>
-                <p className="mt-1 max-w-45 text-xs leading-relaxed text-muted-foreground">
+                <p className="text-foreground text-sm font-bold">Skill match</p>
+                <p className="text-muted-foreground mt-1 max-w-45 text-xs leading-relaxed">
                     {match >= 70
-                        ? "Your profile aligns strongly with what this project needs."
+                        ? 'Your profile aligns strongly with what this project needs.'
                         : match >= 40
                           ? "You've got some of the skills this project is after."
                           : "A few of your skills map to this project's requirements."}
@@ -232,43 +249,43 @@ function Timeline({
         <div className="flex items-center gap-4">
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-3">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-sienna-100 text-sienna-600 dark:bg-sienna-900/40 dark:text-sienna-300">
+                    <div className="bg-sienna-100 text-sienna-600 dark:bg-sienna-900/40 dark:text-sienna-300 flex size-11 shrink-0 items-center justify-center rounded-xl">
                         <CalendarDays className="size-5" />
                     </div>
                     <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                            <p className="text-xs font-extrabold tracking-wider text-sienna dark:text-sienna-300 uppercase">
+                            <p className="text-sienna dark:text-sienna-300 text-xs font-extrabold tracking-wider uppercase">
                                 Starts
                             </p>
                         </div>
-                        <p className="mt-0.5 truncate text-sm font-bold text-foreground">
-                            {start ?? "TBC"}
+                        <p className="text-foreground mt-0.5 truncate text-sm font-bold">
+                            {start ?? 'TBC'}
                         </p>
                     </div>
                 </div>
             </div>
 
             <div className="hidden flex-col items-center px-1 sm:flex">
-                <div className="h-px w-14 bg-border" />
+                <div className="bg-border h-px w-14" />
                 {duration && (
-                    <span className="mt-1.5 shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground">
-                        {duration} {duration === 1 ? "day" : "days"}
+                    <span className="bg-secondary text-muted-foreground mt-1.5 shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold">
+                        {duration} {duration === 1 ? 'day' : 'days'}
                     </span>
                 )}
-                <div className="mt-1.5 h-px w-14 bg-border" />
+                <div className="bg-border mt-1.5 h-px w-14" />
             </div>
 
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-3 sm:justify-end">
                     <div className="min-w-0 text-right">
-                        <p className="text-xs font-extrabold tracking-wider text-moss dark:text-moss-500 uppercase">
+                        <p className="text-moss dark:text-moss-500 text-xs font-extrabold tracking-wider uppercase">
                             Ends
                         </p>
-                        <p className="mt-0.5 truncate text-sm font-bold text-foreground">
-                            {end ?? "TBC"}
+                        <p className="text-foreground mt-0.5 truncate text-sm font-bold">
+                            {end ?? 'TBC'}
                         </p>
                     </div>
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-moss-100 text-moss-600 dark:bg-moss-900/40 dark:text-moss-300">
+                    <div className="bg-moss-100 text-moss-600 dark:bg-moss-900/40 dark:text-moss-300 flex size-11 shrink-0 items-center justify-center rounded-xl">
                         <FlagMini />
                     </div>
                 </div>
@@ -295,16 +312,16 @@ function FlagMini() {
 
 function Avatar({ name, className }: { name: string; className?: string }) {
     const initials = name
-        .split(" ")
+        .split(' ')
         .map((n) => n[0])
         .slice(0, 2)
-        .join("")
+        .join('')
         .toUpperCase();
 
     return (
         <span
             className={cn(
-                "flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-harbor-500 to-harbor-700 text-xs font-extrabold text-white dark:from-harbor-600 dark:to-harbor-800",
+                'from-harbor-500 to-harbor-700 dark:from-harbor-600 dark:to-harbor-800 flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-xs font-extrabold text-white',
                 className,
             )}
         >
@@ -331,13 +348,14 @@ export default function ShowProject() {
         : null;
 
     const applyingTo = useForm({
-        cover_letter: project.cover_letter ?? "",
+        cover_letter: project.cover_letter ?? '',
     });
 
     const canApply =
         !project.is_own_project &&
-        (project.status === "open" || project.status === "in_progress") &&
-        (!project.application_status || project.application_status === "rejected");
+        (project.status === 'open' || project.status === 'in_progress') &&
+        (!project.application_status ||
+            project.application_status === 'rejected');
 
     const submitApplication = () => {
         const url = projectsApply({ project: project.id }).url;
@@ -361,27 +379,32 @@ export default function ShowProject() {
         );
     };
 
-    const description = useMemo(() => project.description ?? "No description yet.", [project]);
+    const description = useMemo(
+        () => project.description ?? 'No description yet.',
+        [project],
+    );
     const descriptionTruncated =
-        showFullDescription || description.length <= 420 ? description : `${description.slice(0, 420)}⋯`;
+        showFullDescription || description.length <= 420
+            ? description
+            : `${description.slice(0, 420)}⋯`;
 
     return (
         <>
             <Head title={project.title} />
-            <main className="min-h-full bg-background px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+            <main className="bg-background min-h-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
                 <div className="mx-auto max-w-7xl">
                     {/* Back link */}
                     <Link
                         href={projectsIndex({}).url}
-                        className="group inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground"
+                        className="group text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-bold"
                     >
                         <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
                         Back to projects
                     </Link>
 
                     {/* Hero */}
-                    <div className="relative mt-4 overflow-hidden rounded-3xl premium-shadow animate-fade-in-up">
-                        <div className={cn("absolute inset-0", gradient)}>
+                    <div className="premium-shadow animate-fade-in-up relative mt-4 overflow-hidden rounded-3xl">
+                        <div className={cn('absolute inset-0', gradient)}>
                             <div className="absolute -top-16 -right-10 size-64 rounded-full bg-white/10 blur-3xl" />
                             <div className="absolute -bottom-24 -left-12 size-80 rounded-full bg-black/10 blur-3xl" />
                         </div>
@@ -391,10 +414,15 @@ export default function ShowProject() {
                                 <Badge
                                     variant="outline"
                                     className={cn(
-                                        "gap-1.5 border-white/25 bg-white/10 text-white backdrop-blur-sm",
+                                        'gap-1.5 border-white/25 bg-white/10 text-white backdrop-blur-sm',
                                     )}
                                 >
-                                    <span className={cn("size-1.5 rounded-full", status.dot)} />
+                                    <span
+                                        className={cn(
+                                            'size-1.5 rounded-full',
+                                            status.dot,
+                                        )}
+                                    />
                                     {status.label}
                                 </Badge>
                                 {project.organisation.name && (
@@ -420,13 +448,16 @@ export default function ShowProject() {
                                     <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
                                         <CalendarDays className="size-4" />
                                         {project.start_date}
-                                        {project.end_date ? ` — ${project.end_date}` : ""}
+                                        {project.end_date
+                                            ? ` — ${project.end_date}`
+                                            : ''}
                                     </span>
                                 )}
                                 {project.positions > 0 && (
                                     <span className="inline-flex items-center gap-1.5 text-sm font-semibold">
                                         <UsersRound className="size-4" />
-                                        {project.positions_filled} of {project.positions} positions filled
+                                        {project.positions_filled} of{' '}
+                                        {project.positions} positions filled
                                     </span>
                                 )}
                             </div>
@@ -434,7 +465,7 @@ export default function ShowProject() {
                             <div className="mt-8 flex flex-wrap items-center gap-3">
                                 <Button
                                     size="lg"
-                                    className="rounded-xl bg-white text-harbor-900 shadow-lg hover:bg-sand-100"
+                                    className="text-harbor-900 hover:bg-sand-100 rounded-xl bg-white shadow-lg"
                                     onClick={() =>
                                         canApply
                                             ? setApplyOpen(true)
@@ -442,7 +473,9 @@ export default function ShowProject() {
                                               ? router.visit(dashboard().url)
                                               : undefined
                                     }
-                                    disabled={!canApply && !project.is_own_project}
+                                    disabled={
+                                        !canApply && !project.is_own_project
+                                    }
                                 >
                                     {canApply ? (
                                         <>
@@ -453,7 +486,9 @@ export default function ShowProject() {
                                         <>
                                             <CheckCircle2 className="size-4" />
                                             {application?.label ??
-                                                (project.is_own_project ? "Your project" : "Unavailable")}
+                                                (project.is_own_project
+                                                    ? 'Your project'
+                                                    : 'Unavailable')}
                                         </>
                                     )}
                                 </Button>
@@ -467,11 +502,12 @@ export default function ShowProject() {
                                 >
                                     <Heart
                                         className={cn(
-                                            "size-4 transition-colors",
-                                            project.liked_by_me && "fill-current text-sienna-300",
+                                            'size-4 transition-colors',
+                                            project.liked_by_me &&
+                                                'text-sienna-300 fill-current',
                                         )}
                                     />
-                                    {project.liked_by_me ? "Liked" : "Save"}
+                                    {project.liked_by_me ? 'Liked' : 'Save'}
                                     <span className="ml-0.5 text-xs font-bold text-white/70">
                                         {project.likes_count}
                                     </span>
@@ -480,30 +516,34 @@ export default function ShowProject() {
                         </div>
 
                         {/* Bottom fade into page background */}
-                        <div className="relative h-6 bg-gradient-to-b from-transparent to-background/60" />
+                        <div className="to-background/60 relative h-6 bg-gradient-to-b from-transparent" />
                     </div>
 
                     <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]">
                         {/* Left column */}
                         <div className="space-y-6">
                             {/* About */}
-                            <section className="glass-card rounded-2xl p-5 sm:p-7 animate-fade-in-up">
+                            <section className="glass-card animate-fade-in-up rounded-2xl p-5 sm:p-7">
                                 <SectionHeader
                                     eyebrow="Overview"
                                     title="About this project"
                                     description="What you'd be part of"
                                     icon={BookOpen}
                                 />
-                                <p className="mt-5 text-sm leading-relaxed text-foreground/85 sm:text-base">
+                                <p className="text-foreground/85 mt-5 text-sm leading-relaxed sm:text-base">
                                     {descriptionTruncated}
                                 </p>
                                 {description.length > 420 && (
                                     <button
                                         type="button"
-                                        onClick={() => setShowFullDescription((v) => !v)}
-                                        className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-sienna hover:text-sienna-600 dark:text-sienna-300 dark:hover:text-sienna-200"
+                                        onClick={() =>
+                                            setShowFullDescription((v) => !v)
+                                        }
+                                        className="text-sienna hover:text-sienna-600 dark:text-sienna-300 dark:hover:text-sienna-200 mt-3 inline-flex items-center gap-1 text-xs font-bold"
                                     >
-                                        {showFullDescription ? "Show less" : "Show more"}
+                                        {showFullDescription
+                                            ? 'Show less'
+                                            : 'Show more'}
                                         {showFullDescription ? (
                                             <ChevronUp className="size-3.5" />
                                         ) : (
@@ -514,7 +554,7 @@ export default function ShowProject() {
                             </section>
 
                             {/* Skills */}
-                            <section className="glass-card rounded-2xl p-5 sm:p-7 animate-fade-in-up">
+                            <section className="glass-card animate-fade-in-up rounded-2xl p-5 sm:p-7">
                                 <SectionHeader
                                     eyebrow="Requirements"
                                     title="Skills you'll contribute"
@@ -530,10 +570,10 @@ export default function ShowProject() {
                                                 <span
                                                     key={skill}
                                                     className={cn(
-                                                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold",
+                                                        'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold',
                                                         hasIt
-                                                            ? "border-moss-600 bg-moss-100 text-moss-700 dark:border-moss-500/40 dark:bg-moss-900/40 dark:text-moss-300"
-                                                            : "border-border bg-secondary/60 text-foreground/80",
+                                                            ? 'border-moss-600 bg-moss-100 text-moss-700 dark:border-moss-500/40 dark:bg-moss-900/40 dark:text-moss-300'
+                                                            : 'border-border bg-secondary/60 text-foreground/80',
                                                     )}
                                                 >
                                                     <Sparkles className="size-3 text-amber-500 dark:text-amber-400" />
@@ -543,14 +583,15 @@ export default function ShowProject() {
                                         })}
                                     </div>
                                 ) : (
-                                    <p className="mt-5 text-sm text-muted-foreground">
-                                        No specific skills listed — enthusiasm welcome.
+                                    <p className="text-muted-foreground mt-5 text-sm">
+                                        No specific skills listed — enthusiasm
+                                        welcome.
                                     </p>
                                 )}
                             </section>
 
                             {/* Timeline */}
-                            <section className="glass-card rounded-2xl p-5 sm:p-7 animate-fade-in-up">
+                            <section className="glass-card animate-fade-in-up rounded-2xl p-5 sm:p-7">
                                 <SectionHeader
                                     eyebrow="Schedule"
                                     title="Project timeline"
@@ -569,7 +610,7 @@ export default function ShowProject() {
 
                             {/* Team */}
                             {project.participants.length > 0 && (
-                                <section className="glass-card rounded-2xl p-5 sm:p-7 animate-fade-in-up">
+                                <section className="glass-card animate-fade-in-up rounded-2xl p-5 sm:p-7">
                                     <SectionHeader
                                         eyebrow="People"
                                         title="Already on board"
@@ -581,16 +622,19 @@ export default function ShowProject() {
                                         {project.participants.map((p) => (
                                             <div
                                                 key={p.id}
-                                                className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/40 p-3"
+                                                className="border-border/60 bg-background/40 flex items-center gap-3 rounded-xl border p-3"
                                             >
                                                 <Avatar name={p.name} />
                                                 <div className="min-w-0">
-                                                    <p className="truncate text-sm font-bold text-foreground">
+                                                    <p className="text-foreground truncate text-sm font-bold">
                                                         {p.name}
                                                     </p>
-                                                    <p className="truncate text-xs text-muted-foreground">
-                                                        {p.role ?? "Participant"}
-                                                        {p.joined_at ? ` · joined ${p.joined_at}` : ""}
+                                                    <p className="text-muted-foreground truncate text-xs">
+                                                        {p.role ??
+                                                            'Participant'}
+                                                        {p.joined_at
+                                                            ? ` · joined ${p.joined_at}`
+                                                            : ''}
                                                     </p>
                                                 </div>
                                             </div>
@@ -603,57 +647,69 @@ export default function ShowProject() {
                         {/* Right column */}
                         <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
                             {/* Application / match card */}
-                            <div className="glass-card rounded-2xl p-5 sm:p-6 animate-fade-in-up">
-                                <p className="text-xs font-bold tracking-widest text-sienna uppercase dark:text-sienna-300">
+                            <div className="glass-card animate-fade-in-up rounded-2xl p-5 sm:p-6">
+                                <p className="text-sienna dark:text-sienna-300 text-xs font-bold tracking-widest uppercase">
                                     Your fit
                                 </p>
                                 <div className="mt-4">
                                     <MatchRing match={project.match} />
                                 </div>
 
-                                <div className="mt-6 border-t border-border pt-5">
+                                <div className="border-border mt-6 border-t pt-5">
                                     {project.is_own_project ? (
-                                        <div className="flex items-center gap-2 rounded-xl bg-moss-100 px-3.5 py-3 text-xs font-semibold text-moss-700 dark:bg-moss-900/40 dark:text-moss-300">
+                                        <div className="bg-moss-100 text-moss-700 dark:bg-moss-900/40 dark:text-moss-300 flex items-center gap-2 rounded-xl px-3.5 py-3 text-xs font-semibold">
                                             <CheckCircle2 className="size-4 shrink-0" />
                                             You created this project.
                                         </div>
                                     ) : application ? (
                                         <div>
-                                            <Badge className={cn("w-full justify-center py-2", application.className)}>
+                                            <Badge
+                                                className={cn(
+                                                    'w-full justify-center py-2',
+                                                    application.className,
+                                                )}
+                                            >
                                                 {application.label}
                                             </Badge>
                                             {project.cover_letter && (
-                                                <div className="mt-4 rounded-xl border border-border/70 bg-background/40 p-3.5">
-                                                    <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                                                <div className="border-border/70 bg-background/40 mt-4 rounded-xl border p-3.5">
+                                                    <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
                                                         Your cover letter
                                                     </p>
-                                                    <p className="mt-1.5 max-h-32 overflow-y-auto text-xs leading-relaxed text-foreground/80">
+                                                    <p className="text-foreground/80 mt-1.5 max-h-32 overflow-y-auto text-xs leading-relaxed">
                                                         {project.cover_letter}
                                                     </p>
                                                 </div>
                                             )}
-                                            {project.application_status === "rejected" && canApply && (
-                                                <Button
-                                                    className="mt-4 w-full rounded-xl"
-                                                    onClick={() => setApplyOpen(true)}
-                                                >
-                                                    <Send className="size-4" />
-                                                    Apply again
-                                                </Button>
-                                            )}
+                                            {project.application_status ===
+                                                'rejected' &&
+                                                canApply && (
+                                                    <Button
+                                                        className="mt-4 w-full rounded-xl"
+                                                        onClick={() =>
+                                                            setApplyOpen(true)
+                                                        }
+                                                    >
+                                                        <Send className="size-4" />
+                                                        Apply again
+                                                    </Button>
+                                                )}
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
                                             <Button
                                                 className="w-full rounded-xl"
                                                 size="lg"
-                                                onClick={() => setApplyOpen(true)}
+                                                onClick={() =>
+                                                    setApplyOpen(true)
+                                                }
                                             >
                                                 <Send className="size-4" />
                                                 Apply for this project
                                             </Button>
-                                            <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
-                                                Applications are reviewed by the project organiser.
+                                            <p className="text-muted-foreground text-center text-[11px] leading-relaxed">
+                                                Applications are reviewed by the
+                                                project organiser.
                                             </p>
                                         </div>
                                     )}
@@ -661,86 +717,96 @@ export default function ShowProject() {
                             </div>
 
                             {/* Stats */}
-                            <div className="grid grid-cols-3 gap-3 animate-fade-in-up">
+                            <div className="animate-fade-in-up grid grid-cols-3 gap-3">
                                 <div className="glass-card rounded-2xl px-3 py-4 text-center">
-                                    <p className="text-xl font-extrabold text-foreground">
-                                        {project.positions - project.positions_filled}
+                                    <p className="text-foreground text-xl font-extrabold">
+                                        {project.positions -
+                                            project.positions_filled}
                                     </p>
-                                    <p className="mt-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                    <p className="text-muted-foreground mt-0.5 text-[10px] font-bold tracking-wider uppercase">
                                         Open slots
                                     </p>
                                 </div>
                                 <div className="glass-card rounded-2xl px-3 py-4 text-center">
-                                    <p className="text-xl font-extrabold text-foreground">
-                                        {project.duration_days ?? "—"}
+                                    <p className="text-foreground text-xl font-extrabold">
+                                        {project.duration_days ?? '—'}
                                     </p>
-                                    <p className="mt-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                    <p className="text-muted-foreground mt-0.5 text-[10px] font-bold tracking-wider uppercase">
                                         Days long
                                     </p>
                                 </div>
                                 <div className="glass-card rounded-2xl px-3 py-4 text-center">
-                                    <p className="text-xl font-extrabold text-foreground">
+                                    <p className="text-foreground text-xl font-extrabold">
                                         {project.likes_count}
                                     </p>
-                                    <p className="mt-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                    <p className="text-muted-foreground mt-0.5 text-[10px] font-bold tracking-wider uppercase">
                                         Likes
                                     </p>
                                 </div>
                             </div>
 
                             {/* Positions progress */}
-                            <div className="glass-card rounded-2xl p-5 sm:p-6 animate-fade-in-up">
+                            <div className="glass-card animate-fade-in-up rounded-2xl p-5 sm:p-6">
                                 <div className="flex items-center justify-between">
-                                    <p className="text-xs font-bold tracking-widest text-moss uppercase dark:text-moss-300">
+                                    <p className="text-moss dark:text-moss-300 text-xs font-bold tracking-widest uppercase">
                                         Slots filled
                                     </p>
-                                    <span className="text-xs font-extrabold text-foreground">
+                                    <span className="text-foreground text-xs font-extrabold">
                                         {filledPercent}%
                                     </span>
                                 </div>
-                                <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
+                                <div className="bg-muted mt-3 h-2.5 overflow-hidden rounded-full">
                                     <div
-                                        className={cn("h-full rounded-full bg-gradient-to-r", gradient)}
+                                        className={cn(
+                                            'h-full rounded-full bg-gradient-to-r',
+                                            gradient,
+                                        )}
                                         style={{ width: `${filledPercent}%` }}
                                     />
                                 </div>
-                                <div className="mt-3 flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
-                                    <span>{project.positions_filled} placed</span>
+                                <div className="text-muted-foreground mt-3 flex items-center justify-between text-[11px] font-semibold">
+                                    <span>
+                                        {project.positions_filled} placed
+                                    </span>
                                     <span>{project.positions} total</span>
                                 </div>
                             </div>
 
                             {/* Organisation */}
-                            <div className="glass-card rounded-2xl p-5 sm:p-6 animate-fade-in-up">
-                                <p className="text-xs font-bold tracking-widest text-harbor uppercase dark:text-harbor-300">
+                            <div className="glass-card animate-fade-in-up rounded-2xl p-5 sm:p-6">
+                                <p className="text-harbor dark:text-harbor-300 text-xs font-bold tracking-widest uppercase">
                                     Organisation
                                 </p>
                                 <div className="mt-4 flex items-center gap-3">
-                                    <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-secondary text-lg font-extrabold text-harbor dark:bg-harbor-900/40 dark:text-harbor-300">
-                                        {project.organisation.name.slice(0, 2).toUpperCase()}
+                                    <span className="bg-secondary text-harbor dark:bg-harbor-900/40 dark:text-harbor-300 flex size-12 shrink-0 items-center justify-center rounded-2xl text-lg font-extrabold">
+                                        {project.organisation.name
+                                            .slice(0, 2)
+                                            .toUpperCase()}
                                     </span>
                                     <div className="min-w-0">
-                                        <p className="truncate text-base font-extrabold text-foreground">
+                                        <p className="text-foreground truncate text-base font-extrabold">
                                             {project.organisation.name}
                                         </p>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-muted-foreground text-xs">
                                             Project organiser
                                         </p>
                                     </div>
                                 </div>
                                 {project.organisation.description && (
-                                    <p className="mt-4 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+                                    <p className="text-muted-foreground mt-4 line-clamp-3 text-xs leading-relaxed">
                                         {project.organisation.description}
                                     </p>
                                 )}
-                                <div className="mt-4 space-y-2 border-t border-border pt-4">
+                                <div className="border-border mt-4 space-y-2 border-t pt-4">
                                     {project.organisation.email && (
                                         <a
                                             href={`mailto:${project.organisation.email}`}
-                                            className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                                            className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-xs font-semibold"
                                         >
-                                            <Mail className="size-3.5 text-sienna dark:text-sienna-300" />
-                                            <span className="truncate">{project.organisation.email}</span>
+                                            <Mail className="text-sienna dark:text-sienna-300 size-3.5" />
+                                            <span className="truncate">
+                                                {project.organisation.email}
+                                            </span>
                                         </a>
                                     )}
                                     {project.organisation.website && (
@@ -748,10 +814,12 @@ export default function ShowProject() {
                                             href={project.organisation.website}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                                            className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-xs font-semibold"
                                         >
-                                            <Globe className="size-3.5 text-moss dark:text-moss-300" />
-                                            <span className="truncate">{project.organisation.website}</span>
+                                            <Globe className="text-moss dark:text-moss-300 size-3.5" />
+                                            <span className="truncate">
+                                                {project.organisation.website}
+                                            </span>
                                         </a>
                                     )}
                                 </div>
@@ -766,7 +834,7 @@ export default function ShowProject() {
                                 <DialogTitle className="flex items-center gap-2 text-lg font-extrabold">
                                     <span
                                         className={cn(
-                                            "flex size-8 items-center justify-center rounded-lg bg-secondary text-sienna dark:text-sienna-300",
+                                            'bg-secondary text-sienna dark:text-sienna-300 flex size-8 items-center justify-center rounded-lg',
                                         )}
                                     >
                                         <Send className="size-4" />
@@ -774,8 +842,8 @@ export default function ShowProject() {
                                     Apply to {project.title}
                                 </DialogTitle>
                                 <DialogDescription>
-                                    Tell the organiser why you'd be a great fit. This is your chance to
-                                    stand out.
+                                    Tell the organiser why you'd be a great fit.
+                                    This is your chance to stand out.
                                 </DialogDescription>
                             </DialogHeader>
 
@@ -784,7 +852,7 @@ export default function ShowProject() {
                                     {project.skills.slice(0, 6).map((skill) => (
                                         <span
                                             key={skill}
-                                            className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 px-2.5 py-1 text-[11px] font-bold text-foreground/80"
+                                            className="border-border bg-secondary/60 text-foreground/80 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold"
                                         >
                                             <Sparkles className="size-3 text-amber-500 dark:text-amber-400" />
                                             {skill}
@@ -795,27 +863,34 @@ export default function ShowProject() {
                                 <div className="grid w-full gap-2">
                                     <label
                                         htmlFor="cover-letter"
-                                        className="text-xs font-bold text-muted-foreground"
+                                        className="text-muted-foreground text-xs font-bold"
                                     >
-                                        Cover letter <span className="font-semibold text-muted-foreground/60">(optional)</span>
+                                        Cover letter{' '}
+                                        <span className="text-muted-foreground/60 font-semibold">
+                                            (optional)
+                                        </span>
                                     </label>
                                     <textarea
                                         id="cover-letter"
                                         rows={5}
                                         value={applyingTo.data.cover_letter}
                                         onChange={(e) =>
-                                            applyingTo.setData("cover_letter", e.target.value)
+                                            applyingTo.setData(
+                                                'cover_letter',
+                                                e.target.value,
+                                            )
                                         }
                                         placeholder="I'd love to join because…"
-                                        className="min-h-28 w-full resize-none rounded-xl border-border bg-background px-3.5 py-2.5 text-sm outline-none ring-sienna/40 placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:border-sienna"
+                                        className="border-border bg-background ring-sienna/40 placeholder:text-muted-foreground/60 focus-visible:border-sienna min-h-28 w-full resize-none rounded-xl px-3.5 py-2.5 text-sm outline-none focus-visible:ring-2"
                                     />
-                                    <p className="text-[11px] text-muted-foreground">
-                                        {applyingTo.data.cover_letter.length}/2000
+                                    <p className="text-muted-foreground text-[11px]">
+                                        {applyingTo.data.cover_letter.length}
+                                        /2000
                                     </p>
                                 </div>
 
                                 {applyingTo.errors.cover_letter && (
-                                    <p className="text-xs font-semibold text-sienna">
+                                    <p className="text-sienna text-xs font-semibold">
                                         {applyingTo.errors.cover_letter}
                                     </p>
                                 )}
@@ -850,8 +925,8 @@ export default function ShowProject() {
 
 ShowProject.layout = {
     breadcrumbs: [
-        { title: "Workspace", href: dashboard().url },
-        { title: "Discover projects", href: projectsIndex({}).url },
-        { title: "Project details", href: "#" },
+        { title: 'Workspace', href: dashboard().url },
+        { title: 'Discover projects', href: projectsIndex({}).url },
+        { title: 'Project details', href: '#' },
     ],
 };

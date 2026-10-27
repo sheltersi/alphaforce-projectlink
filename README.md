@@ -12,37 +12,37 @@ Organisations can create and manage projects, review participant applications, s
 
 ## Table of Contents
 
-* [Overview](#overview)
-* [Objectives](#objectives)
-* [Core Concept](#core-concept)
-* [User Roles](#user-roles)
-* [Application Flow](#application-flow)
-* [Features](#features)
-* [System Architecture](#system-architecture)
-* [Database Design](#database-design)
-* [Core Entities](#core-entities)
-* [Project Lifecycle](#project-lifecycle)
-* [Application Lifecycle](#application-lifecycle)
-* [Participant Lifecycle](#participant-lifecycle)
-* [Organisation Data Isolation](#organisation-data-isolation)
-* [Main Application Pages](#main-application-pages)
-* [Participant Features](#participant-features)
-* [Project Manager Features](#project-manager-features)
-* [Technical Admin Features](#technical-admin-features)
-* [Location Management](#location-management)
-* [Notifications](#notifications)
-* [Audit Logging](#audit-logging)
-* [Security](#security)
-* [Technology Stack](#technology-stack)
-* [Development Phases](#development-phases)
-* [Future Features](#future-features)
-* [Installation](#installation)
-* [Environment Configuration](#environment-configuration)
-* [Database Setup](#database-setup)
-* [Running the Application](#running-the-application)
-* [Testing](#testing)
-* [Git Workflow](#git-workflow)
-* [Project Principles](#project-principles)
+- [Overview](#overview)
+- [Objectives](#objectives)
+- [Core Concept](#core-concept)
+- [User Roles](#user-roles)
+- [Application Flow](#application-flow)
+- [Features](#features)
+- [System Architecture](#system-architecture)
+- [Database Design](#database-design)
+- [Core Entities](#core-entities)
+- [Project Lifecycle](#project-lifecycle)
+- [Application Lifecycle](#application-lifecycle)
+- [Participant Lifecycle](#participant-lifecycle)
+- [Organisation Data Isolation](#organisation-data-isolation)
+- [Main Application Pages](#main-application-pages)
+- [Participant Features](#participant-features)
+- [Project Manager Features](#project-manager-features)
+- [Technical Admin Features](#technical-admin-features)
+- [Location Management](#location-management)
+- [Notifications](#notifications)
+- [Audit Logging](#audit-logging)
+- [Security](#security)
+- [Technology Stack](#technology-stack)
+- [Development Phases](#development-phases)
+- [Future Features](#future-features)
+- [Installation](#installation)
+- [Environment Configuration](#environment-configuration)
+- [Database Setup](#database-setup)
+- [Running the Application](#running-the-application)
+- [Testing](#testing)
+- [Git Workflow](#git-workflow)
+- [Project Principles](#project-principles)
 
 ---
 
@@ -68,19 +68,19 @@ This separation is a core architectural principle of the application.
 
 The main objectives of AlphaForce ProjectLink are to:
 
-* Allow participants to create professional profiles.
-* Allow participants to discover available projects.
-* Allow participants to apply for projects.
-* Allow organisations to create and manage projects.
-* Allow project managers to review applications.
-* Allow project managers to accept or reject participants.
-* Manage accepted project participants.
-* Allow participants to record project work through timesheets.
-* Allow project managers to review and approve timesheets.
-* Support multiple organisations.
-* Keep organisation data isolated.
-* Provide reporting and project oversight.
-* Provide a foundation for future participant/project matching.
+- Allow participants to create professional profiles.
+- Allow participants to discover available projects.
+- Allow participants to apply for projects.
+- Allow organisations to create and manage projects.
+- Allow project managers to review applications.
+- Allow project managers to accept or reject participants.
+- Manage accepted project participants.
+- Allow participants to record project work through timesheets.
+- Allow project managers to review and approve timesheets.
+- Support multiple organisations.
+- Keep organisation data isolated.
+- Provide reporting and project oversight.
+- Provide a foundation for future participant/project matching.
 
 ---
 
@@ -130,22 +130,22 @@ The initial platform contains three primary roles.
 
 Participants can:
 
-* Register
-* Verify their email
-* Build their professional profile
-* Add education
-* Add work experience
-* Add skills
-* Add certifications
-* Upload documents
-* Discover projects
-* Apply for projects
-* Track applications
-* View accepted projects
-* Participate in projects
-* Submit timesheets
-* View notifications
-* Manage account settings
+- Register
+- Verify their email
+- Build their professional profile
+- Add education
+- Add work experience
+- Add skills
+- Add certifications
+- Upload documents
+- Discover projects
+- Apply for projects
+- Track applications
+- View accepted projects
+- Participate in projects
+- Submit timesheets
+- View notifications
+- Manage account settings
 
 ---
 
@@ -155,21 +155,21 @@ Project Managers belong to an organisation and can manage projects assigned to t
 
 They can:
 
-* View organisation projects
-* Create projects
-* Edit projects
-* Publish projects
-* Open/close applications
-* Review applications
-* View participant profiles
-* Accept participants
-* Reject participants
-* Manage project participants
-* Review timesheets
-* Approve/reject timesheets
-* View project reports
-* Manage project documents
-* Monitor project progress
+- View organisation projects
+- Create projects
+- Edit projects
+- Publish projects
+- Open/close applications
+- Review applications
+- View participant profiles
+- Accept participants
+- Reject participants
+- Manage project participants
+- Review timesheets
+- Approve/reject timesheets
+- View project reports
+- Manage project documents
+- Monitor project progress
 
 ---
 
@@ -179,16 +179,16 @@ The Technical Admin manages the platform itself.
 
 They can:
 
-* Manage organisations
-* Manage users
-* Manage roles and permissions
-* View platform activity
-* View audit logs
-* Manage system settings
-* Manage platform-level configuration
-* View global reports
-* Manage platform notifications
-* Monitor overall system usage
+- Manage organisations
+- Manage users
+- Manage roles and permissions
+- View platform activity
+- View audit logs
+- Manage system settings
+- Manage platform-level configuration
+- View global reports
+- Manage platform notifications
+- Monitor overall system usage
 
 Technical Admin functionality is platform-level and should not automatically give an admin unrestricted organisation-level access unless explicitly designed that way.
 
@@ -265,14 +265,14 @@ The profile-building process creates the information that project managers will 
 
 ## Authentication
 
-* Registration
-* Login
-* Logout
-* Email verification
-* Password reset
-* Password change
-* Session management
-* Account status
+- Registration
+- Login
+- Logout
+- Email verification
+- Password reset
+- Password change
+- Session management
+- Account status
 
 ---
 
@@ -282,22 +282,22 @@ Participants maintain a professional profile similar to an online CV.
 
 ## Personal Information
 
-* Profile photo
-* First name
-* Last name
-* Email
-* Phone
-* Location
-* Country
+- Profile photo
+- First name
+- Last name
+- Email
+- Phone
+- Location
+- Country
 
 ## Professional Information
 
-* Professional summary
-* Skills
-* Education
-* Work experience
-* Certifications
-* Documents
+- Professional summary
+- Skills
+- Education
+- Work experience
+- Certifications
+- Documents
 
 ## Profile Completion
 
@@ -343,20 +343,20 @@ Each organisation can create multiple projects.
 
 A project contains information such as:
 
-* Name
-* Description
-* Objectives
-* Category
-* Location
-* Project type
-* Start date
-* End date
-* Application opening date
-* Application closing date
-* Participant limit
-* Required skills
-* Status
-* Project manager
+- Name
+- Description
+- Objectives
+- Category
+- Location
+- Project type
+- Start date
+- End date
+- Application opening date
+- Application closing date
+- Participant limit
+- Required skills
+- Status
+- Project manager
 
 ---
 
@@ -364,16 +364,16 @@ A project contains information such as:
 
 Participants should be able to discover projects through:
 
-* Search
-* Project category
-* Location
-* Project type
-* Required skills
-* Application status
-* Start date
-* End date
-* Organisation
-* Remote/on-site options
+- Search
+- Project category
+- Location
+- Project type
+- Required skills
+- Application status
+- Start date
+- End date
+- Organisation
+- Remote/on-site options
 
 Example:
 
@@ -396,19 +396,19 @@ Filters:
 
 The project details page should display:
 
-* Project name
-* Organisation
-* Project manager
-* Description
-* Objectives
-* Required skills
-* Location
-* Project type
-* Start date
-* End date
-* Application deadline
-* Number of available positions
-* Requirements
+- Project name
+- Organisation
+- Project manager
+- Description
+- Objectives
+- Required skills
+- Location
+- Project type
+- Start date
+- End date
+- Application deadline
+- Number of available positions
+- Requirements
 
 The participant should have a clear:
 
@@ -466,10 +466,10 @@ Project membership is separate from the application.
 
 A participant can therefore:
 
-* Apply to many projects
-* Be rejected from some
-* Be under review for others
-* Participate in several accepted projects
+- Apply to many projects
+- Be rejected from some
+- Be under review for others
+- Participate in several accepted projects
 
 ---
 
@@ -1150,11 +1150,11 @@ Pending Timesheets
 
 It should also show:
 
-* Recommended projects
-* Recent applications
-* Upcoming project activities
-* Notifications
-* Profile completion reminders
+- Recommended projects
+- Recent applications
+- Upcoming project activities
+- Notifications
+- Profile completion reminders
 
 ---
 
@@ -1173,11 +1173,11 @@ Pending Timesheets   13
 
 Additional sections:
 
-* Recent applications
-* Upcoming project deadlines
-* Projects requiring attention
-* Pending timesheet approvals
-* Recent participant activity
+- Recent applications
+- Upcoming project deadlines
+- Projects requiring attention
+- Pending timesheet approvals
+- Recent participant activity
 
 ---
 
@@ -1256,12 +1256,12 @@ The application should follow secure-by-default principles.
 
 ## Authentication
 
-* Password hashing
-* Email verification
-* Password reset
-* Session protection
-* Rate limiting
-* Authentication middleware
+- Password hashing
+- Email verification
+- Password reset
+- Session protection
+- Rate limiting
+- Authentication middleware
 
 ## Authorization
 
@@ -1305,11 +1305,11 @@ Uploaded participant documents may contain private information.
 
 Files should:
 
-* Not be publicly accessible by default.
-* Be stored using secure storage.
-* Be validated by MIME type and file size.
-* Have controlled download authorization.
-* Be accessible only to authorized users.
+- Not be publicly accessible by default.
+- Be stored using secure storage.
+- Be validated by MIME type and file size.
+- Have controlled download authorization.
+- Be accessible only to authorized users.
 
 ---
 
@@ -1319,31 +1319,31 @@ The recommended stack for AlphaForce ProjectLink is:
 
 ## Backend
 
-* PHP
-* Laravel
-* Laravel Eloquent ORM
-* Laravel Authentication
-* Laravel Notifications
-* Laravel Policies / Gates
+- PHP
+- Laravel
+- Laravel Eloquent ORM
+- Laravel Authentication
+- Laravel Notifications
+- Laravel Policies / Gates
 
 ## Frontend
 
-* Vue.js
-* Nuxt where appropriate
-* Tailwind CSS
-* JavaScript / TypeScript as the project evolves
+- Vue.js
+- Nuxt where appropriate
+- Tailwind CSS
+- JavaScript / TypeScript as the project evolves
 
 ## Database
 
-* MySQL
+- MySQL
 
 ## Development
 
-* Composer
-* NPM
-* Vite
-* Git
-* GitHub
+- Composer
+- NPM
+- Vite
+- Git
+- GitHub
 
 ---
 
@@ -1377,86 +1377,86 @@ This rule must also be enforced by the Laravel backend.
 
 ## Phase 1 — Project Foundation
 
-* Laravel setup
-* Frontend setup
-* Authentication
-* Database connection
-* Base layout
-* Design system
-* Navigation
+- Laravel setup
+- Frontend setup
+- Authentication
+- Database connection
+- Base layout
+- Design system
+- Navigation
 
 ---
 
 ## Phase 2 — Participant Onboarding
 
-* Registration
-* Email verification
-* Welcome screen
-* Profile creation
-* Profile completion
-* Profile preview
+- Registration
+- Email verification
+- Welcome screen
+- Profile creation
+- Profile completion
+- Profile preview
 
 ---
 
 ## Phase 3 — Organisations
 
-* Organisation creation
-* Organisation users
-* Roles
-* Organisation settings
-* Organisation authorization
+- Organisation creation
+- Organisation users
+- Roles
+- Organisation settings
+- Organisation authorization
 
 ---
 
 ## Phase 4 — Projects
 
-* Project CRUD
-* Project lifecycle
-* Project skills
-* Locations
-* Project managers
-* Project publishing
+- Project CRUD
+- Project lifecycle
+- Project skills
+- Locations
+- Project managers
+- Project publishing
 
 ---
 
 ## Phase 5 — Applications
 
-* Project discovery
-* Project details
-* Apply
-* Application tracking
-* Application review
-* Accept/reject functionality
+- Project discovery
+- Project details
+- Apply
+- Application tracking
+- Application review
+- Accept/reject functionality
 
 ---
 
 ## Phase 6 — Project Participation
 
-* Project workspace
-* Project team
-* Participant management
-* Project activity
-* Project documents
+- Project workspace
+- Project team
+- Participant management
+- Project activity
+- Project documents
 
 ---
 
 ## Phase 7 — Timesheets
 
-* Create timesheets
-* Add entries
-* Submit timesheets
-* Manager approval
-* Rejection/comments
-* Timesheet reporting
+- Create timesheets
+- Add entries
+- Submit timesheets
+- Manager approval
+- Rejection/comments
+- Timesheet reporting
 
 ---
 
 ## Phase 8 — Notifications
 
-* In-app notifications
-* Application notifications
-* Project notifications
-* Timesheet notifications
+- In-app notifications
+- Application notifications
+- Project notifications
+- Timesheet notifications
 
 ---
 
@@ -1464,37 +1464,37 @@ This rule must also be enforced by the Laravel backend.
 
 Participant reports:
 
-* Applications
-* Projects
-* Hours
+- Applications
+- Projects
+- Hours
 
 Organisation reports:
 
-* Projects
-* Participants
-* Applications
-* Acceptance rates
-* Hours
-* Project performance
+- Projects
+- Participants
+- Applications
+- Acceptance rates
+- Hours
+- Project performance
 
 Platform reports:
 
-* Organisations
-* Users
-* Projects
-* Participation
-* Platform activity
+- Organisations
+- Users
+- Projects
+- Participation
+- Platform activity
 
 ---
 
 ## Phase 10 — Administration
 
-* Technical Admin dashboard
-* Organisation management
-* User management
-* Roles and permissions
-* Audit logs
-* System settings
+- Technical Admin dashboard
+- Organisation management
+- User management
+- Roles and permissions
+- Audit logs
+- System settings
 
 ---
 
@@ -1508,12 +1508,12 @@ Potential future functionality includes:
 
 Match participants with projects based on:
 
-* Skills
-* Location
-* Experience
-* Education
-* Availability
-* Project requirements
+- Skills
+- Location
+- Experience
+- Education
+- Availability
+- Project requirements
 
 Example:
 
@@ -1541,11 +1541,11 @@ Participant Evaluation
 
 Potential metrics:
 
-* Performance
-* Communication
-* Reliability
-* Technical ability
-* Teamwork
+- Performance
+- Communication
+- Reliability
+- Technical ability
+- Teamwork
 
 ---
 
@@ -1559,11 +1559,11 @@ Participants could receive certificates after successfully completing projects.
 
 Projects may eventually track:
 
-* Attendance
-* Check-in
-* Check-out
-* Events
-* Sessions
+- Attendance
+- Check-in
+- Check-out
+- Events
+- Sessions
 
 ---
 
@@ -1571,11 +1571,11 @@ Projects may eventually track:
 
 Projects may have:
 
-* Briefs
-* Guidelines
-* Reports
-* Templates
-* Supporting documents
+- Briefs
+- Guidelines
+- Reports
+- Templates
+- Supporting documents
 
 ---
 
@@ -1589,12 +1589,12 @@ Project managers could send announcements to project participants.
 
 Future reports could include:
 
-* Participant engagement
-* Project success rates
-* Total hours
-* Organisation performance
-* Skill demand
-* Participant participation history
+- Participant engagement
+- Project success rates
+- Total hours
+- Organisation performance
+- Skill demand
+- Participant participation history
 
 ---
 
@@ -1656,11 +1656,11 @@ DB_PASSWORD=
 
 Configure additional services such as:
 
-* Mail
-* File storage
-* Queue
-* Redis
-* Notifications
+- Mail
+- File storage
+- Queue
+- Redis
+- Notifications
 
 according to the deployment environment.
 
@@ -1748,13 +1748,13 @@ npm run build
 
 The project should maintain:
 
-* Consistent naming
-* Small reusable components
-* Clear business logic
-* Proper validation
-* Backend authorization
-* Database constraints
-* Automated tests for important business rules
+- Consistent naming
+- Small reusable components
+- Clear business logic
+- Proper validation
+- Backend authorization
+- Database constraints
+- Automated tests for important business rules
 
 ---
 
@@ -1910,13 +1910,13 @@ This is the core business workflow around which the rest of the platform is buil
 
 ## Brand Personality
 
-* Professional
-* Modern
-* Human
-* Trustworthy
-* Sophisticated
-* Collaborative
-* Purpose-driven
+- Professional
+- Modern
+- Human
+- Trustworthy
+- Sophisticated
+- Collaborative
+- Purpose-driven
 
 ## Primary Color
 

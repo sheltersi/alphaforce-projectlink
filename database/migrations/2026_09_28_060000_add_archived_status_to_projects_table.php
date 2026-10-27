@@ -9,8 +9,8 @@ return new class extends Migration
 {
     /**
      * Add the `archived` terminal status for the Organisation App project
-    * lifecycle (close → archive). PostgreSQL updates its generated CHECK
-    * constraint directly; other drivers use a column change.
+     * lifecycle (close → archive). PostgreSQL updates its generated CHECK
+     * constraint directly; other drivers use a column change.
      */
     public function up(): void
     {

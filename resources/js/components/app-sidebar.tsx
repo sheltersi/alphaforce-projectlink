@@ -1,8 +1,6 @@
 import {
-    BarChart3,
     Bell,
     BriefcaseBusiness,
-    CalendarDays,
     ClipboardList,
     Clock3,
     Compass,
@@ -10,18 +8,15 @@ import {
     FolderOpen,
     LayoutGrid,
     LifeBuoy,
-    MessageSquare,
     PanelLeftClose,
     PanelLeftOpen,
     Settings,
-    SquareCheck,
     UserRound,
-    UsersRound,
-} from "lucide-react";
+} from 'lucide-react';
 
-import AppLogo from "@/components/app-logo";
-import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
+import AppLogo from '@/components/app-logo';
+import { NavMain } from '@/components/nav-main';
+import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
@@ -33,29 +28,29 @@ import {
     SidebarMenuItem,
     SidebarSeparator,
     useSidebar,
-} from "@/components/ui/sidebar";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { dashboard } from "@/routes";
-import { index as myProjectsIndex } from "@/routes/my-projects";
-import { index as projectsIndex } from "@/routes/projects";
-import { index as timesheetsIndex } from "@/routes/timesheets";
-import type { NavGroup, NavItem } from "@/types";
-import { Link, usePage } from "@inertiajs/react";
+} from '@/components/ui/sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { dashboard } from '@/routes';
+import { index as myProjectsIndex } from '@/routes/my-projects';
+import { index as projectsIndex } from '@/routes/projects';
+import { index as timesheetsIndex } from '@/routes/timesheets';
+import type { NavGroup, NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
 
 // Central navigation for the app shell. Route values are kept explicit so the
 // workspace links remain easy to audit and update as pages are added.
 const navGroups: NavGroup[] = [
     {
-        label: "Overview",
+        label: 'Overview',
         items: [
             {
-                title: "Dashboard",
+                title: 'Dashboard',
                 href: dashboard(),
                 icon: LayoutGrid,
             },
             {
-                title: "Notifications",
-                href: "/notifications",
+                title: 'Notifications',
+                href: '/notifications',
                 icon: Bell,
             },
             // {
@@ -68,22 +63,22 @@ const navGroups: NavGroup[] = [
         ],
     },
     {
-        label: "Workspace",
+        label: 'Workspace',
         items: [
             {
-                title: "Discover projects",
+                title: 'Discover projects',
                 href: projectsIndex({}).url,
                 icon: Compass,
-                badgeTone: "accent",
+                badgeTone: 'accent',
             },
             {
-                title: "My projects",
+                title: 'My projects',
                 href: myProjectsIndex({}).url,
                 icon: BriefcaseBusiness,
             },
             {
-                title: "My applications",
-                href: "/applications",
+                title: 'My applications',
+                href: '/applications',
                 icon: ClipboardList,
             },
             // {
@@ -99,7 +94,7 @@ const navGroups: NavGroup[] = [
             //     icon: CalendarDays,
             // },
             {
-                title: "Timesheets",
+                title: 'Timesheets',
                 href: timesheetsIndex({}).url,
                 icon: Clock3,
             },
@@ -123,31 +118,31 @@ const navGroups: NavGroup[] = [
     //     ],
     // },
     {
-        label: "Support",
+        label: 'Support',
         items: [
             {
-                title: "My profile",
-                href: "/onboarding/build-profile",
+                title: 'My profile',
+                href: '/onboarding/build-profile',
                 icon: UserRound,
             },
             {
-                title: "Digital resume",
-                href: "/dashboard/resume",
+                title: 'Digital resume',
+                href: '/dashboard/resume',
                 icon: FileText,
             },
             {
-                title: "Documents",
-                href: "/documents",
+                title: 'Documents',
+                href: '/documents',
                 icon: FolderOpen,
             },
             {
-                title: "Settings",
-                href: "/settings/profile",
+                title: 'Settings',
+                href: '/settings/profile',
                 icon: Settings,
             },
             {
-                title: "Help center",
-                href: "/help",
+                title: 'Help center',
+                href: '/help',
                 icon: LifeBuoy,
             },
         ],
@@ -157,8 +152,9 @@ const navGroups: NavGroup[] = [
 export function AppSidebar() {
     const { state, toggleSidebar } = useSidebar();
     const isMobile = useIsMobile();
-    const isCollapsed = !isMobile && state === "collapsed";
-    const { projectsCount, unreadNotificationsCount } = usePage().props as unknown as {
+    const isCollapsed = !isMobile && state === 'collapsed';
+    const { projectsCount, unreadNotificationsCount } = usePage()
+        .props as unknown as {
         projectsCount?: number;
         unreadNotificationsCount?: number;
     };
@@ -166,15 +162,15 @@ export function AppSidebar() {
     const groups = navGroups.map((group) => ({
         ...group,
         items: group.items.map((item): NavItem => {
-            if (item.title === "Discover projects" && projectsCount) {
+            if (item.title === 'Discover projects' && projectsCount) {
                 return { ...item, badge: String(projectsCount) };
             }
 
-            if (item.title === "Notifications" && unreadNotificationsCount) {
+            if (item.title === 'Notifications' && unreadNotificationsCount) {
                 return {
                     ...item,
                     badge: String(unreadNotificationsCount),
-                    badgeTone: "accent",
+                    badgeTone: 'accent',
                 };
             }
 
@@ -186,7 +182,7 @@ export function AppSidebar() {
         <Sidebar
             collapsible="icon"
             variant="inset"
-            className="[--sidebar:#f4ead9] [--sidebar-foreground:#1e2f44] [--sidebar-primary:#1e2f44] [--sidebar-primary-foreground:#faf5ec] [--sidebar-accent:#e9d8bd] [--sidebar-accent-foreground:#1e2f44] [--sidebar-border:#e9d8bd] [--sidebar-width-icon:5rem] dark:[--sidebar:#121d2a] dark:[--sidebar-foreground:#d8e0e9] dark:[--sidebar-primary:#d8e0e9] dark:[--sidebar-primary-foreground:#121d2a] dark:[--sidebar-accent:#1e2f44] dark:[--sidebar-accent-foreground:#d8e0e9] dark:[--sidebar-border:#1e2f44]"
+            className="[--sidebar-accent-foreground:#1e2f44] [--sidebar-accent:#e9d8bd] [--sidebar-border:#e9d8bd] [--sidebar-foreground:#1e2f44] [--sidebar-primary-foreground:#faf5ec] [--sidebar-primary:#1e2f44] [--sidebar-width-icon:5rem] [--sidebar:#f4ead9] dark:[--sidebar-accent-foreground:#d8e0e9] dark:[--sidebar-accent:#1e2f44] dark:[--sidebar-border:#1e2f44] dark:[--sidebar-foreground:#d8e0e9] dark:[--sidebar-primary-foreground:#121d2a] dark:[--sidebar-primary:#d8e0e9] dark:[--sidebar:#121d2a]"
         >
             <SidebarHeader>
                 <SidebarMenu>
@@ -205,13 +201,13 @@ export function AppSidebar() {
                             onClick={toggleSidebar}
                             aria-label={
                                 isCollapsed
-                                    ? "Expand sidebar"
-                                    : "Collapse sidebar"
+                                    ? 'Expand sidebar'
+                                    : 'Collapse sidebar'
                             }
                             title={
                                 isCollapsed
-                                    ? "Expand sidebar"
-                                    : "Collapse sidebar"
+                                    ? 'Expand sidebar'
+                                    : 'Collapse sidebar'
                             }
                         >
                             {isCollapsed ? (

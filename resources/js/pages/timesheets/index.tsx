@@ -40,7 +40,10 @@ import {
 import { FlatpickrInput } from '@/components/flatpickr-input';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
-import { index as timesheetsIndex, submit as timesheetsSubmit } from '@/routes/timesheets';
+import {
+    index as timesheetsIndex,
+    submit as timesheetsSubmit,
+} from '@/routes/timesheets';
 import {
     destroy as entriesDestroy,
     store as entriesStore,
@@ -62,8 +65,11 @@ const localizer = dateFnsLocalizer({
 const withDragAndDrop: typeof withDragAndDropModule =
     typeof withDragAndDropModule === 'function'
         ? withDragAndDropModule
-        : (withDragAndDropModule as unknown as { default: typeof withDragAndDropModule })
-            .default;
+        : (
+              withDragAndDropModule as unknown as {
+                  default: typeof withDragAndDropModule;
+              }
+          ).default;
 
 const DnDCalendar = withDragAndDrop<CalEvent, CalendarEntry>(Calendar);
 
@@ -216,7 +222,10 @@ function EntryForm({
     const projects = useMemo(() => {
         const seen = new Map<number, string>();
         for (const a of assignments) seen.set(a.project.id, a.project.title);
-        return [...seen.entries()].map(([id, title]) => ({ id: String(id), title }));
+        return [...seen.entries()].map(([id, title]) => ({
+            id: String(id),
+            title,
+        }));
     }, [assignments]);
 
     const projectAssignments = useMemo(
@@ -262,7 +271,10 @@ function EntryForm({
         <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
-                    <label htmlFor="ts-project" className="text-xs font-bold text-muted-foreground">
+                    <label
+                        htmlFor="ts-project"
+                        className="text-muted-foreground text-xs font-bold"
+                    >
                         Project
                     </label>
                     <select
@@ -280,27 +292,39 @@ function EntryForm({
                     </select>
                 </div>
                 <div className="grid gap-2">
-                    <label htmlFor="ts-assignment" className="text-xs font-bold text-muted-foreground">
+                    <label
+                        htmlFor="ts-assignment"
+                        className="text-muted-foreground text-xs font-bold"
+                    >
                         Assignment
                     </label>
                     <select
                         id="ts-assignment"
                         value={form.data.project_participant_id}
-                        onChange={(e) => form.setData('project_participant_id', e.target.value)}
+                        onChange={(e) =>
+                            form.setData(
+                                'project_participant_id',
+                                e.target.value,
+                            )
+                        }
                         className={inputClass}
                         disabled={!form.data.project_id}
                     >
                         <option value="">
-                            {form.data.project_id ? 'Select an assignment…' : 'Pick a project first'}
+                            {form.data.project_id
+                                ? 'Select an assignment…'
+                                : 'Pick a project first'}
                         </option>
                         {projectAssignments.map((a) => (
                             <option key={a.id} value={String(a.id)}>
-                                {[a.role ?? 'Participant', a.team].filter(Boolean).join(' · ')}
+                                {[a.role ?? 'Participant', a.team]
+                                    .filter(Boolean)
+                                    .join(' · ')}
                             </option>
                         ))}
                     </select>
                     {form.errors.project_participant_id && (
-                        <p className="text-xs font-semibold text-sienna">
+                        <p className="text-sienna text-xs font-semibold">
                             {form.errors.project_participant_id}
                         </p>
                     )}
@@ -309,7 +333,10 @@ function EntryForm({
 
             <div className="grid gap-4 sm:grid-cols-3">
                 <div className="grid gap-2">
-                    <label htmlFor="ts-date" className="text-xs font-bold text-muted-foreground">
+                    <label
+                        htmlFor="ts-date"
+                        className="text-muted-foreground text-xs font-bold"
+                    >
                         Date
                     </label>
                     <FlatpickrInput
@@ -320,11 +347,16 @@ function EntryForm({
                         className={inputClass}
                     />
                     {form.errors.work_date && (
-                        <p className="text-xs font-semibold text-sienna">{form.errors.work_date}</p>
+                        <p className="text-sienna text-xs font-semibold">
+                            {form.errors.work_date}
+                        </p>
                     )}
                 </div>
                 <div className="grid gap-2">
-                    <label htmlFor="ts-start" className="text-xs font-bold text-muted-foreground">
+                    <label
+                        htmlFor="ts-start"
+                        className="text-muted-foreground text-xs font-bold"
+                    >
                         Start time
                     </label>
                     <FlatpickrInput
@@ -335,11 +367,16 @@ function EntryForm({
                         className={inputClass}
                     />
                     {form.errors.start_time && (
-                        <p className="text-xs font-semibold text-sienna">{form.errors.start_time}</p>
+                        <p className="text-sienna text-xs font-semibold">
+                            {form.errors.start_time}
+                        </p>
                     )}
                 </div>
                 <div className="grid gap-2">
-                    <label htmlFor="ts-end" className="text-xs font-bold text-muted-foreground">
+                    <label
+                        htmlFor="ts-end"
+                        className="text-muted-foreground text-xs font-bold"
+                    >
                         End time
                     </label>
                     <FlatpickrInput
@@ -350,18 +387,23 @@ function EntryForm({
                         className={inputClass}
                     />
                     {form.errors.end_time && (
-                        <p className="text-xs font-semibold text-sienna">{form.errors.end_time}</p>
+                        <p className="text-sienna text-xs font-semibold">
+                            {form.errors.end_time}
+                        </p>
                     )}
                 </div>
             </div>
 
             <div className="grid gap-2">
                 <div className="flex items-center justify-between">
-                    <label htmlFor="ts-desc" className="text-xs font-bold text-muted-foreground">
+                    <label
+                        htmlFor="ts-desc"
+                        className="text-muted-foreground text-xs font-bold"
+                    >
                         What did you work on?
                     </label>
                     {preview && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-moss-100 px-2.5 py-0.5 text-[11px] font-extrabold text-moss-700 dark:bg-moss-800/40 dark:text-moss-300">
+                        <span className="bg-moss-100 text-moss-700 dark:bg-moss-800/40 dark:text-moss-300 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold">
                             <Clock3 className="size-3" />
                             {preview}
                         </span>
@@ -371,15 +413,20 @@ function EntryForm({
                     id="ts-desc"
                     rows={3}
                     value={form.data.description}
-                    onChange={(e) => form.setData('description', e.target.value)}
+                    onChange={(e) =>
+                        form.setData('description', e.target.value)
+                    }
                     placeholder="Summarise the work completed…"
-                    className="min-h-20 w-full resize-none rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none placeholder:text-muted-foreground/60 focus-visible:border-sienna focus-visible:ring-2 focus-visible:ring-sienna/40"
+                    className="border-border bg-background placeholder:text-muted-foreground/60 focus-visible:border-sienna focus-visible:ring-sienna/40 min-h-20 w-full resize-none rounded-xl border px-3.5 py-2.5 text-sm outline-none focus-visible:ring-2"
                 />
                 {form.errors.description && (
-                    <p className="text-xs font-semibold text-sienna">{form.errors.description}</p>
+                    <p className="text-sienna text-xs font-semibold">
+                        {form.errors.description}
+                    </p>
                 )}
-                <p className="text-[11px] text-muted-foreground">
-                    Duration is calculated from start and end time — no manual hours.
+                <p className="text-muted-foreground text-[11px]">
+                    Duration is calculated from start and end time — no manual
+                    hours.
                 </p>
             </div>
 
@@ -388,7 +435,7 @@ function EntryForm({
                     type="button"
                     onClick={submit}
                     disabled={form.processing}
-                    className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-harbor px-4 text-sm font-bold text-white shadow-lg shadow-harbor/20 transition-all hover:-translate-y-0.5 hover:bg-harbor-700 disabled:opacity-50 dark:bg-harbor-600 dark:hover:bg-harbor-500"
+                    className="bg-harbor shadow-harbor/20 hover:bg-harbor-700 dark:bg-harbor-600 dark:hover:bg-harbor-500 inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-50"
                 >
                     {form.processing ? 'Saving…' : submitLabel}
                 </button>
@@ -398,14 +445,14 @@ function EntryForm({
                             <button
                                 type="button"
                                 onClick={() => setConfirmDelete(false)}
-                                className="inline-flex h-10 items-center rounded-xl border border-border px-4 text-xs font-bold text-foreground hover:bg-accent"
+                                className="border-border text-foreground hover:bg-accent inline-flex h-10 items-center rounded-xl border px-4 text-xs font-bold"
                             >
                                 Keep
                             </button>
                             <button
                                 type="button"
                                 onClick={onDelete}
-                                className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-sienna px-4 text-xs font-bold text-white hover:bg-sienna-600"
+                                className="bg-sienna hover:bg-sienna-600 inline-flex h-10 items-center gap-1.5 rounded-xl px-4 text-xs font-bold text-white"
                             >
                                 <Trash2 className="size-3.5" />
                                 Confirm
@@ -416,7 +463,7 @@ function EntryForm({
                             type="button"
                             onClick={() => setConfirmDelete(true)}
                             aria-label="Delete entry"
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:border-sienna/40 hover:text-sienna"
+                            className="border-border text-muted-foreground hover:border-sienna/40 hover:text-sienna inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-colors"
                         >
                             <Trash2 className="size-4" />
                         </button>
@@ -427,7 +474,8 @@ function EntryForm({
 }
 
 export default function Timesheets() {
-    const { week, entries, assignments, summary } = usePage().props as unknown as {
+    const { week, entries, assignments, summary } = usePage()
+        .props as unknown as {
         week: WeekInfo;
         entries: CalendarEntry[];
         assignments: Assignment[];
@@ -439,10 +487,7 @@ export default function Timesheets() {
     const [dragError, setDragError] = useState<string | null>(null);
     const submitting = useForm({ week_start: week.start }).processing;
 
-    const weekStart = useMemo(
-        () => toDate(week.start, '00:00'),
-        [week.start],
-    );
+    const weekStart = useMemo(() => toDate(week.start, '00:00'), [week.start]);
 
     const events: CalEvent[] = useMemo(
         () =>
@@ -464,8 +509,7 @@ export default function Timesheets() {
     );
 
     const weekLabel = useMemo(() => {
-        const fmtDay = (d: string) =>
-            format(toDate(d, '00:00'), 'd MMM');
+        const fmtDay = (d: string) => format(toDate(d, '00:00'), 'd MMM');
         return `${fmtDay(week.start)} – ${format(toDate(week.end, '00:00'), 'd MMM yyyy')}`;
     }, [week.start, week.end]);
 
@@ -489,7 +533,11 @@ export default function Timesheets() {
 
     function openEntry(entry: CalendarEntry) {
         setDragError(null);
-        setModal(isEditable(entry) ? { mode: 'edit', entry } : { mode: 'view', entry });
+        setModal(
+            isEditable(entry)
+                ? { mode: 'edit', entry }
+                : { mode: 'view', entry },
+        );
     }
 
     function persistMove(entry: CalendarEntry, start: Date, end: Date) {
@@ -540,26 +588,26 @@ export default function Timesheets() {
     return (
         <>
             <Head title="Timesheets" />
-            <main className="min-h-full bg-background px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+            <main className="bg-background min-h-full px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
                 <div className="mx-auto max-w-7xl">
                     {/* Header */}
-                    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end animate-fade-in-up">
+                    <div className="animate-fade-in-up flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                         <div>
-                            <p className="text-sm font-bold text-sienna dark:text-sienna-300">
+                            <p className="text-sienna dark:text-sienna-300 text-sm font-bold">
                                 Log your work
                             </p>
-                            <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                            <h1 className="text-foreground mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">
                                 Timesheets
                             </h1>
-                            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                            <p className="text-muted-foreground mt-2 max-w-xl text-sm">
                                 Click any time slot to log work. Duration is
-                                calculated for you — just pick the
-                                assignment and describe what you did.
+                                calculated for you — just pick the assignment
+                                and describe what you did.
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold text-secondary-foreground">
-                                <Clock3 className="size-3.5 text-sienna dark:text-sienna-300" />
+                            <span className="bg-secondary text-secondary-foreground inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold">
+                                <Clock3 className="text-sienna dark:text-sienna-300 size-3.5" />
                                 {formatMinutes(summary.week_minutes)} this week
                             </span>
                             <button
@@ -575,7 +623,7 @@ export default function Timesheets() {
                                     })
                                 }
                                 disabled={assignments.length === 0}
-                                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-harbor px-4 text-xs font-bold text-white shadow-lg shadow-harbor/20 transition-all hover:-translate-y-0.5 hover:bg-harbor-700 disabled:opacity-50 dark:bg-harbor-600 dark:hover:bg-harbor-500"
+                                className="bg-harbor shadow-harbor/20 hover:bg-harbor-700 dark:bg-harbor-600 dark:hover:bg-harbor-500 inline-flex h-9 items-center gap-1.5 rounded-xl px-4 text-xs font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 disabled:opacity-50"
                             >
                                 <Plus className="size-4" />
                                 Add entry
@@ -584,14 +632,14 @@ export default function Timesheets() {
                     </div>
 
                     {dragError && (
-                        <div className="mt-4 flex items-center gap-2 rounded-xl border border-sienna/30 bg-sienna-100 px-4 py-3 text-xs font-semibold text-sienna-800 dark:bg-sienna-900/30 dark:text-sienna-300">
+                        <div className="border-sienna/30 bg-sienna-100 text-sienna-800 dark:bg-sienna-900/30 dark:text-sienna-300 mt-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-xs font-semibold">
                             <AlertTriangle className="size-4 shrink-0" />
                             <span className="flex-1">{dragError}</span>
                             <button
                                 type="button"
                                 onClick={() => setDragError(null)}
                                 aria-label="Dismiss"
-                                className="rounded-lg p-1 hover:bg-sienna-200/60 dark:hover:bg-sienna-800/40"
+                                className="hover:bg-sienna-200/60 dark:hover:bg-sienna-800/40 rounded-lg p-1"
                             >
                                 <X className="size-3.5" />
                             </button>
@@ -601,8 +649,13 @@ export default function Timesheets() {
                     {timeless.length > 0 && (
                         <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-100 px-4 py-3 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
                             <p className="font-bold">
-                                {timeless.length} older {timeless.length === 1 ? 'entry needs' : 'entries need'} start
-                                and end times before {timeless.length === 1 ? 'it' : 'they'} can be submitted.
+                                {timeless.length} older{' '}
+                                {timeless.length === 1
+                                    ? 'entry needs'
+                                    : 'entries need'}{' '}
+                                start and end times before{' '}
+                                {timeless.length === 1 ? 'it' : 'they'} can be
+                                submitted.
                             </p>
                             <div className="mt-2 flex flex-wrap gap-1.5">
                                 {timeless.map((e) => (
@@ -621,21 +674,23 @@ export default function Timesheets() {
                     )}
 
                     {/* Week toolbar */}
-                    <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between animate-fade-in-up stagger-1">
+                    <div className="animate-fade-in-up stagger-1 mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-1.5">
                             <button
                                 type="button"
                                 onClick={() => visitWeek(week.prev)}
                                 aria-label="Previous week"
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-accent"
+                                className="border-border bg-card text-foreground hover:bg-accent inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors"
                             >
                                 <ChevronLeft className="size-4" />
                             </button>
                             <button
                                 type="button"
-                                onClick={() => visitWeek(toDateString(new Date()))}
+                                onClick={() =>
+                                    visitWeek(toDateString(new Date()))
+                                }
                                 disabled={week.is_current}
-                                className="inline-flex h-9 items-center rounded-xl border border-border bg-card px-4 text-xs font-bold text-foreground transition-colors hover:bg-accent disabled:opacity-50"
+                                className="border-border bg-card text-foreground hover:bg-accent inline-flex h-9 items-center rounded-xl border px-4 text-xs font-bold transition-colors disabled:opacity-50"
                             >
                                 Today
                             </button>
@@ -643,22 +698,40 @@ export default function Timesheets() {
                                 type="button"
                                 onClick={() => visitWeek(week.next)}
                                 aria-label="Next week"
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-accent"
+                                className="border-border bg-card text-foreground hover:bg-accent inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-colors"
                             >
                                 <ChevronRight className="size-4" />
                             </button>
-                            <p className="ml-2 text-sm font-extrabold text-foreground" role="status">
+                            <p
+                                className="text-foreground ml-2 text-sm font-extrabold"
+                                role="status"
+                            >
                                 {weekLabel}
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
                             <div
-                                className="hidden items-center gap-3 text-[11px] font-bold text-muted-foreground md:flex"
+                                className="text-muted-foreground hidden items-center gap-3 text-[11px] font-bold md:flex"
                                 aria-label="Status legend"
                             >
-                                {(['draft', 'submitted', 'approved', 'rejected'] as const).map((s) => (
-                                    <span key={s} className="inline-flex items-center gap-1">
-                                        <span className={cn('ts-legend-dot', `ts-legend-${s}`)} />
+                                {(
+                                    [
+                                        'draft',
+                                        'submitted',
+                                        'approved',
+                                        'rejected',
+                                    ] as const
+                                ).map((s) => (
+                                    <span
+                                        key={s}
+                                        className="inline-flex items-center gap-1"
+                                    >
+                                        <span
+                                            className={cn(
+                                                'ts-legend-dot',
+                                                `ts-legend-${s}`,
+                                            )}
+                                        />
                                         {statusMeta[s].label}
                                     </span>
                                 ))}
@@ -667,7 +740,7 @@ export default function Timesheets() {
                                 type="button"
                                 onClick={() => setConfirmSubmit(true)}
                                 disabled={summary.draft_count === 0}
-                                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-moss px-4 text-xs font-bold text-white shadow-lg shadow-moss/20 transition-all hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-50 dark:bg-moss-600"
+                                className="bg-moss shadow-moss/20 dark:bg-moss-600 inline-flex h-9 items-center gap-1.5 rounded-xl px-4 text-xs font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:brightness-110 disabled:opacity-50"
                             >
                                 <Send className="size-3.5" />
                                 Submit week ({summary.draft_count})
@@ -676,9 +749,12 @@ export default function Timesheets() {
                     </div>
 
                     {/* Day totals */}
-                    <div className="mt-3 grid grid-cols-7 gap-2 animate-fade-in-up stagger-2">
+                    <div className="animate-fade-in-up stagger-2 mt-3 grid grid-cols-7 gap-2">
                         {Array.from({ length: 7 }, (_, i) => {
-                            const day = format(addDays(toDate(week.start, '00:00'), i), 'yyyy-MM-dd');
+                            const day = format(
+                                addDays(toDate(week.start, '00:00'), i),
+                                'yyyy-MM-dd',
+                            );
                             const minutes = summary.by_day[day] ?? 0;
                             const isToday = day === toDateString(new Date());
                             return (
@@ -691,11 +767,13 @@ export default function Timesheets() {
                                             : 'border-border bg-card',
                                     )}
                                 >
-                                    <p className="text-[10px] font-bold tracking-wide text-muted-foreground uppercase">
+                                    <p className="text-muted-foreground text-[10px] font-bold tracking-wide uppercase">
                                         {format(toDate(day, '00:00'), 'EEE')}
                                     </p>
-                                    <p className="text-xs font-extrabold text-foreground tabular-nums">
-                                        {minutes > 0 ? formatMinutes(minutes) : '—'}
+                                    <p className="text-foreground text-xs font-extrabold tabular-nums">
+                                        {minutes > 0
+                                            ? formatMinutes(minutes)
+                                            : '—'}
                                     </p>
                                 </div>
                             );
@@ -703,22 +781,23 @@ export default function Timesheets() {
                     </div>
 
                     {/* Calendar */}
-                    <div className="glass-card ts-cal mt-4 overflow-hidden rounded-2xl p-2 sm:p-4 animate-fade-in-up stagger-2">
+                    <div className="glass-card ts-cal animate-fade-in-up stagger-2 mt-4 overflow-hidden rounded-2xl p-2 sm:p-4">
                         {assignments.length === 0 ? (
                             <div className="p-10 text-center">
-                                <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-secondary">
-                                    <CalendarDays className="size-5 text-sienna dark:text-sienna-300" />
+                                <div className="bg-secondary mx-auto flex size-12 items-center justify-center rounded-xl">
+                                    <CalendarDays className="text-sienna dark:text-sienna-300 size-5" />
                                 </div>
-                                <h2 className="mt-4 text-lg font-extrabold text-foreground">
+                                <h2 className="text-foreground mt-4 text-lg font-extrabold">
                                     No active assignments
                                 </h2>
-                                <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
-                                    You can log time once a project manager assigns you to a project.
-                                    Discover open projects to apply.
+                                <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-sm">
+                                    You can log time once a project manager
+                                    assigns you to a project. Discover open
+                                    projects to apply.
                                 </p>
                                 <Link
                                     href="/projects"
-                                    className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-harbor px-4 py-2.5 text-xs font-bold text-white hover:bg-harbor-700"
+                                    className="bg-harbor hover:bg-harbor-700 mt-5 inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-white"
                                 >
                                     Discover projects
                                 </Link>
@@ -730,14 +809,26 @@ export default function Timesheets() {
                                 date={weekStart}
                                 view="week"
                                 views={['week']}
-                                onNavigate={(date: Date) => visitWeek(toDateString(date))}
+                                onNavigate={(date: Date) =>
+                                    visitWeek(toDateString(date))
+                                }
                                 onSelectSlot={openCreate}
-                                onSelectEvent={(event) => openEntry(event.resource)}
+                                onSelectEvent={(event) =>
+                                    openEntry(event.resource)
+                                }
                                 onEventDrop={({ event, start, end }) =>
-                                    persistMove(event.resource, start as Date, end as Date)
+                                    persistMove(
+                                        event.resource,
+                                        start as Date,
+                                        end as Date,
+                                    )
                                 }
                                 onEventResize={({ event, start, end }) =>
-                                    persistMove(event.resource, start as Date, end as Date)
+                                    persistMove(
+                                        event.resource,
+                                        start as Date,
+                                        end as Date,
+                                    )
                                 }
                                 resizable
                                 selectable
@@ -748,14 +839,21 @@ export default function Timesheets() {
                                 max={toDate(week.start, '22:00')}
                                 style={{ height: 640 }}
                                 eventPropGetter={(event: CalEvent) => ({
-                                    className: statusMeta[event.resource.status].className,
+                                    className:
+                                        statusMeta[event.resource.status]
+                                            .className,
                                 })}
-                                draggableAccessor={(event) => isEditable(event.resource)}
-                                resizableAccessor={(event) => isEditable(event.resource)}
+                                draggableAccessor={(event) =>
+                                    isEditable(event.resource)
+                                }
+                                resizableAccessor={(event) =>
+                                    isEditable(event.resource)
+                                }
                                 components={{ event: CalEventBlock }}
                                 formats={{
                                     timeGutterFormat: 'HH:mm',
-                                    dayHeaderFormat: (date: Date) => format(date, 'EEE d MMM'),
+                                    dayHeaderFormat: (date: Date) =>
+                                        format(date, 'EEE d MMM'),
                                 }}
                             />
                         )}
@@ -764,11 +862,18 @@ export default function Timesheets() {
             </main>
 
             {/* Create / edit dialog */}
-            <Dialog open={modal !== null && modal.mode !== 'view'} onOpenChange={(open) => { if (!open) setModal(null); }}>
+            <Dialog
+                open={modal !== null && modal.mode !== 'view'}
+                onOpenChange={(open) => {
+                    if (!open) setModal(null);
+                }}
+            >
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>
-                            {modal?.mode === 'edit' ? 'Edit entry' : 'Add timesheet entry'}
+                            {modal?.mode === 'edit'
+                                ? 'Edit entry'
+                                : 'Add timesheet entry'}
                         </DialogTitle>
                         <DialogDescription>
                             {modal?.mode === 'edit'
@@ -776,12 +881,19 @@ export default function Timesheets() {
                                 : 'Pick the assignment, set the time, describe the work.'}
                         </DialogDescription>
                     </DialogHeader>
-                    {modal && modal.mode === 'edit' && modal.entry.status === 'rejected' && modal.entry.review_comment && (
-                        <div className="rounded-xl border border-sienna/30 bg-sienna-100 px-4 py-3 text-xs text-sienna-800 dark:bg-sienna-900/30 dark:text-sienna-300">
-                            <p className="font-extrabold">Reviewer feedback</p>
-                            <p className="mt-1 leading-relaxed">{modal.entry.review_comment}</p>
-                        </div>
-                    )}
+                    {modal &&
+                        modal.mode === 'edit' &&
+                        modal.entry.status === 'rejected' &&
+                        modal.entry.review_comment && (
+                            <div className="border-sienna/30 bg-sienna-100 text-sienna-800 dark:bg-sienna-900/30 dark:text-sienna-300 rounded-xl border px-4 py-3 text-xs">
+                                <p className="font-extrabold">
+                                    Reviewer feedback
+                                </p>
+                                <p className="mt-1 leading-relaxed">
+                                    {modal.entry.review_comment}
+                                </p>
+                            </div>
+                        )}
                     {modal && modal.mode !== 'view' && (
                         <EntryForm
                             key={
@@ -793,48 +905,73 @@ export default function Timesheets() {
                             initial={
                                 modal.mode === 'edit'
                                     ? {
-                                        projectId: String(modal.entry.project.id),
-                                        assignmentId: String(modal.entry.assignment.id),
-                                        workDate: modal.entry.work_date,
-                                        startTime: modal.entry.start_time ?? '',
-                                        endTime: modal.entry.end_time ?? '',
-                                        description: modal.entry.description ?? '',
-                                    }
+                                          projectId: String(
+                                              modal.entry.project.id,
+                                          ),
+                                          assignmentId: String(
+                                              modal.entry.assignment.id,
+                                          ),
+                                          workDate: modal.entry.work_date,
+                                          startTime:
+                                              modal.entry.start_time ?? '',
+                                          endTime: modal.entry.end_time ?? '',
+                                          description:
+                                              modal.entry.description ?? '',
+                                      }
                                     : {
-                                        projectId: '',
-                                        assignmentId: '',
-                                        workDate: modal.date,
-                                        startTime: modal.start,
-                                        endTime: modal.end,
-                                        description: '',
-                                    }
+                                          projectId: '',
+                                          assignmentId: '',
+                                          workDate: modal.date,
+                                          startTime: modal.start,
+                                          endTime: modal.end,
+                                          description: '',
+                                      }
                             }
-                            entryId={modal.mode === 'edit' ? modal.entry.id : undefined}
-                            submitLabel={modal.mode === 'edit' ? 'Save changes' : 'Add entry'}
+                            entryId={
+                                modal.mode === 'edit'
+                                    ? modal.entry.id
+                                    : undefined
+                            }
+                            submitLabel={
+                                modal.mode === 'edit'
+                                    ? 'Save changes'
+                                    : 'Add entry'
+                            }
                             onSuccess={() => setModal(null)}
                             onDelete={
-                                modal.mode === 'edit' ? () => deleteEntry(modal.entry.id) : undefined
+                                modal.mode === 'edit'
+                                    ? () => deleteEntry(modal.entry.id)
+                                    : undefined
                             }
-                            canDelete={modal.mode === 'edit' && modal.entry.status === 'draft'}
+                            canDelete={
+                                modal.mode === 'edit' &&
+                                modal.entry.status === 'draft'
+                            }
                         />
                     )}
                 </DialogContent>
             </Dialog>
 
             {/* Read-only detail for submitted / approved entries */}
-            <Dialog open={modal?.mode === 'view'} onOpenChange={(open) => { if (!open) setModal(null); }}>
+            <Dialog
+                open={modal?.mode === 'view'}
+                onOpenChange={(open) => {
+                    if (!open) setModal(null);
+                }}
+            >
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>Timesheet entry</DialogTitle>
                         <DialogDescription>
-                            {modalEntry?.project.title} · {modalEntry?.work_date}
+                            {modalEntry?.project.title} ·{' '}
+                            {modalEntry?.work_date}
                         </DialogDescription>
                     </DialogHeader>
                     {modalEntry && (
                         <div className="space-y-4">
                             <span
                                 className={cn(
-                                    'inline-flex items-center rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide',
+                                    'inline-flex items-center rounded-full px-3 py-1 text-[11px] font-extrabold tracking-wide uppercase',
                                     modalEntry.status === 'approved' &&
                                         'bg-moss-100 text-moss-700 dark:bg-moss-800/40 dark:text-moss-300',
                                     modalEntry.status === 'submitted' &&
@@ -847,43 +984,60 @@ export default function Timesheets() {
                             </span>
                             <dl className="grid grid-cols-2 gap-3 text-sm">
                                 <div>
-                                    <dt className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Time</dt>
-                                    <dd className="mt-0.5 font-bold text-foreground">
-                                        {modalEntry.start_time}–{modalEntry.end_time}
+                                    <dt className="text-muted-foreground text-[11px] font-bold tracking-wide uppercase">
+                                        Time
+                                    </dt>
+                                    <dd className="text-foreground mt-0.5 font-bold">
+                                        {modalEntry.start_time}–
+                                        {modalEntry.end_time}
                                         {modalEntry.minutes !== null && (
-                                            <span className="ml-1.5 font-semibold text-muted-foreground">
-                                                ({formatMinutes(modalEntry.minutes)})
+                                            <span className="text-muted-foreground ml-1.5 font-semibold">
+                                                (
+                                                {formatMinutes(
+                                                    modalEntry.minutes,
+                                                )}
+                                                )
                                             </span>
                                         )}
                                     </dd>
                                 </div>
                                 <div>
-                                    <dt className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Assignment</dt>
-                                    <dd className="mt-0.5 font-bold text-foreground">
-                                        {[modalEntry.assignment.role ?? 'Participant', modalEntry.assignment.team]
+                                    <dt className="text-muted-foreground text-[11px] font-bold tracking-wide uppercase">
+                                        Assignment
+                                    </dt>
+                                    <dd className="text-foreground mt-0.5 font-bold">
+                                        {[
+                                            modalEntry.assignment.role ??
+                                                'Participant',
+                                            modalEntry.assignment.team,
+                                        ]
                                             .filter(Boolean)
                                             .join(' · ')}
                                     </dd>
                                 </div>
                             </dl>
                             {modalEntry.description && (
-                                <div className="rounded-xl bg-secondary/60 p-3.5 text-sm leading-relaxed text-foreground/85">
+                                <div className="bg-secondary/60 text-foreground/85 rounded-xl p-3.5 text-sm leading-relaxed">
                                     {modalEntry.description}
                                 </div>
                             )}
                             {modalEntry.review_comment && (
-                                <div className="rounded-xl border border-border/70 p-3.5">
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                                        Reviewer {modalEntry.reviewed_by ? `· ${modalEntry.reviewed_by}` : ''}
+                                <div className="border-border/70 rounded-xl border p-3.5">
+                                    <p className="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+                                        Reviewer{' '}
+                                        {modalEntry.reviewed_by
+                                            ? `· ${modalEntry.reviewed_by}`
+                                            : ''}
                                     </p>
-                                    <p className="mt-1 text-xs leading-relaxed text-foreground/80">
+                                    <p className="text-foreground/80 mt-1 text-xs leading-relaxed">
                                         {modalEntry.review_comment}
                                     </p>
                                 </div>
                             )}
-                            <p className="text-[11px] text-muted-foreground">
-                                Submitted entries are locked. If changes are needed, your reviewer
-                                can reject the entry with feedback.
+                            <p className="text-muted-foreground text-[11px]">
+                                Submitted entries are locked. If changes are
+                                needed, your reviewer can reject the entry with
+                                feedback.
                             </p>
                         </div>
                     )}
@@ -896,16 +1050,17 @@ export default function Timesheets() {
                     <DialogHeader>
                         <DialogTitle>Submit this week?</DialogTitle>
                         <DialogDescription>
-                            {summary.draft_count} {summary.draft_count === 1 ? 'entry' : 'entries'} (
-                            {formatMinutes(summary.week_minutes)} total) will be sent for review and
-                            locked against further edits.
+                            {summary.draft_count}{' '}
+                            {summary.draft_count === 1 ? 'entry' : 'entries'} (
+                            {formatMinutes(summary.week_minutes)} total) will be
+                            sent for review and locked against further edits.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <button
                             type="button"
                             onClick={() => setConfirmSubmit(false)}
-                            className="rounded-xl border border-border bg-background px-4 py-2.5 text-xs font-bold text-foreground transition-colors hover:bg-accent"
+                            className="border-border bg-background text-foreground hover:bg-accent rounded-xl border px-4 py-2.5 text-xs font-bold transition-colors"
                         >
                             Keep editing
                         </button>
@@ -913,7 +1068,7 @@ export default function Timesheets() {
                             type="button"
                             onClick={submitWeek}
                             disabled={submitting}
-                            className="inline-flex items-center gap-2 rounded-xl bg-moss px-4 py-2.5 text-xs font-bold text-white transition-all hover:brightness-110 disabled:opacity-50"
+                            className="bg-moss inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-white transition-all hover:brightness-110 disabled:opacity-50"
                         >
                             <Send className="size-3.5" />
                             {submitting ? 'Submitting…' : 'Submit for review'}

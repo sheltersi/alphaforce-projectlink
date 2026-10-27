@@ -42,7 +42,7 @@ import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
 import { cn, toUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';
-import type { BreadcrumbItem, NavItem } from '@/types';
+import type { AppPageProps, BreadcrumbItem, NavItem } from '@/types';
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[];
@@ -73,7 +73,7 @@ const activeItemStyles =
     'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
 
 export function AppHeader({ breadcrumbs = [] }: Props) {
-    const page = usePage();
+    const page = usePage<AppPageProps>();
     const { auth } = page.props;
     const unreadNotificationsCount =
         (page.props as unknown as { unreadNotificationsCount?: number })
@@ -83,7 +83,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
 
     return (
         <>
-            <div className="border-sidebar-border/80 border-b bg-background/80 backdrop-blur-lg">
+            <div className="border-sidebar-border/80 bg-background/80 border-b backdrop-blur-lg">
                 <div className="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                     {/* Mobile Menu */}
                     <div className="lg:hidden">
@@ -204,7 +204,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 aria-label="Messages"
                             >
                                 <MessageSquare className="!size-5 opacity-80 group-hover:opacity-100" />
-                                <span className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-sienna-500 px-1 text-[9px] font-bold text-white shadow-sm">
+                                <span className="bg-sienna-500 absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold text-white shadow-sm">
                                     5
                                 </span>
                             </Button>
@@ -224,7 +224,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 >
                                     <Bell className="!size-5 opacity-80 group-hover:opacity-100" />
                                     {unreadNotificationsCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sienna px-1 text-[9px] font-bold text-white ring-2 ring-background">
+                                        <span className="bg-sienna ring-background absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold text-white ring-2">
                                             {unreadNotificationsCount > 99
                                                 ? '99+'
                                                 : unreadNotificationsCount}
@@ -285,7 +285,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                 </div>
             </div>
             {breadcrumbs.length > 1 && (
-                <div className="border-sidebar-border/70 flex w-full border-b bg-background/60 backdrop-blur-md">
+                <div className="border-sidebar-border/70 bg-background/60 flex w-full border-b backdrop-blur-md">
                     <div className="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl">
                         <Breadcrumbs breadcrumbs={breadcrumbs} />
                     </div>
