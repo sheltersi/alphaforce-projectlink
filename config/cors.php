@@ -15,7 +15,9 @@ return [
     |
     */
 
-    'paths' => ['api/*'],
+    'paths' => ['api/*',
+
+    ],
 
     'allowed_methods' => ['*'],
 
@@ -25,17 +27,19 @@ return [
         // Next.js frontend served through Valet.
         'https://orangepie.test',
         'http://orangepie.test',
+
+        // Next.js frontend served through Vercel.
         'https://orangepie.alphaforce.co.za',
-        'http://orangepie.alphaforce.co.za',
+
     ],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['Content-Type', 'Accept', 'Authorization', 'X-Requested-With'],
+    'allowed_headers' => ['*'],
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    'max_age' => 3600,
 
     'supports_credentials' => false,
 
