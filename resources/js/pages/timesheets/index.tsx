@@ -37,6 +37,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { FlatpickrInput } from '@/components/flatpickr-input';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { index as timesheetsIndex, submit as timesheetsSubmit } from '@/routes/timesheets';
@@ -311,11 +312,11 @@ function EntryForm({
                     <label htmlFor="ts-date" className="text-xs font-bold text-muted-foreground">
                         Date
                     </label>
-                    <input
+                    <FlatpickrInput
                         id="ts-date"
-                        type="date"
+                        pickerType="date"
                         value={form.data.work_date}
-                        onChange={(e) => form.setData('work_date', e.target.value)}
+                        onChange={(value) => form.setData('work_date', value)}
                         className={inputClass}
                     />
                     {form.errors.work_date && (
@@ -326,11 +327,11 @@ function EntryForm({
                     <label htmlFor="ts-start" className="text-xs font-bold text-muted-foreground">
                         Start time
                     </label>
-                    <input
+                    <FlatpickrInput
                         id="ts-start"
-                        type="time"
+                        pickerType="time"
                         value={form.data.start_time}
-                        onChange={(e) => form.setData('start_time', e.target.value)}
+                        onChange={(value) => form.setData('start_time', value)}
                         className={inputClass}
                     />
                     {form.errors.start_time && (
@@ -341,11 +342,11 @@ function EntryForm({
                     <label htmlFor="ts-end" className="text-xs font-bold text-muted-foreground">
                         End time
                     </label>
-                    <input
+                    <FlatpickrInput
                         id="ts-end"
-                        type="time"
+                        pickerType="time"
                         value={form.data.end_time}
-                        onChange={(e) => form.setData('end_time', e.target.value)}
+                        onChange={(value) => form.setData('end_time', value)}
                         className={inputClass}
                     />
                     {form.errors.end_time && (

@@ -3,13 +3,13 @@ import {
     ArrowLeft,
     CalendarCheck2,
     Compass,
-    Network,
     ShieldCheck,
     Sparkles,
     Star,
     UserRound,
 } from "lucide-react";
 import { home } from "@/routes";
+import AppLogoIcon from "@/components/app-logo-icon";
 import type { AuthLayoutProps } from "@/types";
 
 const highlights = [
@@ -90,12 +90,7 @@ export default function AuthSimpleLayout({
                                 href={home()}
                                 className="flex items-center gap-2.5"
                             >
-                                <span className="bg-sand-50 text-harbor flex size-10 items-center justify-center rounded-xl shadow-lg">
-                                    <Network
-                                        className="size-5.5"
-                                        strokeWidth={2.2}
-                                    />
-                                </span>
+                                <AppLogoIcon className="size-10 rounded-xl object-contain shadow-lg" />
                                 <span className="leading-tight">
                                     <span className="text-sand-50 block text-[16px] font-bold tracking-tight drop-shadow">
                                         AlphaForce ProjectLink
@@ -243,9 +238,7 @@ export default function AuthSimpleLayout({
                             href={home()}
                             className="flex items-center gap-2.5 lg:hidden"
                         >
-                            <span className="bg-harbor text-sand-50 flex size-9 items-center justify-center rounded-xl shadow-md">
-                                <Network className="size-5" strokeWidth={2.2} />
-                            </span>
+                            <AppLogoIcon className="size-9 rounded-xl object-contain shadow-md" />
                             <span className="text-harbor text-[15px] font-bold tracking-tight">
                                 AlphaForce ProjectLink
                             </span>

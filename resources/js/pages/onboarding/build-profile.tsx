@@ -17,7 +17,6 @@ import {
     LogOut,
     MailCheck,
     MapPin,
-    Network,
     Plus,
     Save,
     Sparkles,
@@ -28,6 +27,8 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import AppLogoIcon from "@/components/app-logo-icon";
+import { FlatpickrInput } from "@/components/flatpickr-input";
 import {
     SKILL_SUGGESTIONS,
     STEPS,
@@ -567,9 +568,7 @@ export default function BuildProfile() {
                     />
                     <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
                         <span className="flex items-center gap-2.5">
-                            <span className="flex size-9 items-center justify-center rounded-xl bg-harbor text-sand-50 shadow-md shadow-harbor/25">
-                                <Network className="size-5" strokeWidth={2.2} />
-                            </span>
+                            <AppLogoIcon className="size-9 rounded-xl object-contain shadow-md shadow-harbor/25" />
                             <span className="text-[15px] font-bold tracking-tight text-harbor">
                                 AlphaForce ProjectLink
                             </span>
@@ -1610,15 +1609,14 @@ export default function BuildProfile() {
                                             required
                                             htmlFor={`exp-start-${exp.id}`}
                                         >
-                                            <input
+                                            <FlatpickrInput
                                                 id={`exp-start-${exp.id}`}
-                                                type="month"
+                                                pickerType="month"
                                                 className={inputCls}
                                                 value={exp.startDate}
-                                                onChange={(e) =>
+                                                onChange={(value) =>
                                                     updateExperience(exp.id, {
-                                                        startDate:
-                                                            e.target.value,
+                                                        startDate: value,
                                                     })
                                                 }
                                             />
@@ -1628,15 +1626,15 @@ export default function BuildProfile() {
                                             optional
                                             htmlFor={`exp-end-${exp.id}`}
                                         >
-                                            <input
+                                            <FlatpickrInput
                                                 id={`exp-end-${exp.id}`}
-                                                type="month"
+                                                pickerType="month"
                                                 className={inputCls}
                                                 disabled={exp.currentlyWorking}
                                                 value={exp.endDate}
-                                                onChange={(e) =>
+                                                onChange={(value) =>
                                                     updateExperience(exp.id, {
-                                                        endDate: e.target.value,
+                                                        endDate: value,
                                                     })
                                                 }
                                             />
@@ -1804,14 +1802,14 @@ export default function BuildProfile() {
                                         optional
                                         htmlFor={`cert-issue-${cert.id}`}
                                     >
-                                        <input
+                                        <FlatpickrInput
                                             id={`cert-issue-${cert.id}`}
-                                            type="month"
+                                            pickerType="month"
                                             className={inputCls}
                                             value={cert.issueDate}
-                                            onChange={(e) =>
+                                            onChange={(value) =>
                                                 updateCertification(cert.id, {
-                                                    issueDate: e.target.value,
+                                                    issueDate: value,
                                                 })
                                             }
                                         />
@@ -1821,14 +1819,14 @@ export default function BuildProfile() {
                                         optional
                                         htmlFor={`cert-exp-${cert.id}`}
                                     >
-                                        <input
+                                        <FlatpickrInput
                                             id={`cert-exp-${cert.id}`}
-                                            type="month"
+                                            pickerType="month"
                                             className={inputCls}
                                             value={cert.expiryDate}
-                                            onChange={(e) =>
+                                            onChange={(value) =>
                                                 updateCertification(cert.id, {
-                                                    expiryDate: e.target.value,
+                                                    expiryDate: value,
                                                 })
                                             }
                                         />

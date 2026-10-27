@@ -13,7 +13,6 @@ import {
     Mail,
     MailCheck,
     MapPin,
-    Network,
     LogOut,
     Pencil,
     Phone,
@@ -24,6 +23,7 @@ import {
 import { useMemo, useState } from "react";
 
 import { Head, Link, router, usePage } from "@inertiajs/react";
+import AppLogoIcon from "@/components/app-logo-icon";
 
 import {
     STEPS,
@@ -177,9 +177,7 @@ export default function ProfilePreview() {
                             href="/onboarding/build-profile"
                             className="flex items-center gap-2.5"
                         >
-                            <span className="flex size-9 items-center justify-center rounded-xl bg-harbor text-sand-50 shadow-md shadow-harbor/25">
-                                <Network className="size-5" strokeWidth={2.2} />
-                            </span>
+                            <AppLogoIcon className="size-9 rounded-xl object-contain shadow-md shadow-harbor/25" />
                             <span className="text-[15px] font-bold tracking-tight text-harbor">
                                 AlphaForce ProjectLink
                             </span>

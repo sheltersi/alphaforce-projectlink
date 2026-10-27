@@ -16,7 +16,6 @@ import {
     Link2,
     MapPin,
     Menu,
-    Network,
     Quote,
     Search,
     ShieldCheck,
@@ -31,6 +30,7 @@ import { useState } from "react";
 import { dashboard, login } from "@/routes";
 import { register } from "@/routes";
 import { Head, Link, usePage } from "@inertiajs/react";
+import AppLogoIcon from "@/components/app-logo-icon";
 
 const projects = [
     {
@@ -261,9 +261,7 @@ export default function Welcome() {
                         className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
                     >
                         <a href="#top" className="flex items-center gap-2.5">
-                            <span className="flex size-9 items-center justify-center rounded-xl bg-harbor text-sand-50 shadow-md shadow-harbor/30">
-                                <Network className="size-5" strokeWidth={2.2} />
-                            </span>
+                            <AppLogoIcon className="size-9 rounded-xl object-contain shadow-md shadow-harbor/30" />
                             <span className="leading-tight">
                                 <span className="block text-[15px] font-bold tracking-tight text-harbor">
                                     AlphaForce ProjectLink
@@ -1218,12 +1216,11 @@ export default function Welcome() {
                                 className="pointer-events-none absolute top-1/2 left-1/2 size-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/15"
                             />
                             <div className="relative mx-auto max-w-2xl">
-                                <span className="inline-flex size-14 items-center justify-center rounded-2xl bg-white/15 text-white shadow-lg backdrop-blur">
-                                    <Network
-                                        className="size-7"
-                                        strokeWidth={2}
-                                    />
-                                </span>
+                                <AppLogoIcon
+                                    alt=""
+                                    aria-hidden="true"
+                                    className="mx-auto size-14 rounded-2xl object-contain shadow-lg"
+                                />
                                 <h2 className="mt-6 text-3xl font-bold tracking-tight text-white sm:text-[2.75rem] sm:leading-tight">
                                     Your next project starts here.
                                 </h2>
@@ -1275,12 +1272,7 @@ export default function Welcome() {
                         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
                             <div>
                                 <div className="flex items-center gap-2.5">
-                                    <span className="flex size-9 items-center justify-center rounded-xl bg-sand-50 text-harbor">
-                                        <Network
-                                            className="size-5"
-                                            strokeWidth={2.2}
-                                        />
-                                    </span>
+                                    <AppLogoIcon className="size-9 rounded-xl object-contain" />
                                     <span className="text-[15px] font-bold text-sand-50">
                                         AlphaForce ProjectLink
                                     </span>
