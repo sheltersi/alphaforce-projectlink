@@ -50,17 +50,6 @@ function apiEntryPayload(ProjectParticipant $assignment, array $overrides = []):
     ], $overrides);
 }
 
-/*
- | The sanctum guard memoizes the first Bearer-authenticated user on the
- | shared test app instance, so requests switching users must forget
- | guards first. Real HTTP traffic boots a fresh app per request and is
- | unaffected — this is purely a test-isolation helper.
- */
-function apiForgetGuards(): void
-{
-    app('auth')->forgetGuards();
-}
-
 it('creates a timesheet entry through the api with server-computed duration', function () {
     $assignment = apiTimesheetAssignment();
 

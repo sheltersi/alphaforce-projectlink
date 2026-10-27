@@ -48,3 +48,11 @@ function something()
 {
     // ..
 }
+
+/**
+ * Forget memoized authentication guards between API requests in feature tests.
+ */
+function apiForgetGuards(): void
+{
+    app('auth')->forgetGuards();
+}

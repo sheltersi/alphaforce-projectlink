@@ -74,7 +74,7 @@ test('participant can save profile with all onboarding data', function () {
     expect($profile->educations)->toHaveCount(1);
     expect($profile->workExperiences)->toHaveCount(1);
     expect($profile->certifications)->toHaveCount(1);
-    expect($profile->phone)->toBe('+27 87 000 0000');
+    expect($profile->phone)->toBe('+27 84 000 0000');
     expect($profile->id_number)->toBe('ID-12345');
     expect($profile->nationality)->toBe('South African');
 });
