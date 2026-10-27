@@ -16,7 +16,6 @@ import {
     LayoutDashboard,
     LogOut,
     MailCheck,
-    MapPin,
     Plus,
     Save,
     Sparkles,
@@ -28,6 +27,7 @@ import {
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import AppLogoIcon from "@/components/app-logo-icon";
+import { CountryCityFields } from "@/components/country-city-fields";
 import { FlatpickrInput } from "@/components/flatpickr-input";
 import {
     SKILL_SUGGESTIONS,
@@ -111,6 +111,20 @@ const inputCls =
     "h-12 w-full rounded-xl border border-harbor/15 bg-white px-4 text-[14.5px] font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25";
 const textareaCls =
     "w-full rounded-xl border border-harbor/15 bg-white px-4 py-3.5 text-[14.5px] leading-relaxed font-medium text-ember placeholder:font-normal placeholder:text-ember-400/70 shadow-sm outline-none transition focus:border-sienna focus:ring-2 focus:ring-sienna/25";
+
+function splitLocation(location: string): { city: string; country: string } {
+    const separator = location.lastIndexOf(",");
+    if (separator < 0) return { city: "", country: location.trim() };
+
+    return {
+        city: location.slice(0, separator).trim(),
+        country: location.slice(separator + 1).trim(),
+    };
+}
+
+function joinLocation(city: string, country: string): string {
+    return [city.trim(), country.trim()].filter(Boolean).join(", ");
+}
 
 function SectionCard({
     title,
@@ -1180,39 +1194,14 @@ export default function BuildProfile() {
                                 />
                             </Field>
                         </div>
-                        <div className="grid gap-5 sm:grid-cols-2">
-                            <Field
-                                label="Location / City"
-                                required
-                                htmlFor="city"
-                            >
-                                <div className="relative">
-                                    <MapPin className="pointer-events-none absolute top-1/2 left-4 size-4.5 -translate-y-1/2 text-ember-400" />
-                                    <input
-                                        id="city"
-                                        className={`${inputCls} pl-11`}
-                                        placeholder="e.g. Johannesburg"
-                                        autoComplete="address-level2"
-                                        value={profile.city}
-                                        onChange={(e) =>
-                                            patch({ city: e.target.value })
-                                        }
-                                    />
-                                </div>
-                            </Field>
-                            <Field label="Country" required htmlFor="country">
-                                <input
-                                    id="country"
-                                    className={inputCls}
-                                    placeholder="e.g. South Africa"
-                                    autoComplete="country-name"
-                                    value={profile.country}
-                                    onChange={(e) =>
-                                        patch({ country: e.target.value })
-                                    }
-                                />
-                            </Field>
-                        </div>
+                        <CountryCityFields
+                            idPrefix="profile"
+                            city={profile.city}
+                            country={profile.country}
+                            required
+                            inputClassName={inputCls}
+                            onChange={(city, country) => patch({ city, country })}
+                        />
                     </div>
                 );
 
@@ -1586,24 +1575,23 @@ export default function BuildProfile() {
                                             }
                                         />
                                     </Field>
-                                    <Field
-                                        label="Location"
+                                    <CountryCityFields
+                                        idPrefix={`experience-${exp.id}`}
+                                        city={splitLocation(exp.location).city}
+                                        country={splitLocation(exp.location).country}
                                         optional
-                                        htmlFor={`exp-loc-${exp.id}`}
-                                    >
-                                        <input
-                                            id={`exp-loc-${exp.id}`}
-                                            className={inputCls}
-                                            placeholder="e.g. Johannesburg, South Africa"
-                                            value={exp.location}
-                                            onChange={(e) =>
-                                                updateExperience(exp.id, {
-                                                    location: e.target.value,
-                                                })
-                                            }
-                                        />
-                                    </Field>
-                                    <div className="grid grid-cols-2 gap-4">
+                                        wrapperClassName="sm:col-span-2"
+                                        inputClassName={inputCls}
+                                        onChange={(city, country) =>
+                                            updateExperience(exp.id, {
+                                                location: joinLocation(
+                                                    city,
+                                                    country,
+                                                ),
+                                            })
+                                        }
+                                    />
+                                    <div className="grid grid-cols-2 gap-4 sm:col-span-2">
                                         <Field
                                             label="Start Date"
                                             required

@@ -95,6 +95,9 @@ importers:
       react-big-calendar:
         specifier: ^1.20.0
         version: 1.20.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      react-country-state-city:
+        specifier: ^1.1.13
+        version: 1.1.13(react@19.3.0)
       react-dom:
         specifier: ^19.2.0
         version: 19.3.0(react@19.3.0)
@@ -2247,6 +2250,11 @@ packages:
       react: ^16.14.0 || ^17 || ^18 || ^19
       react-dom: ^16.14.0 || ^17 || ^18 || ^19
 
+  react-country-state-city@1.1.13:
+    resolution: {integrity: sha512-uIGXvs0noD+zUQU4S6y/uFwx5RGQh3U/Jz8FNC/0GhL6DDUQ+5DC7MoZYEBDZy+qTw287OXqzWoBpuGXmWGrMA==}
+    peerDependencies:
+      react: '>=16'
+
   react-dom@19.3.0:
     resolution: {integrity: sha512-JDk8dgif51OjFoDE70+OT9ICyYr+69HlmihNwp1+Nsfbna3t5sIiCa9ZJktDmQ4/1b/rn26hIAR2uYXDMr5r0Q==}
     peerDependencies:
@@ -4388,6 +4396,10 @@ snapshots:
       react-dom: 19.3.0(react@19.3.0)
       react-overlays: 5.2.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       uncontrollable: 7.2.1(react@19.3.0)
+
+  react-country-state-city@1.1.13(react@19.3.0):
+    dependencies:
+      react: 19.3.0
 
   react-dom@19.3.0(react@19.3.0):
     dependencies:
